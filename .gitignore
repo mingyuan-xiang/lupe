@@ -168,3 +168,6 @@ tools/tools
 
 # vim
 *.swp
+
+# Temporary working directory
+tmp/

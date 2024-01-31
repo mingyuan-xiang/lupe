@@ -4,6 +4,8 @@
 . ./env.sh
 ```
 
+TODO: merge this with conda
+
 TODO: This need to be changes in the future
 
 # compile
