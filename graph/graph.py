@@ -5,7 +5,8 @@ The plot is kind of broken, but I'll probably fix it in the future.
 """
 
 from .layer.layer import get_layer
-from .layer.layer_type import lupe_type_to_string
+from .layer.layer_type import LupeType, lupe_type_to_string
+from .layer.in_out import InOut
 import colorsys
 import numpy as np
 import matplotlib.colors as mcolors
@@ -26,13 +27,31 @@ class LupeGraph:
         # to the key
         self.graph = {}
 
-        # Get the node dictionary from the ONNX model
-        self.node_list, self.graph = self._register(model)
+        # Get the input size
+        # Note: Assume the input is one tensor with fixed sizes
+        size = model.graph.input[0].type.tensor_type.shape
+        dims = []
+        for dim in size.dim:
+            dims.append(dim.dim_value)
 
-    def _register(self, model):
-        """Use BFS to register all the nodes in the graph"""
+        # Get the node dictionary from the ONNX model
+        self.node_list, self.graph = self._register(model, dims)
+
+    def _register(self, model, dims):
+        """Use BFS to register all the nodes in the graph
+        
+        Args:
+            model: The ONNX model
+            dims: The input size
+        """
         node_list = {}
         lupe_graph = {}
+
+        # Add the input node
+        input_node = "input"
+        node_list[input_node] = InOut("input", None)
+        lupe_graph[input_node] = []
+
         for node in model.graph.node:
             node_list, lupe_graph = get_layer(node, node_list, lupe_graph)
 
@@ -166,7 +185,7 @@ if __name__ == "__main__":
     from onnx import checker
 
     # Load the ONNX model
-    onnx_model = onnx.load("tmp/lenet/lenet.onnx")
+    onnx_model = onnx.load("models/onnx/LeNet.onnx")
 
     # Convert ONNX model into a dictionary
     model_dict = {

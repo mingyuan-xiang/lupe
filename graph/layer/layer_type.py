@@ -4,10 +4,12 @@ from enum import Enum, auto
 
 class LupeType(Enum):
     """Supported layer types"""
+    AVG_POOL = auto()
     BIAS = auto()
     CONSTANT = auto()
     CONV2D = auto()
     FC = auto()
+    FLATTEN = auto()
     INPUT = auto()
     MAX_POOL = auto()
     OUTPUT = auto()
@@ -25,22 +27,28 @@ def get_lupe_type(onnx_type):
     Returns:
         The Lupe type
     """
-    if onnx_type == 'Conv':
-        return LupeType.CONV2D
-    if onnx_type == 'Gemm':
-        return LupeType.FC
-    if onnx_type == 'MaxPool':
-        return LupeType.MAX_POOL
-    if onnx_type == 'Relu':
-        return LupeType.RELU
-    if onnx_type == 'Reshape':
-        return LupeType.RESHAPE
-    if onnx_type == 'Tanh':
-        return LupeType.TANH
-    if onnx_type == 'Constant':
-        return LupeType.CONSTANT
+    if onnx_type == "AveragePool":
+        ty = LupeType.AVG_POOL
+    elif onnx_type == "Conv":
+        ty = LupeType.CONV2D
+    elif onnx_type == "Gemm":
+        ty = LupeType.FC
+    elif onnx_type == "MaxPool":
+        ty = LupeType.MAX_POOL
+    elif onnx_type == "Relu":
+        ty = LupeType.RELU
+    elif onnx_type == "Reshape":
+        ty = LupeType.RESHAPE
+    elif onnx_type == "Tanh":
+        ty = LupeType.TANH
+    elif onnx_type == "Constant":
+        ty = LupeType.CONSTANT
+    elif onnx_type == "Flatten":
+        ty = LupeType.FLATTEN
+    else:
+        raise ValueError(f"Unsupported ONNX operation type: {onnx_type}")
 
-    raise ValueError(f'Unsupported ONNX operation type: {onnx_type}')
+    return ty
 
 def lupe_type_to_string(lupe_type):
     """Convert the LupeType to a string
@@ -76,6 +84,6 @@ def lupe_type_to_string(lupe_type):
     elif lupe_type == LupeType.WEIGHT:
         string = "Weight"
     else:
-        raise ValueError(f'Unsupported LupeType: {lupe_type}')
+        raise ValueError(f"Unsupported LupeType: {lupe_type}")
 
     return string

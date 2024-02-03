@@ -1,16 +1,35 @@
 """The layer node in the graph"""
 
+from abc import ABC, abstractmethod
+
 from .layer_type import LupeType, get_lupe_type
+from .convolution import Convolution
+from .in_out import InOut
+from .pooling import AvgPooling, MaxPooling
+from .activation import Relu, Tanh
+from .transition import Flatten
+from .fully_connected import FullyConnected
 
-from dataclasses import dataclass
+class LupeLayer(ABC):
+    def __init__(self, name, node):
+        """Initialize the layer
+        
+        Args:
+            name: The name of the layer
+            node: The ONNX node
+        """
+        self.name = name
+        self._register(node)
 
-@dataclass
-class LupeLayer:
-    """The layer node in the graph"""
-    name : str
-    type : LupeType
+    @abstractmethod
+    def _register(self, node):
+        """Register the layer"""
 
-def get_layer(node, nodeList, graph):
+    @abstractmethod
+    def get_code(self):
+        """Get the code for the layer"""
+
+def get_layer(node, node_list, graph):
     """Get the layer from the node
     
     Args:
@@ -26,58 +45,46 @@ def get_layer(node, nodeList, graph):
     inputs = node.input
     node_name = node.output[0]
 
-    # Check if the node name is a number. If so, then it is an output node
-    try:
-        float(node_name)
-        node_name = "output"
-    except ValueError:
-        pass
+    graph[inputs[0]].append(node_name)
 
-    if lupe_type in (LupeType.CONV2D, LupeType.FC):
-        if inputs[0] not in nodeList:
-            # Input tensor
-            nodeList[inputs[0]] = LupeLayer(inputs[0], LupeType.INPUT)
-            graph[inputs[0]] = []
-        graph[inputs[0]].append(node_name)
+    # Add output node
+    graph[node_name] = []
+    node_list[node_name] = _get_layer_constructor(lupe_type)(
+        node_name, lupe_type, node
+    )
 
-        # Add weight and bias nodes
-        nodeList[inputs[1]] = LupeLayer(inputs[1], LupeType.WEIGHT)
-        graph[inputs[1]] = [node_name]
-        nodeList[inputs[2]] = LupeLayer(inputs[2], LupeType.BIAS)
-        graph[inputs[2]] = [node_name]
+    return node_list, graph
 
-        # Add output node
-        graph[node_name] = []
-        nodeList[node_name] = LupeLayer(node_name, lupe_type)
-    elif lupe_type in (LupeType.MAX_POOL, LupeType.TANH, LupeType.RELU):
-        if inputs[0] not in nodeList:
-            # Input tensor
-            nodeList[inputs[0]] = LupeLayer(inputs[0], LupeType.INPUT)
-            graph[inputs[0]] = []
-        graph[inputs[0]].append(node_name)
-
-        # Add output node
-        graph[node_name] = []
-        nodeList[node_name] = LupeLayer(node_name, lupe_type)
-    elif lupe_type == LupeType.RESHAPE:
-        if inputs[0] not in nodeList:
-            # Input tensor
-            nodeList[inputs[0]] = LupeLayer(inputs[0], LupeType.INPUT)
-            graph[inputs[0]] = []
-        graph[inputs[0]].append(node_name)
-
-        # constant tensor
-        nodeList[inputs[1]] = LupeLayer(inputs[1], LupeType.CONSTANT)
-        graph[inputs[1]] = [node_name]
-
-        # Add output node
-        graph[node_name] = []
-        nodeList[node_name] = LupeLayer(node_name, lupe_type)
-    elif lupe_type == LupeType.CONSTANT:
-        # Add output node
-        graph[node_name] = []
-        nodeList[node_name] = LupeLayer(node_name, lupe_type)
+def _get_layer_constructor(lupe_type):
+    """Get the layer constructor"""
+    if lupe_type == LupeType.CONV2D:
+        layer = Convolution
+    elif lupe_type in (LupeType.INPUT, LupeType.OUTPUT):
+        layer = InOut
+    elif lupe_type == LupeType.AVG_POOL:
+        layer = AvgPooling
+    elif lupe_type == LupeType.MAX_POOL:
+        layer = MaxPooling
+    elif lupe_type == LupeType.RELU:
+        layer = Relu
+    elif lupe_type == LupeType.TANH:
+        layer = Tanh
+    elif lupe_type == LupeType.FLATTEN:
+        layer = Flatten
+    elif lupe_type == LupeType.FC:
+        layer = FullyConnected
     else:
-        raise ValueError(f'Unsupported Lupe type: {lupe_type}')
+        raise ValueError(f"Unsupported Lupe type: {lupe_type}")
 
-    return nodeList, graph
+    return layer
+
+def get_onnx_attr(node, s):
+    """Get the ONNX attribute
+    
+    Args:
+        node: The ONNX node
+        s: The attribute name
+    """
+    return next(
+        (attr for attr in node.attribute if attr.name == s), None
+    )
