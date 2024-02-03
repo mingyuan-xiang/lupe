@@ -40,3 +40,6 @@
 [submodule "ext/libmspdriver"]
 	path = ext/libmspdriver
 	url = git@github.com:mingyuan-xiang/libmspdriver.git
+[submodule "models"]
+	path = models
+	url = git@github.com:mingyuan-xiang/models.git

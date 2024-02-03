@@ -1,6 +1,11 @@
-"""The graph for the DNN model"""
+"""The graph for the DNN model
 
-from layer import LupeLayer
+The plot is kind of broken, but I'll probably fix it in the future.
+
+"""
+
+from .layer.layer import get_layer
+from .layer.layer_type import lupe_type_to_string
 import colorsys
 import numpy as np
 import matplotlib.colors as mcolors
@@ -10,32 +15,34 @@ class LupeGraph:
     """The graph for the DNN model"""
     def __init__(self, name, model):
         """Initialize the graph for the DNN model
-        
+
+        The graph is just a dictionary of nodes and their connections.
+
         Args:
             model: The ONNX model
         """
         self.name = name
-        self.graph = model.graph
         # For each key (node), the value is a list of nodes that are connected
         # to the key
-        self.node_list = {}
-        self.root = LupeLayer("root", None)
+        self.graph = {}
 
-        # Get the node list from the ONNX model
-        node_list = {}
-        for node in self.graph.node:
-            node_list[node.name] = node
+        # Get the node dictionary from the ONNX model
+        self.node_list, self.graph = self._register(model)
 
-        self._register()
-
-    def _register(self):
+    def _register(self, model):
         """Use BFS to register all the nodes in the graph"""
+        node_list = {}
+        lupe_graph = {}
+        for node in model.graph.node:
+            node_list, lupe_graph = get_layer(node, node_list, lupe_graph)
+
+        return node_list, lupe_graph
 
     def plot(self):
         """Plot the graph"""
 
         nodes = self._get_node_type_dict()
-        colors = self._generate_colors(nodes.values())
+        colors = self._generate_colors(list(nodes.values()))
 
         source_indices = []
         target_indices = []
@@ -43,8 +50,8 @@ class LupeGraph:
         edge_colors = []
 
         node_indices = {node: i for i, node in enumerate(nodes)}
-        for source in self.node_list:
-            for target in self.node_list:
+        for source in self.graph:
+            for target in self.graph[source]:
                 source_idx = node_indices[source]
                 target_idx = node_indices[target]
                 source_indices.append(source_idx)
@@ -57,52 +64,42 @@ class LupeGraph:
 
         # Create the Sankey diagram
         fig = go.Figure(data=[go.Sankey(
-            node=dict(
-                pad=15,
-                thickness=20,
-                line=dict(color="black", width=0.5),
-                label=["" for _ in nodes],  # Hiding node labels
-                color=list(colors.keys()),
-            ),
-            link=dict(
-                source=source_indices,
-                target=target_indices,
-                value=values,
-                color=edge_colors,
-            ))])
+            node={
+                "pad" : 15,
+                "thickness" : 20,
+                "line" : {"color" : "black", "width" : 0.5},
+                "label" : ["" for _ in nodes],  # Hiding node labels
+                "color" : list(colors.values()),
+            },
+            link={
+                "source" : source_indices,
+                "target" : target_indices,
+                "value" : values,
+                "color" : edge_colors,
+            })])
 
         # Add legend annotations and color boxes
         for i, ty in enumerate(colors):
             fig.add_shape(
                 type="rect",
                 xref="paper", yref="paper",
-                x0=0.01, y0=0.1 + i * 0.05 - 0.02,
-                x1=0.05, y1=0.1 + i * 0.05 + 0.02,
+                x0=1.02, y0=1.1 - i * 0.1 - 0.03,
+                x1=1.04, y1=1.1 - i * 0.1 + 0.03,
                 fillcolor=colors[ty],
                 line={"width": 1}
             )
-    
+
             # Annotation for the node name, aligned to the box boundary
             fig.add_annotation(
-                x=0.06,
-                y=0.08625 + i * 0.05,
+                x=0.90,
+                y=1.2 - i * 0.1,
                 xref="paper",
                 yref="paper",
                 text=ty,
                 showarrow=False,
                 xanchor="left",
-                font=dict(size=10),
+                font={"size" : 15},
             )
-
-        # Draw a box around the legend
-        fig.add_shape(
-            type="rect",
-            xref="paper", yref="paper",
-            x0=0, y0=0.05,
-            x1=0.2, y1=0.1 + len(nodes) * 0.05,
-            line={"width": 1},
-            fillcolor="rgba(255, 255, 255, 0)",  # transparent white background
-        )
 
         # Update layout to make space for the legend
         fig.update_layout(
@@ -125,7 +122,7 @@ class LupeGraph:
 
         hues = np.linspace(0, 360, n, endpoint=False)
 
-        for _, hue in enumerate(hues):
+        for i, hue in enumerate(hues):
             if i % 2 == 0:
                 # Higher saturation and lightness
                 hsl_color = (hue, 80, 70)
@@ -159,4 +156,27 @@ class LupeGraph:
         Returns:
             The dictionary of node types
         """
-        return {}
+        return {
+            node: lupe_type_to_string(self.node_list[node].type)
+            for node in self.node_list
+        }
+
+if __name__ == "__main__":
+    import onnx
+    from onnx import checker
+
+    # Load the ONNX model
+    onnx_model = onnx.load("tmp/lenet/lenet.onnx")
+
+    # Convert ONNX model into a dictionary
+    model_dict = {
+        "graph": onnx_model.graph,
+        "model_metadata": onnx_model.metadata_props,
+        "model_ir_version": onnx_model.ir_version,
+        "model_producer_name": onnx_model.producer_name
+    }
+
+    checker.check_model(onnx_model)
+
+    graph = LupeGraph("LeNet", onnx_model)
+    graph.plot()
