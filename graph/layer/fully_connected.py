@@ -1,6 +1,7 @@
 """Fully connected layer"""
 
-from layer import LupeLayer, get_onnx_attr
+from .layer import LupeLayer
+from .layer_utils import get_onnx_attr
 
 class FullyConnected(LupeLayer):
     """FullyConnected layer
@@ -21,7 +22,19 @@ class FullyConnected(LupeLayer):
         self.beta = beta.f if beta else None
         # transA
         trans_a = get_onnx_attr(node, "transA")
-        self.trans_a = trans_a.i if trans_a else None
+        self.trans_a = trans_a is None or trans_a.i == 0
         # transB
         trans_b = get_onnx_attr(node, "transB")
-        self.trans_b = trans_b.i if trans_b else None
+        self.trans_b = trans_b is None or trans_b.i == 0
+
+    def __str__(self):
+        s = f"{self.name}: Convolution2D("
+        if self.alpha:
+            s += f"alpha={self.alpha}, "
+        if self.beta:
+            s += f"beta={self.beta}, "
+        s += f"transA={self.trans_a}, "
+        s += f"transB={self.trans_b}"
+        s += ")"
+
+        return s

@@ -2,4 +2,4 @@
 
 residual shortcut / recurrent
 
-# Check possible models
+# Dilations

@@ -1,15 +1,18 @@
 """Input and output layer"""
 
-from layer import LupeLayer
+from .layer import LupeLayer
 
 class InOut(LupeLayer):
     """Input and output layer"""
 
-    def __init__(self, name, dims):
-        """Initialize the input or output layer.
+    def _register(self, node):
+        """Register the layer
         
-        Instead of using the ONNX node, the input and output layers are just
-        lists to represent the input and output shapes.
+        Args:
+            node: ONNX node
         """
-        super().__init__(name, None)
-        self.dims = dims
+        shape = [dim.dim_value for dim in node.type.tensor_type.shape.dim]
+        self.shape = tuple(shape)
+
+    def __str__(self):
+        return f"{self.name}: InOut(shape={self.shape})"

@@ -1,6 +1,13 @@
 """Supported layer types"""
 
 from enum import Enum, auto
+from .convolution import Convolution2D
+from .in_out import InOut
+from .pooling import AvgPooling, MaxPooling
+from .activation import Relu, Tanh
+from .transition import Flatten
+from .fully_connected import FullyConnected
+from .weights import Bias, Weight
 
 class LupeType(Enum):
     """Supported layer types"""
@@ -87,3 +94,30 @@ def lupe_type_to_string(lupe_type):
         raise ValueError(f"Unsupported LupeType: {lupe_type}")
 
     return string
+
+def get_layer_constructor(lupe_type):
+    """Get the layer constructor"""
+    if lupe_type == LupeType.CONV2D:
+        layer = Convolution2D
+    elif lupe_type in (LupeType.INPUT, LupeType.OUTPUT):
+        layer = InOut
+    elif lupe_type == LupeType.AVG_POOL:
+        layer = AvgPooling
+    elif lupe_type == LupeType.MAX_POOL:
+        layer = MaxPooling
+    elif lupe_type == LupeType.RELU:
+        layer = Relu
+    elif lupe_type == LupeType.TANH:
+        layer = Tanh
+    elif lupe_type == LupeType.FLATTEN:
+        layer = Flatten
+    elif lupe_type == LupeType.FC:
+        layer = FullyConnected
+    elif lupe_type == LupeType.BIAS:
+        layer = Bias
+    elif lupe_type == LupeType.WEIGHT:
+        layer = Weight
+    else:
+        raise ValueError(f"Unsupported Lupe type: {lupe_type}")
+
+    return layer

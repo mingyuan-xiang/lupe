@@ -1,11 +1,14 @@
+#!/usr/bin/env python3
+
 """The front end interface of Lupe for enabling DNN on MSP430"""
 
-# TODO: lupe can:
-# + generate the model for msp430 from onnx/pytorch/tf
-# + compiler & flash the model
-# + open and shell for serial port
-
 import argparse
+import os
+
+import onnx
+from onnx import checker
+
+from graph.graph import LupeGraph
 
 def lupe_args():
     """Get the command line arguments for lupe
@@ -14,13 +17,43 @@ def lupe_args():
         Return an argparse instance
     """
     par = argparse.ArgumentParser()
-    par.add_argument(
-        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
+    par.add_argument("mode", type=str, choices=["code-gen", "flash", "print"],
+        help="""Mode of operation:
+        code-gen: Generate the C code for the model
+        flash: Compile and flash the model to the MSP430."""
     )
-    par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     par.add_argument(
-        '--model-name', type=str, default='BestModel', help='model name'
+        "--model-name", type=str, default="LeNet", help="Model name"
     )
-    par.
+    par.add_argument(
+        "--model-path", type=str, default="./models/onnx/LeNet.onnx",
+        help="Model path of the onnx representation"
+    )
 
     return par.parse_args()
+
+def main():
+    """The main function"""
+    args = lupe_args()
+
+    if args.mode == "print":
+        # Load onnx model
+        if os.path.isfile(args.model_path):
+            model = onnx.load(args.model_path)
+            checker.check_model(model)
+
+            graph = LupeGraph(args.model_name, model)
+            graph.print()
+    elif args.mode == "code-gen":
+        # Load onnx model
+        if os.path.isfile(args.model_path):
+            model = onnx.load(args.model_path)
+            checker.check_model(model)
+
+            graph = LupeGraph(args.model_name, model)
+    elif args.mode == "flash":
+        print("Flash")
+        # TODO: configure environment here
+
+if __name__ == "__main__":
+    main()
