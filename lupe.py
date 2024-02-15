@@ -4,6 +4,7 @@
 
 import argparse
 import os
+import pathlib
 
 import onnx
 from onnx import checker
@@ -29,6 +30,10 @@ def lupe_args():
         "--model-path", type=str, default="./models/onnx/LeNet.onnx",
         help="Model path of the onnx representation"
     )
+    par.add_argument(
+        "--config", type=str, default="./config/no_opt.json",
+        help="Optimization configuration file for the model"
+    )
 
     return par.parse_args()
 
@@ -42,7 +47,7 @@ def main():
             model = onnx.load(args.model_path)
             checker.check_model(model)
 
-            graph = LupeGraph(args.model_name, model)
+            graph = LupeGraph(args.model_name, model, "")
             graph.print()
     elif args.mode == "code-gen":
         # Load onnx model
@@ -50,7 +55,9 @@ def main():
             model = onnx.load(args.model_path)
             checker.check_model(model)
 
-            graph = LupeGraph(args.model_name, model)
+            parent = pathlib.Path(__file__).parent.resolve()
+            out_path = os.path.join(parent, "apps", args.model_name)
+            graph = LupeGraph(args.model_name, model, out_path)
     elif args.mode == "flash":
         print("Flash")
         # TODO: configure environment here

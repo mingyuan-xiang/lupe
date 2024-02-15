@@ -9,7 +9,7 @@ from .layer.in_out import InOut
 
 class LupeGraph:
     """The graph for the DNN model"""
-    def __init__(self, name, model):
+    def __init__(self, name, model, out_path):
         """Initialize the graph for the DNN model
 
         The graph is just a dictionary of nodes and their connections.
@@ -18,6 +18,8 @@ class LupeGraph:
             model: The ONNX model
         """
         self.name = name
+        self.out_path = out_path
+        print(self.out_path)
         # For each key (node), the value is a tuple where the first element is
         # the children and the second element is the parent
         self.graph = {}
@@ -110,6 +112,10 @@ class LupeGraph:
             self.node_list[node].print()
             print()
 
+    def load_opt_config(self, config):
+        """Load the optimization configuration"""
+        pass
+
 if __name__ == "__main__":
     import onnx
     from onnx import checker
@@ -127,5 +133,5 @@ if __name__ == "__main__":
 
     checker.check_model(onnx_model)
 
-    graph = LupeGraph("LeNet", onnx_model)
+    graph = LupeGraph("LeNet", onnx_model, "")
     graph.print()
