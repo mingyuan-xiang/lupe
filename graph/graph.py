@@ -4,6 +4,8 @@ The plot is kind of broken, but I'll probably fix it in the future.
 
 """
 
+import json
+
 from .layer.layer_type import LupeType, get_lupe_type, get_layer_constructor
 from .layer.in_out import InOut
 
@@ -19,7 +21,6 @@ class LupeGraph:
         """
         self.name = name
         self.out_path = out_path
-        print(self.out_path)
         # For each key (node), the value is a tuple where the first element is
         # the children and the second element is the parent
         self.graph = {}
@@ -114,7 +115,9 @@ class LupeGraph:
 
     def load_opt_config(self, config):
         """Load the optimization configuration"""
-        pass
+        with open(config, "rb") as file:
+            opt_config = json.load(file)
+            print(opt_config)
 
 if __name__ == "__main__":
     import onnx

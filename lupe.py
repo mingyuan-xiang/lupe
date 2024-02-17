@@ -31,7 +31,7 @@ def lupe_args():
         help="Model path of the onnx representation"
     )
     par.add_argument(
-        "--config", type=str, default="./config/no_opt.json",
+        "--config", type=str, default="./configs/no_opt.json",
         help="Optimization configuration file for the model"
     )
 
@@ -58,6 +58,10 @@ def main():
             parent = pathlib.Path(__file__).parent.resolve()
             out_path = os.path.join(parent, "apps", args.model_name)
             graph = LupeGraph(args.model_name, model, out_path)
+
+            # Read the optimization configuration
+            if os.path.isfile(args.config):
+                graph.load_opt_config(args.config)
     elif args.mode == "flash":
         print("Flash")
         # TODO: configure environment here
