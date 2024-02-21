@@ -115,7 +115,7 @@ class LupeGraph:
 
     def load_opt_config(self, config):
         """Load the optimization configuration"""
-        with open(config, "rb") as file:
+        with open(config, "r", encoding="utf-8") as file:
             opt_config = json.load(file)
             print(opt_config)
 

@@ -171,3 +171,6 @@ tools/tools
 
 # Temporary working directory
 tmp/
+
+# application folder
+apps/

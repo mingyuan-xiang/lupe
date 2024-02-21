@@ -19,10 +19,6 @@ class LupeLayer(ABC):
     def _register(self, node):
         """Register the layer"""
 
-    # @abstractmethod
-    # def get_code(self):
-    #     """Get the code for the layer"""
-
     def print(self):
         """Print the layer"""
         print(str(self))

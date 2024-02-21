@@ -1,0 +1,67 @@
+#include <libmspdriver/driverlib.h>
+{%- if add_timer %}
+#include <libmsptimer/timekeeper.h>
+{%- endif %}
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <msp430.h>
+
+#include <include/lea.h>
+#include <include/model.h>
+#include <include/img_mat.h>
+
+void init() {
+  watchdog_disable();
+  gpio_init_all_ports();
+  gpio_unlock();
+  gpio_clear_interrupts();
+  clock_init();
+  uartio_open(0);
+  gpio_dir_out(1, 0);
+  gpio_dir_out(1, 1);
+  gpio_clear(1, 0);
+  gpio_set(1, 1);
+{#- Initialize DMA #}
+  init_lea_ops();
+{%- if add_timer %}
+  timers_init();
+{%- endif %}
+}
+
+void exit() {
+  msp_end_printing();
+{%- if add_timer %}
+  timers_stop();
+{%- endif %}
+}
+
+int main() {
+  init();
+
+  msp_send_printf("Test {{ model_name }}\n");
+{% if add_timer %}
+  uint32_t total_time = 0;
+  uint32_t cnt = 0;
+{%- endif %}
+  uint16_t l;
+
+  for (uint16_t i = 0; i < {{ dataset_size }}; ++i) {
+    msp_recv_mat(&img_meta);
+{% if add_timer %}
+    start_timer();
+{%- endif %}
+    l = model(&img_meta);
+{% if add_timer %}
+    total_time += stop_timer();
+{%- endif %}
+{# Send the classification results through UART #}
+    msp_send_printf("%u", l);
+{% if add_timer %}
+    if (cnt == {{ print_freq }}) {
+      msp_send_printf("total time: %n", total_time);
+      cnt = 0;
+    }
+{%- endif %}
+  }
+
+  exit();
+}
