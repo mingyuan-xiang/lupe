@@ -1,7 +1,9 @@
 """Convolution layer"""
 
+import sys
+
 from .layer import LupeLayer
-from .layer_utils import get_onnx_attr
+from .layer_utils import get_onnx_attr, name_conversion
 
 # TODO: Deal with group for separable convolution
 
@@ -32,3 +34,11 @@ class Convolution2D(LupeLayer):
         s += ")"
 
         return s
+
+    def _get_name(self, node):
+        """Get the name of the layer"""
+        for i in node.input:
+            if "weight" in i:
+                return name_conversion(i)[:-len("_weight")]
+
+        sys.exit(f"The convolution layer {node.name} doesn't have weights")

@@ -18,11 +18,12 @@ def lupe_args():
     Returns:
         Return an argparse instance
     """
-    par = argparse.ArgumentParser()
+    par = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     par.add_argument("mode", type=str, choices=["code-gen", "flash", "print"],
         help="""Mode of operation:
-        code-gen: Generate the C code for the model
-        flash: Compile and flash the model to the MSP430."""
+        code-gen: Generate the C code for the model.
+        flash: Compile and flash the model to the MSP430.
+        print: Print the the model."""
     )
     par.add_argument(
         "--model-name", type=str, default="LeNet", help="Model name"
@@ -76,6 +77,9 @@ def main():
             # Create the directory if it does not exist
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
+            # Create the include directory
+            if not os.path.exists(os.path.join(out_path, "include")):
+                os.makedirs(os.path.join(out_path, "include"))
 
             graph = LupeGraph(args.model_name, model, out_path)
 
@@ -83,7 +87,9 @@ def main():
             if os.path.isfile(args.config):
                 graph.load_opt_config(args.config)
 
-            generator = msp430gen()(out_path, args.config, add_timer=args.timer)
+            generator = msp430gen()(
+                out_path, args.config, graph, add_timer=args.timer
+            )
             generator.gen(args.model_name, args.dataset_size, args.print_freq)
     elif args.mode == "flash":
         print("Flash")

@@ -1,6 +1,7 @@
 """Input and output layer"""
 
 from .layer import LupeLayer
+from .layer_utils import name_conversion
 
 class InOut(LupeLayer):
     """Input and output layer"""
@@ -16,3 +17,7 @@ class InOut(LupeLayer):
 
     def __str__(self):
         return f"{self.name}: InOut(shape={self.shape})"
+
+    def _get_name(self, node):
+        """Get the name of the layer"""
+        return name_conversion(node.name)

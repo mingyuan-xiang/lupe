@@ -1,7 +1,7 @@
 """Pooling layer"""
 
 from .layer import LupeLayer
-from .layer_utils import get_onnx_attr
+from .layer_utils import get_onnx_attr, name_conversion
 
 class Pooling(LupeLayer):
     """Pooling layer"""
@@ -25,6 +25,12 @@ class Pooling(LupeLayer):
         s += ")"
 
         return s
+
+    def _get_name(self, node):
+        """Get the name of the layer"""
+        return name_conversion(node.name)
+
+
 
 class AvgPooling(Pooling):
     """Average pooling layer"""

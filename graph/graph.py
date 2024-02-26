@@ -38,14 +38,12 @@ class LupeGraph:
         for w in weights:
             # weights
             if "weight" in w.name:
-                self.node_list[w.name] = get_layer_constructor(LupeType.WEIGHT)(
-                    w.name, w
-                )
+                wei = get_layer_constructor(LupeType.WEIGHT)(w)
+                self.node_list[wei.name] = wei
             # biases
             elif "bias" in w.name:
-                self.node_list[w.name] = get_layer_constructor(LupeType.BIAS)(
-                    w.name, w
-                )
+                bias = get_layer_constructor(LupeType.BIAS)(w)
+                self.node_list[bias.name] = bias
 
     def _register(self, model):
         """Use BFS to register all the nodes in the graph
@@ -57,12 +55,14 @@ class LupeGraph:
 
         # Add the input node
         for node in model.graph.input:
-            self.node_list[node.name] = InOut(node.name, node)
-            self.graph[node.name] = {"parents" : [], "children" : []}
+            i = InOut(node)
+            self.node_list[i.name] = i
+            self.graph[i.name] = {"parents" : [], "children" : []}
 
         # Add the output node
         for node in model.graph.output:
-            self.node_list[node.name] = InOut(node.name, node)
+            o = InOut(node)
+            self.node_list[o.name] = o
 
         for node in model.graph.node:
             self._add_layer(node)
@@ -81,27 +81,27 @@ class LupeGraph:
 
         lupe_type = get_lupe_type(node.op_type)
 
-        self.graph[node.name] = {"parents" : [], "children" : []}
-        self.node_list[node.name] = get_layer_constructor(lupe_type)(
-            node.name, node
-        )
+        layer = get_layer_constructor(lupe_type)(node)
+        name = layer.name
+        self.node_list[name] = layer
+        self.graph[name] = {"parents" : [], "children" : []}
 
         # Assign this node to be the child of the input nodes
         for input_node in node.input:
             if input_node in self.graph:
-                self.graph[input_node]["children"].append(node.name)
+                self.graph[input_node]["children"].append(name)
 
         # Assign parents to this node
-        self.graph[node.name]["parents"] += list(node.input)
+        self.graph[name]["parents"] += list(node.input)
 
         # Assign model outputs
         for output_node in node.output:
             if output_node in self.node_list:
                 self.graph[output_node] = {
-                    "parents" : [node.name],
+                    "parents" : [name],
                     "children" : []
                 }
-                self.graph[node.name]["children"].append(output_node)
+                self.graph[name]["children"].append(output_node)
 
     def print(self):
         """Print the graph"""

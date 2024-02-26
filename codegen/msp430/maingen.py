@@ -14,7 +14,7 @@ def maingen(
         code_dir, model_name, dataset_size, print_freq=100, add_timer=True
     ):
     """Generate the main file using jinja template"""
-    template_path = os.path.join(JINJA_DIR, "main.jinja")
+    template_path = os.path.join(JINJA_DIR, "main.c.jinja")
 
     with open(template_path, "r", encoding="utf-8") as file:
         template = file.read()
