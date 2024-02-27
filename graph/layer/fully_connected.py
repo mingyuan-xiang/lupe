@@ -48,3 +48,7 @@ class FullyConnected(LupeLayer):
                 return name_conversion(i)[:-len("_weight")]
 
         sys.exit(f"The convolution layer {node.name} doesn't have weights")
+
+    def has_weights(self):
+        """If the layer has weights"""
+        return True

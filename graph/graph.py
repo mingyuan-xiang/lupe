@@ -38,11 +38,11 @@ class LupeGraph:
         for w in weights:
             # weights
             if "weight" in w.name:
-                wei = get_layer_constructor(LupeType.WEIGHT)(w)
+                wei = get_layer_constructor(LupeType.WEIGHT)(w, None)
                 self.node_list[wei.name] = wei
             # biases
             elif "bias" in w.name:
-                bias = get_layer_constructor(LupeType.BIAS)(w)
+                bias = get_layer_constructor(LupeType.BIAS)(w, None)
                 self.node_list[bias.name] = bias
 
     def _register(self, model):
@@ -55,13 +55,13 @@ class LupeGraph:
 
         # Add the input node
         for node in model.graph.input:
-            i = InOut(node)
+            i = InOut(node, None)
             self.node_list[i.name] = i
             self.graph[i.name] = {"parents" : [], "children" : []}
 
         # Add the output node
         for node in model.graph.output:
-            o = InOut(node)
+            o = InOut(node, None)
             self.node_list[o.name] = o
 
         for node in model.graph.node:
@@ -81,7 +81,7 @@ class LupeGraph:
 
         lupe_type = get_lupe_type(node.op_type)
 
-        layer = get_layer_constructor(lupe_type)(node)
+        layer = get_layer_constructor(lupe_type)(node, self.node_list)
         name = layer.name
         self.node_list[name] = layer
         self.graph[name] = {"parents" : [], "children" : []}

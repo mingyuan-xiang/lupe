@@ -35,12 +35,13 @@ def modelgen(code_dir, model_name, graph):
 
     # Skip the first and last nodes (for input and output nodes)
     nodes = list(graph.graph.keys())[1:-1]
+    nodes_dic = [{"name" : n, "has_weights" : graph.node_list[n].has_weights()} for n in nodes]
 
     with open(template_path, "r", encoding="utf-8") as file:
         template = file.read()
         params = {
             "model_name": model_name,
-            "layer_list": nodes,
+            "layer_list": nodes_dic,
             "last_layer": nodes[-1],
         }
 

@@ -48,6 +48,10 @@ def lupe_args():
     par.add_argument(
         "--print-freq", type=int, default=100, help="Print frequency"
     )
+    par.add_argument(
+        "--loc", type=str, default="hi", choices=["hi", "lo"],
+        help="Sections of the weights"
+    )
 
     return par.parse_args()
 

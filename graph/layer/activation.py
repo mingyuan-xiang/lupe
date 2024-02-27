@@ -10,6 +10,10 @@ class Activation(LupeLayer):
         """Get the name of the layer"""
         return name_conversion(node.name)
 
+    def has_weights(self):
+        """If the layer has weights"""
+        return False
+
 class Relu(Activation):
     """Relu layer"""
 

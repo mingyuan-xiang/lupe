@@ -5,8 +5,13 @@
 #include <msp430.h>
 
 {% for layer in layer_list -%}
-#include <include/{{ layer }}_compute.h>
-#include <include/{{ layer }}_param.h>
+#include <include/{{ layer.name }}_compute.h>
+{% endfor -%}
+
+{% for layer in layer_list -%}
+{% if layer.has_weights %}
+#include <params/include/{{ layer.name }}_param.h>
+{%- endif -%}
 {% endfor %}
 
 uint16_t {{ model_name }}(mat_t* image) {
@@ -15,12 +20,15 @@ uint16_t {{ model_name }}(mat_t* image) {
   memcpy(in_meta.data, image->data, MAT_GET_SIZE(image)*sizeof(uint16_t));
   {# layers #}
   {%- for layer in layer_list %}
-  /* {{ layer }} */
-  memset({{ layer }}_out_meta.data, 0, MAT_GET_SIZE(&{{ layer }}_out_meta)*sizeof(uint16_t));
-  {{ layer }}(&{{ layer }}_in_meta, &{{ layer }}_weight_meta, &{{ layer }}_bias_meta, &{{ layer }}_out_meta);
+  /* {{ layer.name }} */
+  memset({{ layer.name }}_out_meta.data, 0, MAT_GET_SIZE(&{{ layer.name }}_out_meta)*sizeof(uint16_t));
+  {%- if layer.has_weights %}
+  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.name }}_weight_meta, &{{ layer.name }}_bias_meta);
+  {%- else %}
+  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
+  {%- endif -%}
   {% endfor %}
-
-  {#- classification #}
+  {# classification #}
   /* Get the max score */
   uint16_t max = 0;
   for (uint16_t i = 0; i < {{ last_layer }}_out_meta.dims[1]; ++i) {

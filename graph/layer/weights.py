@@ -16,6 +16,9 @@ class tensor(LupeLayer):
         """For weights and biases, the name is the name of the tensor"""
         return name_conversion(node.name)
 
+    def has_weights(self):
+        """If the layer has weights"""
+        return False
 
 class Weight(tensor):
     """Weight"""
