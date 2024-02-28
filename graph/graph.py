@@ -5,9 +5,11 @@ The plot is kind of broken, but I'll probably fix it in the future.
 """
 
 import json
+from onnx import shape_inference
 
 from .layer.layer_type import LupeType, get_lupe_type, get_layer_constructor
 from .layer.in_out import InOut
+from .layer.layer_utils import name_conversion
 
 class LupeGraph:
     """The graph for the DNN model"""
@@ -26,6 +28,9 @@ class LupeGraph:
         self.graph = {}
         self.node_list = {}
 
+        # Infer the shapes of the model
+        model = shape_inference.infer_shapes(model)
+
         self._register_weights(model)
 
         # Get the node dictionary from the ONNX model
@@ -38,11 +43,11 @@ class LupeGraph:
         for w in weights:
             # weights
             if "weight" in w.name:
-                wei = get_layer_constructor(LupeType.WEIGHT)(w, None)
+                wei = get_layer_constructor(LupeType.WEIGHT)(w, None, None)
                 self.node_list[wei.name] = wei
             # biases
             elif "bias" in w.name:
-                bias = get_layer_constructor(LupeType.BIAS)(w, None)
+                bias = get_layer_constructor(LupeType.BIAS)(w, None, None)
                 self.node_list[bias.name] = bias
 
     def _register(self, model):
@@ -53,21 +58,26 @@ class LupeGraph:
             dims: The input size
         """
 
+        # Assume there will only be one input and one output
+        if len(model.graph.input) != 1 or len(model.graph.output) != 1:
+            raise ValueError("There should only be one input or output")
         # Add the input node
-        for node in model.graph.input:
-            i = InOut(node, None)
-            self.node_list[i.name] = i
-            self.graph[i.name] = {"parents" : [], "children" : []}
+        node = model.graph.input[0]
+        i = InOut(node, None, None, io="input")
+        self.node_list[i.name] = i
+        self.graph[i.name] = {"parents" : [], "children" : []}
+        self.input_name = i.name
 
         # Add the output node
-        for node in model.graph.output:
-            o = InOut(node, None)
-            self.node_list[o.name] = o
+        node = model.graph.output[0]
+        o = InOut(node, None, None, io="output")
+        self.node_list[o.name] = o
+        self.output_name = o.name
 
         for node in model.graph.node:
-            self._add_layer(node)
+            self._add_layer(node, model)
 
-    def _add_layer(self, node):
+    def _add_layer(self, node, model):
         """Get the layer from the node
 
         Args:
@@ -81,7 +91,7 @@ class LupeGraph:
 
         lupe_type = get_lupe_type(node.op_type)
 
-        layer = get_layer_constructor(lupe_type)(node, self.node_list)
+        layer = get_layer_constructor(lupe_type)(node, model, self.node_list)
         name = layer.name
         self.node_list[name] = layer
         self.graph[name] = {"parents" : [], "children" : []}
@@ -92,7 +102,7 @@ class LupeGraph:
                 self.graph[input_node]["children"].append(name)
 
         # Assign parents to this node
-        self.graph[name]["parents"] += list(node.input)
+        self.graph[name]["parents"] += [name_conversion(i) for i in node.input]
 
         # Assign model outputs
         for output_node in node.output:

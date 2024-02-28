@@ -1,7 +1,5 @@
 """Convolution layer"""
 
-import sys
-
 from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion
 
@@ -41,7 +39,9 @@ class Convolution2D(LupeLayer):
             if "weight" in i:
                 return name_conversion(i)[:-len("_weight")]
 
-        sys.exit(f"The convolution layer {node.name} doesn't have weights")
+        raise NameError(
+            f"The convolution layer {node.name} doesn't have weights"
+        )
 
     def has_weights(self):
         """If the layer has weights"""

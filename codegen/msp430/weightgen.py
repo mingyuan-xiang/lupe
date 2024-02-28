@@ -34,8 +34,8 @@ def weightgen(code_dir, graph, loc="hi"):
             c_code = gen_c(param_file_name)
             c_code += gen_c_data_struct(weight, None)
             c_code += gen_c_data_struct(bias, None)
-            c_code += gen_c_data(weight, True, None)
-            c_code += gen_c_data(bias, True, None)
+            c_code += gen_c_data(weight, True)
+            c_code += gen_c_data(bias, True)
             save(
                 c_code,
                 os.path.join(code_dir, param_file_name + ".c")

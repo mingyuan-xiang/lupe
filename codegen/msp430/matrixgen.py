@@ -97,7 +97,7 @@ def gen_header_includes(name):
     """Generate the header file for the includes."""
     h_code = ""
     h_code += "#ifndef " + name.upper() + "_H\n"
-    h_code += "#define " + name.upper() + "_H\n"
+    h_code += "#define " + name.upper() + "_H\n\n"
     # add includes
     for header in _header_list:
         h_code += "#include <" + header + ">\n"
@@ -128,21 +128,15 @@ def gen_c_data_struct(mat, ptr=None):
 
     return c_code
 
-def gen_c_data(mat, flip, ptr=None):
+def gen_c_data(mat, flip):
     """Generate the c file for the matrix data.
     
     Args:
         mat: The matrix object
         flip: Whether to flip the matrix
-        ptr: The pointer to the matrix. If this is not None,
-            reuse the existing data given by the ptr. Otherwise, use the matrix
-            name as the pointer.
 
     Returns:
         The C code for the matrix data
     """
-    c_code = ""
-    if ptr is None:
-        c_code += mat.gen_mat_var_decl(flip)
 
-    return c_code
+    return mat.gen_mat_var_decl(flip)

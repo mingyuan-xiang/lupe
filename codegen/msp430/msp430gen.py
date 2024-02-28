@@ -4,6 +4,7 @@ import os
 from .maingen import maingen
 from .modelgen import modelgen
 from .weightgen import weightgen
+from .arrgen import arrgen
 
 class MSP430Gen:
     """The codegen class"""
@@ -33,3 +34,9 @@ class MSP430Gen:
             os.makedirs(params_dir)
             os.makedirs(os.path.join(params_dir, "include"))
         weightgen(params_dir, self.graph, loc=loc)
+
+        buffer_dir = os.path.join(self.code_dir, "buffer")
+        if not os.path.exists(buffer_dir):
+            os.makedirs(buffer_dir)
+            os.makedirs(os.path.join(buffer_dir, "include"))
+        arrgen(buffer_dir, self.graph, loc=loc)
