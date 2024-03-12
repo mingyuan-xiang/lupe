@@ -5,6 +5,7 @@
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <msp430.h>
 
+#include <buffer/include/input.h>
 #include <include/model.h>
 
 void init() {
@@ -18,8 +19,6 @@ void init() {
   gpio_dir_out(1, 1);
   gpio_clear(1, 0);
   gpio_set(1, 1);
-{#- Initialize DMA #}
-  init_lea_ops();
 {%- if add_timer %}
   timers_init();
 {%- endif %}
@@ -43,11 +42,11 @@ int main() {
   uint16_t l;
 
   for (uint16_t i = 0; i < {{ dataset_size }}; ++i) {
-    msp_recv_mat(&img_meta);
+    msp_recv_mat(&input_meta);
 {% if add_timer %}
     start_timer();
 {%- endif %}
-    l = model(&img_meta);
+    l = model(&input_meta);
 {% if add_timer %}
     total_time += stop_timer();
 {%- endif %}

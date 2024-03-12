@@ -4,13 +4,15 @@
 #include <libmspdriver/driverlib.h>
 #include <msp430.h>
 
+#include <buffer/include/buffer.h>
+
 {% for layer in layer_list -%}
-#include <include/{{ layer.name }}_compute.h>
+#include <layers/include/{{ layer.name }}.h>
 {% endfor -%}
 
 {% for layer in layer_list -%}
 {% if layer.has_weights %}
-#include <params/include/{{ layer.name }}_param.h>
+#include <params/include/{{ layer.name }}.h>
 {%- endif -%}
 {% endfor %}
 

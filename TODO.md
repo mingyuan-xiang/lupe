@@ -9,3 +9,13 @@ residual shortcut / recurrent
 # Nice Chart
 
 ![Nice chart](figures/nice_chart.png)
+
+# Paper
+
++ Cross functions opt - only possible from a top down view
+    - API design perspective
+      - OpenBLAS [FOR LOOP for Matrix Multiplication](https://github.com/OpenMathLib/OpenBLAS/issues/1636)
+      - ONNX API design
+
+
+# Intermittent support

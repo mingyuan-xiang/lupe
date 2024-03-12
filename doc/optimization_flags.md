@@ -2,15 +2,37 @@
 - [model-fix](#model-fix)
 
 
+## Important Note
+
+Assume most of the optimization techniques are built on top of each other.
+Some techniques can support out of order invocation, e.g. `lea`.
+
 ## lea
 
 This flag will enable
 [low-energy accelerator (LEA)](https://www.ti.com/lit/an/slaa720/slaa720.pdf)
 to speed up execution.
 
-## model-fix
+## layer-fusion
 
-Fix the kernel size (for input and output) for each layer. This is the first
-step of top-down optimization for Lupe. The reason for this flag is that the
-model is fixed at deployment time, so we can have a series of tailored layers
-instead of generic computation layers, i.e., 2D convolution, etc.
+Fuse layers to avoid control flow overhead
+
+## tailored-api
+
+Instead of having an unified ML layer API for the computation, Lupe will
+generate a tailored layer for the corresponding model.
+
+## prop-constant
+
+Propagate the constants so that the compiler can enable better optimizations.
+This is only possible through a top-down view.
+
+## dma
+
+Optimize the DMA transaction functions.
+
+## lea-opt
+
+## loop-unroll
+
+Unroll for loops

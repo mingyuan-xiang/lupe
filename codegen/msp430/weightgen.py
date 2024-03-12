@@ -18,7 +18,7 @@ def weightgen(code_dir, graph, loc="hi"):
         if node.has_weights():
             weight = Matrix(node.weight.name, node.weight.data, False, loc=loc)
             bias = Matrix(node.bias.name, node.bias.data, False, loc=loc)
-            param_file_name = node.name + "_param"
+            param_file_name = node.name
 
             # Generate header file
             h_code = gen_header_includes(param_file_name)
