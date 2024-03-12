@@ -5,6 +5,7 @@
 import argparse
 import os
 import pathlib
+import json
 
 import onnx
 from onnx import checker
@@ -55,6 +56,12 @@ def lupe_args():
 
     return par.parse_args()
 
+def load_opt_config(config):
+    """Load the optimization configuration"""
+    with open(config, "r", encoding="utf-8") as file:
+        opt_config = json.load(file)
+        return opt_config
+
 def main():
     """The main function"""
     args = lupe_args()
@@ -89,10 +96,12 @@ def main():
 
             # Read the optimization configuration
             if os.path.isfile(args.config):
-                graph.load_opt_config(args.config)
+                config = load_opt_config(args.config)
+
+            print(config)
 
             generator = msp430gen()(
-                out_path, args.config, graph, add_timer=args.timer
+                out_path, config, graph, add_timer=args.timer
             )
             generator.gen(args.model_name, args.dataset_size, args.print_freq)
     elif args.mode == "flash":

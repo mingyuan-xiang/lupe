@@ -5,8 +5,9 @@
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <msp430.h>
 
+#include <include/{{ model_name }}.h>
 #include <buffer/include/input.h>
-#include <include/model.h>
+#include <layers/include/utils.h>
 
 void init() {
   watchdog_disable();
@@ -22,6 +23,7 @@ void init() {
 {%- if add_timer %}
   timers_init();
 {%- endif %}
+  init_DMA();
 }
 
 void exit() {
@@ -46,7 +48,7 @@ int main() {
 {% if add_timer %}
     start_timer();
 {%- endif %}
-    l = model(&input_meta);
+    l = {{ model_name }}(&input_meta);
 {% if add_timer %}
     total_time += stop_timer();
 {%- endif %}

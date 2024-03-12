@@ -29,9 +29,11 @@ This is only possible through a top-down view.
 
 ## dma
 
-Optimize the DMA transaction functions.
+Optimize the DMA transaction functions. (**inter-module optimizations**)
 
 ## lea-opt
+
+Optimize the LEA library APIs. (**inter-module optimizations**)
 
 ## loop-unroll
 

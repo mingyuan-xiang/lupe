@@ -96,8 +96,8 @@ def save(code, loc):
 def gen_header_includes(name):
     """Generate the header file for the includes."""
     h_code = ""
-    h_code += "#ifndef " + name.upper() + "_H\n"
-    h_code += "#define " + name.upper() + "_H\n\n"
+    h_code += "#ifndef " + name.upper() + "_ARRAY_H\n"
+    h_code += "#define " + name.upper() + "_ARRAY_H\n\n"
     # add includes
     for header in _header_list:
         h_code += "#include <" + header + ">\n"
@@ -114,10 +114,10 @@ def gen_header_data(mat):
 
     return h_code
 
-def gen_c(name):
+def gen_c(header_prefix, name):
     """Generate the c file."""
     c_code = ""
-    c_code += "#include <include/" + name + ".h>\n\n"
+    c_code += "#include <" + header_prefix + "/include/" + name + ".h>\n\n"
 
     return c_code
 

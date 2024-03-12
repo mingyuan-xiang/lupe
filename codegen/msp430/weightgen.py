@@ -31,7 +31,7 @@ def weightgen(code_dir, graph, loc="hi"):
             )
 
             # Generate C file
-            c_code = gen_c(param_file_name)
+            c_code = gen_c("params", param_file_name)
             c_code += gen_c_data_struct(weight, None)
             c_code += gen_c_data_struct(bias, None)
             c_code += gen_c_data(weight, True)

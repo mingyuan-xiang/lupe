@@ -5,21 +5,25 @@ from .maingen import maingen
 from .modelgen import modelgen
 from .weightgen import weightgen
 from .arrgen import arrgen
+from .utilsgen import utilsgen
+from .layergen import layergen
 
 class MSP430Gen:
     """The codegen class"""
 
     def __init__(self, code_dir, opt_config, graph, add_timer=True):
         """Initialize the codegen class"""
-        self.config = self._parse_config(opt_config)
+        self.opt_config = self._parse_config(opt_config)
         self.code_dir = code_dir
         self.add_timer = add_timer
         self.graph = graph
 
     def _parse_config(self, opt_config):
-        """Parse the configuration file"""
-        return {}
+        """Parse the configuration file. Set default to False if not present."""
+        if "dma" not in opt_config:
+            opt_config["dma"] = False
 
+        return opt_config
 
     def gen(self, model_name, dataset_size, print_freq=100, loc="hi"):
         """Generate the code"""
@@ -51,3 +55,5 @@ class MSP430Gen:
         if not os.path.exists(layer_dir):
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
+        utilsgen(layer_dir, self.opt_config)
+        layergen(layer_dir, self.graph, self.opt_config)

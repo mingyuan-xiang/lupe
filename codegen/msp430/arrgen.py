@@ -31,7 +31,7 @@ def _inputgen(code_dir, graph, loc="hi"):
     )
 
     # Generate C file
-    c_code = gen_c(input_file_name)
+    c_code = gen_c("buffer", input_file_name)
     c_code += gen_c_data_struct(input_data, None)
     c_code += gen_c_data(input_data, True)
     save(
@@ -53,7 +53,7 @@ def _buffergen(code_dir, graph, loc="hi"):
     out_buffer_name = "out_buffer"
 
     h_code = gen_header_includes(file_name)
-    c_code = gen_c(file_name)
+    c_code = gen_c("buffer", file_name)
 
     buffer_size = list_mul(graph.node_list[graph.input_name].shape)
     in_buffer_ptr = in_buffer_name

@@ -4,7 +4,6 @@ The plot is kind of broken, but I'll probably fix it in the future.
 
 """
 
-import json
 from onnx import shape_inference
 
 from .layer.layer_type import LupeType, get_lupe_type, get_layer_constructor
@@ -122,12 +121,6 @@ class LupeGraph:
         for node in self.graph:
             self.node_list[node].print()
             print()
-
-    def load_opt_config(self, config):
-        """Load the optimization configuration"""
-        with open(config, "r", encoding="utf-8") as file:
-            opt_config = json.load(file)
-            print(opt_config)
 
 if __name__ == "__main__":
     import onnx
