@@ -6,6 +6,20 @@
 #include <libmatAbstract/mat.h>
 #include <stdint.h>
 
+#define LEA_FLT_SIZE {{ lea_flt_size }}
+#define LEA_SRC_SIZE {{ lea_src_size }}
+#define LEA_DST_SIZE {{ lea_dst_size }}
+
+#define LUPE_MIN 0x8000
+
+#define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
+
+extern _q15 lea_flt[LEA_FLT_SIZE];
+extern _q15 lea_src[LEA_SRC_SIZE];
+extern _q15 lea_tmp[LEA_DST_SIZE];
+extern _q15 lea_dst[LEA_DST_SIZE];
+extern _iq31 lea_res[2];
+
 extern DMA_initParam dma_config;
 {% if dma_opt %}
 // DMAEN | DMAREQ
@@ -43,6 +57,6 @@ extern DMA_initParam dma_config;
 }
 {%- endif %}
 
-void init_DMA();
+void init_lupe();
 
 #endif

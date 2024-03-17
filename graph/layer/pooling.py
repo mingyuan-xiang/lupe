@@ -1,7 +1,13 @@
 """Pooling layer"""
 
+from abc import abstractmethod
+import os
+
+from jinja2 import Template
+
 from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion
+from .helpers import get_stride
 
 class Pooling(LupeLayer):
     """Pooling layer"""
@@ -34,9 +40,58 @@ class Pooling(LupeLayer):
         """If the layer has weights"""
         return False
 
+    @abstractmethod
+    def _get_init_val(self):
+        """Get the initial value for the pooling layer"""
+
+    @abstractmethod
+    def _get_update(self, var, data):
+        """Return how to update the pooling layer"""
+
+    def get_code(self, jinja_dir, opt_config):
+        """Get the code for the layer"""
+        path = os.path.join(jinja_dir, "pooling.jinja")
+
+        params = {
+            "layer_name" : self.name,
+            "prop_const" : opt_config["prop_const"],
+            "agg_init" : self._get_init_val(),
+            "update_agg" : self._get_update("agg", "in_data"),
+            "height" : self.kernel_shape[0],
+            "width" : self.kernel_shape[1],
+            "in_ch" : self.input_size[1],
+            "rows" : self.input_size[2],
+            "cols" : self.input_size[3],
+            "in_ch_stride" : get_stride(self.input_size, 1),
+            "out_ch_stride" : get_stride(self.output_size, 1),
+            "in_row_stride" : get_stride(self.input_size, 2),
+            "out_row_stride" : get_stride(self.output_size, 2),
+        }
+
+        with open(path, "r", encoding="utf-8") as file:
+            template = file.read()
+            j_template = Template(template)
+            code_str = j_template.render(params)
+
+            return code_str
+
 class AvgPooling(Pooling):
     """Average pooling layer"""
+    def _get_init_val(self):
+        """Get the initial value for the pooling layer"""
+        return "0"
+
+    def _get_update(self, var, data):
+        """Return how to update the pooling layer"""
+        return f"{var} += ({data} >> 2)"
 
 
 class MaxPooling(Pooling):
     """Max pooling layer"""
+    def _get_init_val(self):
+        """Get the initial value for the pooling layer"""
+        return "LUPE_MIN"
+
+    def _get_update(self, var, data):
+        """Return how to update the polling layer"""
+        return f"{var} = ({var} > {data} ? {var} : {data});"

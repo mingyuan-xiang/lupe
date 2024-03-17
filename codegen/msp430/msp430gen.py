@@ -8,6 +8,8 @@ from .arrgen import arrgen
 from .utilsgen import utilsgen
 from .layergen import layergen
 
+import pprint
+
 class MSP430Gen:
     """The codegen class"""
 
@@ -22,6 +24,14 @@ class MSP430Gen:
         """Parse the configuration file. Set default to False if not present."""
         if "dma" not in opt_config:
             opt_config["dma"] = False
+        if "lea_flt_size" not in opt_config:
+            opt_config["lea_flt_size"] = 100
+        if "lea_src_size" not in opt_config:
+            opt_config["lea_src_size"] = 100
+        if "lea_dst_size" not in opt_config:
+            opt_config["lea_dst_size"] = 100
+        if "prop_const" not in opt_config:
+            opt_config["prop_const"] = False
 
         return opt_config
 
@@ -57,3 +67,7 @@ class MSP430Gen:
             os.makedirs(os.path.join(layer_dir, "include"))
         utilsgen(layer_dir, self.opt_config)
         layergen(layer_dir, self.graph, self.opt_config)
+
+    def print_config(self):
+        """Print the configuration"""
+        pprint.pprint(self.opt_config)

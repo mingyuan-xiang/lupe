@@ -17,12 +17,16 @@ to speed up execution.
 
 Fuse layers to avoid control flow overhead
 
+## loop-unroll
+
+Unroll loops.
+
 ## tailored-api
 
 Instead of having an unified ML layer API for the computation, Lupe will
 generate a tailored layer for the corresponding model.
 
-## prop-constant
+## prop-const
 
 Propagate the constants so that the compiler can enable better optimizations.
 This is only possible through a top-down view.

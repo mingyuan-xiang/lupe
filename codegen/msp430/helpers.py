@@ -38,3 +38,9 @@ def jinja_gen(c_template, h_template, name, code_dir):
 
     cfile_path = os.path.join(code_dir, name + ".c")
     _gen(c_template, cfile_path)
+
+def add_indent(s, n):
+    """Add n spaces to each line of the string"""
+    if s is not None:
+        return "\n".join([" " * n + line for line in s.split("\n")])
+    return None

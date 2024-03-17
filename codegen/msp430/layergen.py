@@ -1,6 +1,9 @@
 """Generates code for each layer of the graph"""
 
-#TODO: opt_init()
+import os
+
+from . import JINJA_DIR, INDENT
+from .helpers import jinja_gen
 
 def layergen(code_dir, graph, opt_config):
     """Generates code for each layer of the graph
@@ -10,5 +13,26 @@ def layergen(code_dir, graph, opt_config):
         graph: The graph object
         opt_config: The optimization configuration
     """
-    # for node in graph.graph:
-    #     code = graph.node_list[node].get_code()
+    for n in graph.graph:
+        node = graph.node_list[n]
+        # header
+        header_template_path = os.path.join(JINJA_DIR, "layer.h.jinja")
+        header_params = {
+            "layer_name": node.name,
+            "has_weights" : node.has_weights(),
+        }
+
+        jinja_dir = os.path.join(JINJA_DIR, "layers")
+        # c file
+        cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
+        cfile_params = {
+            "layer_name": node.name,
+            "code" : node.get_code(jinja_dir, opt_config)
+        }
+
+        jinja_gen(
+            (cfile_template_path, cfile_params),
+            (header_template_path, header_params),
+            node.name,
+            code_dir
+        )

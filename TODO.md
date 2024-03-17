@@ -17,5 +17,6 @@ residual shortcut / recurrent
       - OpenBLAS [FOR LOOP for Matrix Multiplication](https://github.com/OpenMathLib/OpenBLAS/issues/1636)
       - ONNX API design
 
+# deal with padding and stride
 
 # Intermittent support

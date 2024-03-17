@@ -98,11 +98,13 @@ def main():
             if os.path.isfile(args.config):
                 config = load_opt_config(args.config)
 
-            print(config)
-
             generator = msp430gen()(
                 out_path, config, graph, add_timer=args.timer
             )
+
+            # print the optimization configurations
+            generator.print_config()
+
             generator.gen(args.model_name, args.dataset_size, args.print_freq)
     elif args.mode == "flash":
         print("Flash")

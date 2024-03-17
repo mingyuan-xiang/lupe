@@ -6,4 +6,10 @@
 #include <libmatAbstract/mat.h>
 #include <stdint.h>
 
+{% if has_weights -%}
+{{ layer_name }}(mat_t* {{ layer_name }}_in_meta, mat_t* {{ layer_name }}_out_meta, mat_t* {{ layer_name }}_weight_meta, mat_t* {{ layer_name }}_bias_meta);
+{%- else -%}
+{{ layer_name }}(mat_t* {{ layer_name }}_in_meta, mat_t* {{ layer_name }}_out_meta);
+{%- endif %}
+
 #endif

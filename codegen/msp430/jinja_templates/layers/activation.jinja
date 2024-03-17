@@ -1,0 +1,11 @@
+{{ layer_name }}(mat_t* {{ layer_name }}_in_meta, mat_t* {{ layer_name }}_out_meta) {
+  {%- if prop_const %}
+  uint16_t size = {{ in_stride }};
+  {% else %}
+  uint16_t size = input->strides[0];
+  {% endif %}
+  for (uint16_t i = 0; i < size; ++i) {
+    int16_t val = input->data[i];
+    output->data[i] = {{ update_code }};
+  }
+}
