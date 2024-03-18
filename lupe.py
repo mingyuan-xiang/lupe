@@ -8,6 +8,7 @@ import pathlib
 import json
 import shutil
 
+from jinja2 import Template
 import onnx
 from onnx import checker
 
@@ -21,9 +22,11 @@ def lupe_args():
         Return an argparse instance
     """
     par = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
-    par.add_argument("mode", type=str, choices=["code-gen", "flash", "print"],
+    par.add_argument("mode", type=str, choices=[
+        "code-gen", "compile", "flash", "print"],
         help="""Mode of operation:
         code-gen: Generate the C code for the model.
+        compile: Compile the generated code using CMU Abstract maker.
         flash: Compile and flash the model to the MSP430.
         print: Print the the model."""
     )
@@ -117,9 +120,23 @@ def main():
             raise FileNotFoundError(
                 f"The model file {args.model_path} does not exist"
             )
+    elif args.mode == "compile":
+        template_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
+        )
+        with open(template_path, "r", encoding="utf-8") as file:
+            template = file.read()
+            j_template = Template(template)
+            code_str = j_template.render({"model_name" : args.model_name})
+
+        file_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "Makefile"
+        )
+        with open(os.path.join(file_path), "w", encoding="utf-8") as file:
+            file.write(code_str)
+        os.system(f"make apps/{args.model_name}/bld/gcc/all")
     elif args.mode == "flash":
-        print("Flash")
-        # TODO: configure environment here
+        os.system(f"make apps/{args.model_name}/bld/gcc/prog")
 
 if __name__ == "__main__":
     main()

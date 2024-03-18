@@ -1,12 +1,21 @@
-# activate msp430 toolchain
+## Set up the environment
+
+### Conda environment
 
 ```
-. ./env.sh
+$ conda env create -f env.yml
+$ conda activate lupe
 ```
 
-TODO: merge this with conda
+### Ti GCC toolchain
 
-TODO: This need to be changes in the future
+```
+$ . ./scripts/setup/setup.sh <os>
+```
+
+Note:
+    1. `<os>` has to be `mac` or `linux`
+    2. The Ti GCC will be put in `.mspgcc` directory
 
 # compile
 
@@ -28,4 +37,4 @@ make apps/<app name>/bld/gcc/depclean
 
 # Python requirements
 
-Ordered dictionary https://stackoverflow.com/questions/39980323/are-dictionaries-ordered-in-python-3-6)
+TODO

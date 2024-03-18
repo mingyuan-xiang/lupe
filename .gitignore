@@ -171,6 +171,13 @@ tools/tools
 
 # Temporary working directory
 tmp/
+tmp_downloads
 
 # application folder
 apps/
+
+# global Makefiles
+#Makefile
+
+# gcc folder
+.mspgcc/
