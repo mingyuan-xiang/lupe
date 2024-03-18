@@ -17,8 +17,6 @@ class LupeLayer(ABC):
             io: Indicate if the layer is an input or output (None if other)
         """
         self.name = self._get_name(node)
-        self._register(node)
-        self._register_weights(node, node_list)
 
         if io is None:
             self.input_size = self._get_input_size(node, model)
@@ -35,6 +33,9 @@ class LupeLayer(ABC):
             self.output_size = None
         else:
             raise ValueError("Invalid io arguments")
+
+        self._register(node)
+        self._register_weights(node, node_list)
 
     @abstractmethod
     def _get_name(self, node):

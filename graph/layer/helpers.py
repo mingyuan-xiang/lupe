@@ -13,3 +13,5 @@ def get_stride(shape, idx):
     stride = 1
     for i in range(idx + 1, len(shape)):
         stride *= shape[i]
+
+    return stride

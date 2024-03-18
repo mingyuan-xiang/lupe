@@ -1,7 +1,12 @@
 """Convolution layer"""
 
+import os
+
+from jinja2 import Template
+
 from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion
+from .helpers import get_stride
 
 # TODO: Deal with group for separable convolution
 
@@ -14,7 +19,9 @@ class Convolution2D(LupeLayer):
         self.group = group.i if group else None
         # kernel_shape
         kernel_shape = get_onnx_attr(node, "kernel_shape")
-        self.kernel_shape = tuple(kernel_shape.ints) if kernel_shape else None
+        self.kernel_shape = tuple(
+            (self.output_size[1], self.input_size[1], *kernel_shape.ints)
+        ) if kernel_shape else None
         # pads
         pads = get_onnx_attr(node, "pads")
         self.pads = tuple(pads.ints) if pads else None
@@ -46,3 +53,28 @@ class Convolution2D(LupeLayer):
     def has_weights(self):
         """If the layer has weights"""
         return True
+
+    def get_code(self, jinja_dir, opt_config):
+        """Get the code for the layer"""
+        path = os.path.join(jinja_dir, "conv.jinja")
+
+        params = {
+            "layer_name" : self.name,
+            "prop_const" : opt_config["prop_const"],
+            "in_ch" : self.input_size[1],
+            "out_ch" : self.output_size[1],
+            "flt_len" : get_stride(self.kernel_shape, 1),
+            "out_len" : get_stride(self.output_size, 1),
+            "in_len" : get_stride(self.input_size, 1),
+            "flt_size" : get_stride(self.kernel_shape, 2),
+            "in_line_size" : self.input_size[3], 
+            "out_line_size" : self.output_size[3],
+            "out_line_num" : self.output_size[2],
+        }
+
+        with open(path, "r", encoding="utf-8") as file:
+            template = file.read()
+            j_template = Template(template)
+            code_str = j_template.render(params)
+
+            return code_str

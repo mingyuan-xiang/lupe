@@ -3,8 +3,11 @@ void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output
   uint32_t weight_line_offset = (weight->dims[1]) * sizeof(int16_t);
 
   mac_params->length = MAKE_ALIGN_2(line_size);
+  {%- if prop_const %}
+  uint16_t output_size = {{ out_col }};
+  {% else %}
   uint16_t output_size = output->dims[1];
-
+  {%- endif %}
   int16_t res;
 
   /* send input neurons */
@@ -23,13 +26,17 @@ void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output
   }
 }
 
-/*
-* A simple vector-matrix multiplication implementation for NN
-* Assume the destination vector is set to 0's
-*/
-void linear2D(mat_t* input, mat_t* weight, mat_t* output) {
+void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+  {%- if prop_const %}
+  uint16_t input_size = {{ in_col }};
+  {% else %}
   uint16_t input_size = input->dims[1];
-
+  {%- endif %}
+  {%- if prop_const %}
+  uint16_t output_size = {{ out_col }};
+  {% else %}
+  uint16_t output_size = output->dims[1];
+  {%- endif %}
   uint16_t lea_line_size = LEA_SRC_SIZE;
   uint16_t lea_input_line_remain_size = input_size % lea_line_size;
 
@@ -58,5 +65,10 @@ void linear2D(mat_t* input, mat_t* weight, mat_t* output) {
     do_mac(weight, input, input_fram_addr, output, lea_line_size, &mac_params);
 
     input_fram_addr += lea_line_offset;
+  }
+
+  /* update bias */
+  for (uint16_t i = 0; i < output_size; ++i) {
+    output.data[i] = __saturated_add_q15(output.data[i], bias.data[i]);
   }
 }

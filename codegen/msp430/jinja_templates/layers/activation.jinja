@@ -1,4 +1,4 @@
-{{ layer_name }}(mat_t* {{ layer_name }}_in_meta, mat_t* {{ layer_name }}_out_meta) {
+void {{ layer_name }}(mat_t* input, mat_t* output) {
   {%- if prop_const %}
   uint16_t size = {{ in_stride }};
   {% else %}

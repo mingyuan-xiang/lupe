@@ -1,5 +1,9 @@
 """Fully connected layer"""
 
+import os
+
+from jinja2 import Template
+
 from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion
 
@@ -28,7 +32,7 @@ class FullyConnected(LupeLayer):
         self.trans_b = trans_b is None or trans_b.i == 0
 
     def __str__(self):
-        s = f"{self.name}: Convolution2D("
+        s = f"{self.name}: FullyConnected("
         if self.alpha:
             s += f"alpha={self.alpha}, "
         if self.beta:
@@ -52,3 +56,21 @@ class FullyConnected(LupeLayer):
     def has_weights(self):
         """If the layer has weights"""
         return True
+
+    def get_code(self, jinja_dir, opt_config):
+        """Get the code for the layer"""
+        path = os.path.join(jinja_dir, "fc.jinja")
+
+        params = {
+            "layer_name" : self.name,
+            "prop_const" : opt_config["prop_const"],
+            "in_col" : self.input_size[1],
+            "out_col" : self.input_size[1],
+        }
+
+        with open(path, "r", encoding="utf-8") as file:
+            template = file.read()
+            j_template = Template(template)
+            code_str = j_template.render(params)
+
+            return code_str
