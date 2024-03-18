@@ -4,6 +4,8 @@ The plot is kind of broken, but I'll probably fix it in the future.
 
 """
 
+from collections import OrderedDict
+
 from onnx import shape_inference
 
 from .layer.layer_type import LupeType, get_lupe_type, get_layer_constructor
@@ -24,8 +26,8 @@ class LupeGraph:
         self.out_path = out_path
         # For each key (node), the value is a tuple where the first element is
         # the children and the second element is the parent
-        self.graph = {}
-        self.node_list = {}
+        self.graph = OrderedDict()
+        self.node_list = OrderedDict()
 
         # Infer the shapes of the model
         model = shape_inference.infer_shapes(model)
@@ -121,6 +123,10 @@ class LupeGraph:
         for node in self.graph:
             self.node_list[node].print()
             print()
+
+    def get_hidden_layers(self):
+        """Get the names of hidden layers"""
+        return list(self.graph.keys())[1:-1]
 
 if __name__ == "__main__":
     import onnx

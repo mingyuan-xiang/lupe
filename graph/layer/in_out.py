@@ -25,3 +25,7 @@ class InOut(LupeLayer):
     def has_weights(self):
         """If the layer has weights"""
         return False
+
+    def get_code(self, jinja_dir, opt_config):
+        """This will never get called"""
+        raise NotImplementedError

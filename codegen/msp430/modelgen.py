@@ -1,7 +1,7 @@
 """"
-Generates the main file for the MSP430 project.
+Generates the model file for the MSP430 project.
 
-The template for the main file is in the jinja_templates directory.
+The template for the model file is in the jinja_templates directory.
 """
 
 import os
@@ -17,7 +17,7 @@ def modelgen(code_dir, model_name, graph):
 
     # model c file
     cfile_template_path = os.path.join(JINJA_DIR, "model.c.jinja")
-    nodes = list(graph.graph.keys())[1:-1]
+    nodes = graph.get_hidden_layers()
     nodes_dic = [{
         "name" : n,
         "has_weights" : graph.node_list[n].has_weights()

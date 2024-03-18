@@ -6,6 +6,7 @@ import argparse
 import os
 import pathlib
 import json
+import shutil
 
 import onnx
 from onnx import checker
@@ -34,7 +35,7 @@ def lupe_args():
         help="Model path of the onnx representation"
     )
     par.add_argument(
-        "--config", type=str, default="./configs/no_opt.json",
+        "--config", type=str, default="./configs/no_opt_lea.json",
         help="Optimization configuration file for the model"
     )
     par.add_argument(
@@ -52,6 +53,9 @@ def lupe_args():
     par.add_argument(
         "--loc", type=str, default="hi", choices=["hi", "lo"],
         help="Sections of the weights"
+    )
+    par.add_argument(
+        "--clean", type=bool, default=True, help="Clean the output directory"
     )
 
     return par.parse_args()
@@ -86,11 +90,14 @@ def main():
             else:
                 out_path = args.output_path
             # Create the directory if it does not exist
+            if args.clean:
+                shutil.rmtree(out_path)
+
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
-            # Create the include directory
-            if not os.path.exists(os.path.join(out_path, "include")):
-                os.makedirs(os.path.join(out_path, "include"))
+            else:
+                if args.clean:
+                    os.remove(out_path)
 
             graph = LupeGraph(args.model_name, model, out_path)
 
@@ -106,6 +113,10 @@ def main():
             generator.print_config()
 
             generator.gen(args.model_name, args.dataset_size, args.print_freq)
+        else:
+            raise FileNotFoundError(
+                f"The model file {args.model_path} does not exist"
+            )
     elif args.mode == "flash":
         print("Flash")
         # TODO: configure environment here

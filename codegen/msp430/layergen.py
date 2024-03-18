@@ -13,7 +13,8 @@ def layergen(code_dir, graph, opt_config):
         graph: The graph object
         opt_config: The optimization configuration
     """
-    for n in graph.graph:
+    nodes = graph.get_hidden_layers()
+    for n in nodes:
         node = graph.node_list[n]
         # header
         header_template_path = os.path.join(JINJA_DIR, "layer.h.jinja")

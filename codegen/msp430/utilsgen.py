@@ -15,7 +15,7 @@ def utilsgen(code_dir, opt_config):
     # utils header
     header_template_path = os.path.join(JINJA_DIR, "utils.h.jinja")
     header_params = {
-        "dma_opt": opt_config["dma"],
+        "dma_opt": opt_config["dma_opt"],
         "lea_flt_size" : opt_config["lea_flt_size"],
         "lea_src_size" : opt_config["lea_src_size"],
         "lea_dst_size" : opt_config["lea_dst_size"]
