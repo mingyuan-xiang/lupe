@@ -108,7 +108,6 @@ def gen_header_includes(name):
 def gen_header_data(mat):
     """Generate the header file for the matrix data."""
     h_code = ""
-    h_code += "/* Tensor size: " + str(mat.mat.shape) + " */\n"
     h_code += "extern " + mat.loc + " _q15 " + mat.name + "[];\n"
     h_code += "extern " + mat.loc + " mat_t " + mat.name + "_meta;\n"
 

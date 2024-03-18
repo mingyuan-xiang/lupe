@@ -68,15 +68,19 @@ def _buffergen(code_dir, graph, loc="hi"):
         if list_mul(node.output_size) > buffer_size:
             buffer_size = list_mul(node.output_size)
 
-        in_mat = Matrix(node.name, np.zeros(node.input_size), False, loc=loc)
-        out_mat = Matrix(node.name, np.zeros(node.output_size), False, loc=loc)
+        in_mat = Matrix(
+            node.name + "_in", np.zeros(node.input_size), False, loc=loc
+        )
+        out_mat = Matrix(
+            node.name + "_out", np.zeros(node.output_size), False, loc=loc
+        )
 
         # Generate header file
-        h_code += gen_header_data(in_mat) + "\n"
+        h_code += gen_header_data(in_mat)
         h_code += gen_header_data(out_mat) + "\n"
         # Generate C file
         c_code += gen_c_data_struct(in_mat, in_buffer_ptr)
-        c_code += gen_c_data_struct(in_mat, out_buffer_ptr)
+        c_code += gen_c_data_struct(out_mat, out_buffer_ptr)
 
         in_buffer_ptr, out_buffer_ptr = out_buffer_ptr, in_buffer_ptr
 
@@ -96,7 +100,7 @@ def _buffergen(code_dir, graph, loc="hi"):
     c_code += gen_c_data_struct(in_mat, None)
     c_code += gen_c_data_struct(out_mat, None)
     c_code += gen_c_data(in_mat, True)
-    c_code += gen_c_data(in_mat, True)
+    c_code += gen_c_data(out_mat, True)
     save(
         c_code,
         os.path.join(code_dir, file_name + ".c")

@@ -99,8 +99,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         */
         flt_lea_addr += sizeof(uint16_t);
         fill_params.length = LEA_FLT_SIZE;
-        status = msp_fill_q15(&fill_params, lea_flt);
-        msp_checkStatus(status);
+        msp_fill_q15(&fill_params, lea_flt);
 
         for (uint16_t k = 0; k < kernel_size; ++k) {
           DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
@@ -152,7 +151,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
     for (uint16_t j = 0; j < output_len; ++j) {
-      output.data[pos] = __saturated_add_q15(output.data[pos], bias.data[i]);
+      output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);
       ++pos;
     }
   }

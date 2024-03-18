@@ -9,8 +9,10 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def modelgen(code_dir, model_name, graph):
+def modelgen(code_dir, graph):
     """Generate the model using jinja template"""
+    model_name = graph.name
+
     # model header
     header_template_path = os.path.join(JINJA_DIR, "model.h.jinja")
     header_params = {"model_name": model_name}

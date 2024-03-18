@@ -4,8 +4,9 @@
 #include <libmspdriver/driverlib.h>
 #include <msp430.h>
 
-#include <include/model.h>
+#include <include/{{ model_name }}.h>
 #include <buffer/include/buffer.h>
+#include <buffer/include/input.h>
 
 {% for layer in layer_list -%}
 #include <layers/include/{{ layer.name }}.h>
@@ -18,9 +19,8 @@
 {% endfor %}
 
 uint16_t {{ model_name }}(mat_t* image) {
-  uint16_t pos;
   {#- Prepare the input data #}
-  memcpy(in_meta.data, image->data, MAT_GET_SIZE(image)*sizeof(uint16_t));
+  memcpy(input_meta.data, image->data, MAT_GET_SIZE(image)*sizeof(uint16_t));
   {# layers #}
   {%- for layer in layer_list %}
   /* {{ layer.name }} */

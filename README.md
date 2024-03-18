@@ -14,8 +14,13 @@ $ . ./scripts/setup/setup.sh <os>
 ```
 
 Note:
-    1. `<os>` has to be `mac` or `linux`
-    2. The Ti GCC will be put in `.mspgcc` directory
+
+1. `<os>` has to be `mac` or `linux`
+2. The Ti GCC will be put in `.mspgcc` directory
+
+## MSP430 port
+
+Change the port of MSP430 in `Makefile.env` correspondingly.
 
 # compile
 

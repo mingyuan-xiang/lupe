@@ -54,7 +54,7 @@ class MSP430Gen:
         )
 
         # Generate the model file
-        modelgen(self.src_dir, model_name, self.graph)
+        modelgen(self.src_dir, self.graph)
 
         # Generate the weight and bias files
         params_dir = os.path.join(self.src_dir, "params")
@@ -79,7 +79,7 @@ class MSP430Gen:
         layergen(layer_dir, self.graph, self.opt_config)
 
         # Generate the makefile
-        makefilegen(self.code_dir)
+        makefilegen(self.code_dir, self.graph)
 
     def print_config(self):
         """Print the configuration"""

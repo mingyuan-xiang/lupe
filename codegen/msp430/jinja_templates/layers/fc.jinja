@@ -69,6 +69,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* update bias */
   for (uint16_t i = 0; i < output_size; ++i) {
-    output.data[i] = __saturated_add_q15(output.data[i], bias.data[i]);
+    output->data[i] = __saturated_add_q15(output->data[i], bias->data[i]);
   }
 }

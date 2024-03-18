@@ -10,10 +10,17 @@ from jinja2 import Template
 
 from . import JINJA_DIR
 
-def makefilegen(code_dir):
+def makefilegen(code_dir, graph):
     """Generate the Makefile using jinja template"""
     template_path = os.path.join(JINJA_DIR, "makefile.jinja")
-    params = {}
+
+    nodes = graph.get_hidden_layers()
+    nodes_with_weights = [n for n in nodes if graph.node_list[n].has_weights()]
+    params = {
+        "model_name" : graph.name,
+        "layer_list" : nodes,
+        "layers_with_weights" : nodes_with_weights,
+    }
 
     with open(template_path, "r", encoding="utf-8") as file:
         template = file.read()

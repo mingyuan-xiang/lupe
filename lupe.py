@@ -112,28 +112,31 @@ def main():
                 out_path, config, graph, add_timer=args.timer
             )
 
-            # print the optimization configurations
+            # Print the optimization configurations
             generator.print_config()
 
             generator.gen(args.model_name, args.dataset_size, args.print_freq)
+
+            # Generate the outer Makefile for the maker
+            template_path = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
+            )
+            with open(template_path, "r", encoding="utf-8") as file:
+                template = file.read()
+                j_template = Template(template)
+                code_str = j_template.render({"model_name" : args.model_name})
+
+            file_path = os.path.join(
+                os.path.dirname(os.path.realpath(__file__)), "Makefile"
+            )
+            os.remove(file_path)
+            with open(os.path.join(file_path), "w", encoding="utf-8") as file:
+                file.write(code_str)
         else:
             raise FileNotFoundError(
                 f"The model file {args.model_path} does not exist"
             )
     elif args.mode == "compile":
-        template_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
-        )
-        with open(template_path, "r", encoding="utf-8") as file:
-            template = file.read()
-            j_template = Template(template)
-            code_str = j_template.render({"model_name" : args.model_name})
-
-        file_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "Makefile"
-        )
-        with open(os.path.join(file_path), "w", encoding="utf-8") as file:
-            file.write(code_str)
         os.system(f"make apps/{args.model_name}/bld/gcc/all")
     elif args.mode == "flash":
         os.system(f"make apps/{args.model_name}/bld/gcc/prog")
