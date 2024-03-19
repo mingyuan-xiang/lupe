@@ -93,14 +93,11 @@ def main():
             else:
                 out_path = args.output_path
             # Create the directory if it does not exist
-            if args.clean:
+            if args.clean and os.path.exists(out_path):
                 shutil.rmtree(out_path)
 
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
-            else:
-                if args.clean:
-                    os.remove(out_path)
 
             graph = LupeGraph(args.model_name, model, out_path)
 

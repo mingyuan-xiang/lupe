@@ -180,4 +180,4 @@ apps/
 Makefile
 
 # gcc folder
-.mspgcc/
+.toolchains/

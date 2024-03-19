@@ -33,8 +33,7 @@ install_deps() {
 main() {
   verify_input $@
 
-  mkdir -p ".mspgcc/"
-  TOOLCHAIN_DIR=`readlink -f ".mspgcc/"`
+  TOOLCHAIN_DIR=`readlink -f ".toolchains/ti/mspgcc"`
 
   DIR="tmp_downloads"
   mkdir -p $DIR
