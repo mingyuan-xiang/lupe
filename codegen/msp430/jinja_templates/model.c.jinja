@@ -18,9 +18,9 @@
 {%- endif -%}
 {% endfor %}
 
-uint16_t {{ model_name }}(mat_t* image) {
+uint16_t {{ model_name }}(mat_t* model_in) {
   {#- Prepare the input data #}
-  memcpy(input_meta.data, image->data, MAT_GET_SIZE(image)*sizeof(uint16_t));
+  memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
   {# layers #}
   {%- for layer in layer_list %}
   /* {{ layer.name }} */
