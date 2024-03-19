@@ -1,6 +1,6 @@
 EXEC = {{ model_name }}
 
-OBJECTS = main.o {{model_name}}.o buffer/input.o buffer/buffer.o{%for l in layer_list%} layers/{{l}}.o{%endfor%}{%for l in layers_with_weights%} params/{{l}}.o{%endfor%}
+OBJECTS = main.o {{model_name}}.o buffer/input.o buffer/buffer.o layers/utils.o{%for l in layer_list%} layers/{{l}}.o{%endfor%}{%for l in layers_with_weights%} params/{{l}}.o{%endfor%}
 
 DEPS = libdsp:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
 

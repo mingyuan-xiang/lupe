@@ -40,3 +40,16 @@ void init_lupe() {
   }
 }
 {%- endif %}
+
+/* Wake up CPU once DMA is complete */
+void __attribute__((interrupt(DMA_VECTOR))) dma_isr_handler(void) {
+  switch (__even_in_range(DMAIV, DMAIV_DMA2IFG)) {
+  case DMAIV_DMA0IFG:
+  case DMAIV_DMA1IFG:
+  case DMAIV_DMA2IFG:
+    break;
+  default:
+    break;
+  }
+  __bic_SR_register_on_exit(LPM0_bits);
+}

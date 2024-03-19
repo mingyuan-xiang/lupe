@@ -1,4 +1,4 @@
-void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output, uint16_t line_size, msp_mac_q15_params* mac_params) {
+static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output, uint16_t line_size, msp_mac_q15_params* mac_params) {
   uint32_t weight_fram_addr = (uint32_t)weight->data + (input_fram_addr - ((uint32_t)input->data));
   uint32_t weight_line_offset = (weight->dims[1]) * sizeof(int16_t);
 

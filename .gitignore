@@ -181,3 +181,6 @@ Makefile
 
 # gcc folder
 .toolchains/
+
+# training data
+data/

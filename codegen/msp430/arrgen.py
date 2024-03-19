@@ -99,8 +99,8 @@ def _buffergen(code_dir, graph, loc="hi"):
     # Generate C file
     c_code += gen_c_data_struct(in_mat, None)
     c_code += gen_c_data_struct(out_mat, None)
-    c_code += gen_c_data(in_mat, True)
-    c_code += gen_c_data(out_mat, True)
+    c_code += gen_c_data(in_mat, False)
+    c_code += gen_c_data(out_mat, False)
     save(
         c_code,
         os.path.join(code_dir, file_name + ".c")

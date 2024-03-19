@@ -31,10 +31,10 @@ def lupe_args():
         print: Print the the model."""
     )
     par.add_argument(
-        "--model-name", type=str, default="LeNet", help="Model name"
+        "--model-name", type=str, default="DATE_LeNet", help="Model name"
     )
     par.add_argument(
-        "--model-path", type=str, default="./models/onnx/LeNet.onnx",
+        "--model-path", type=str, default="./models/onnx/DATE_LeNet.onnx",
         help="Model path of the onnx representation"
     )
     par.add_argument(
@@ -42,7 +42,7 @@ def lupe_args():
         help="Optimization configuration file for the model"
     )
     par.add_argument(
-        "--dataset-size", type=int, default=100, help="Size of the dataset"
+        "--dataset-size", type=int, default=1000, help="Size of the dataset"
     )
     par.add_argument(
         "--timer", type=bool, default=True, help="Add timer to the code"
@@ -92,6 +92,7 @@ def main():
                 out_path = os.path.join(parent, "apps", args.model_name)
             else:
                 out_path = args.output_path
+            print(f"Writing to {out_path}, got optimization flags:")
             # Create the directory if it does not exist
             if args.clean and os.path.exists(out_path):
                 shutil.rmtree(out_path)
