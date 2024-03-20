@@ -116,8 +116,8 @@ class sync_reader:
         return msg
 
     def put_arr(self, arr):
-        bytes = arr.newbyteorder('>').tobytes()
-        self.ser.write(bytes)
+        b = arr.newbyteorder('>').tobytes()
+        self.ser.write(b)
 
         while self.ser.read() != UARTIO_MSG_TYPE_RECV_DONE:
             pass

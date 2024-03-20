@@ -27,8 +27,10 @@ args = get_args()
 par = sync_reader(args.port, args.baud)
 
 # read start string
-while par.get_msg() is not None and "Test" not in par.get_msg():
-    pass
+while True:
+    msg = par.get_msg()
+    if msg is not None and "Test" in msg:
+        break
 
 print("=============== Start computing ===============")
 

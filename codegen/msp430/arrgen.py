@@ -8,7 +8,7 @@ from .matrixgen import (
     gen_c, gen_c_data_struct, gen_c_data
 )
 
-def _inputgen(code_dir, graph, loc="hi"):
+def _inputgen(code_dir, graph, loc="hi", debug_input=None):
     """Generate the input files"""
     input_data = graph.node_list[graph.input_name]
     # force the input size to have dimension 4
@@ -17,7 +17,10 @@ def _inputgen(code_dir, graph, loc="hi"):
     shape = list(input_data.shape)
     while len(input_data.shape) < 4:
         shape.insert(0, 1)
-    input_data = Matrix(input_data.name, np.zeros(shape), False, loc=loc)
+    if debug_input is None:
+        input_data = Matrix(input_data.name, np.zeros(shape), False, loc=loc)
+    else:
+        input_data = Matrix(input_data.name, debug_input, False, loc=loc)
 
     input_file_name = input_data.name
 
@@ -106,7 +109,7 @@ def _buffergen(code_dir, graph, loc="hi"):
         os.path.join(code_dir, file_name + ".c")
     )
 
-def arrgen(code_dir, graph, loc="hi"):
+def arrgen(code_dir, graph, loc="hi", debug_input=None):
     """Generate the pre-allocated arrays"""
-    _inputgen(code_dir, graph, loc)
+    _inputgen(code_dir, graph, loc, debug_input)
     _buffergen(code_dir, graph, loc)

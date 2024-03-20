@@ -14,6 +14,7 @@ from onnx import checker
 
 from graph.graph import LupeGraph
 from codegen.codegen import msp430gen
+from debug.get_input import get_input
 
 def lupe_args():
     """Get the command line arguments for lupe
@@ -45,7 +46,8 @@ def lupe_args():
         "--dataset-size", type=int, default=1000, help="Size of the dataset"
     )
     par.add_argument(
-        "--timer", type=bool, default=True, help="Add timer to the code"
+        "--timer", action=argparse.BooleanOptionalAction,
+        default=True, help="Add timer to the code"
     )
     par.add_argument(
         "--output-path", type=str, help="Output path for the code"
@@ -58,7 +60,16 @@ def lupe_args():
         help="Sections of the weights"
     )
     par.add_argument(
-        "--clean", type=bool, default=True, help="Clean the output directory"
+        "--clean", action=argparse.BooleanOptionalAction,
+        default=True, help="Clean the output directory"
+    )
+    par.add_argument(
+        "--debug", action=argparse.BooleanOptionalAction, default=False,
+        help="Insert printing for input/output into the model"
+    )
+    par.add_argument(
+        "--debug-dataset", choices=["MNIST"], default="MNIST",
+        help="Set the input buffer to be the first image(data) in the dataset"
     )
 
     return par.parse_args()
@@ -110,10 +121,16 @@ def main():
                 out_path, config, graph, add_timer=args.timer
             )
 
+            if args.debug:
+                input_arr, label = get_input(args.debug_dataset)
+                generator.setup_debug_info(input_arr, label)
+
             # Print the optimization configurations
             generator.print_config()
 
-            generator.gen(args.model_name, args.dataset_size, args.print_freq)
+            generator.gen(
+                args.model_name, args.dataset_size, args.print_freq
+            )
 
             # Generate the outer Makefile for the maker
             template_path = os.path.join(

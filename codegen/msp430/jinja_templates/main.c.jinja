@@ -37,12 +37,16 @@ void exit() {
 int main() {
   init();
 
+  uint16_t l;
   msp_send_printf("Test {{ model_name }}\n");
+{%- if debug %}
+  l = {{ model_name }}(&input_meta);
+  msp_send_printf("Got %u, Expecting: {{ label }}", l);
+{% else %}
 {% if add_timer %}
   uint32_t total_time = 0;
   uint32_t cnt = 0;
 {%- endif %}
-  uint16_t l;
 
   for (uint16_t i = 0; i < {{ dataset_size }}; ++i) {
     msp_recv_mat(&input_meta);
@@ -62,6 +66,6 @@ int main() {
     }
 {%- endif %}
   }
-
+{%- endif %}
   exit();
 }

@@ -45,4 +45,13 @@ class Transition(LupeLayer):
 class Flatten(Transition):
     """Flatten layer"""
     def _get_update(self):
-        return "/* The data is stored in 1D array. */"
+        code = (
+            "/* The data is stored in 1D array. So, we just need to " +
+            "feed the input to the output*/\n"
+        )
+        code += (
+            "  memcpy(output->data, input->data, " +
+            "MAT_GET_SIZE(input)*sizeof(uint16_t));"
+        )
+
+        return code

@@ -3,6 +3,9 @@
 #include <libmsp/mspbase.h>
 #include <libmspdriver/driverlib.h>
 #include <msp430.h>
+{%- if debug %}
+#include <libmspsyncioutils/mspsyncioutils.h>
+{%- endif %}
 
 #include <include/{{ model_name }}.h>
 #include <buffer/include/buffer.h>
@@ -19,9 +22,13 @@
 {% endfor %}
 
 uint16_t {{ model_name }}(mat_t* model_in) {
-  {#- Prepare the input data #}
+{#- Prepare the input data #}
   memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
-  {# layers #}
+  {%- if debug %}
+  msp_send_printf("\n============== Input ==============\n");
+  msp_send_mat(&conv1_in_meta);
+  {%- endif %}
+{#- layers #}
   {%- for layer in layer_list %}
   /* {{ layer.name }} */
   memset({{ layer.name }}_out_meta.data, 0, MAT_GET_SIZE(&{{ layer.name }}_out_meta)*sizeof(uint16_t));
@@ -30,8 +37,12 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- else %}
   {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
   {%- endif -%}
-  {% endfor %}
-  {# classification #}
+  {%- if debug %}
+  msp_send_printf("\n============== Output of {{ layer.name }} ==============\n");
+  msp_send_mat(&{{ layer.name }}_out_meta);
+  {%- endif %}
+  {%- endfor %}
+{#- classification #}
   /* Get the max score */
   uint16_t max = 0;
   for (uint16_t i = 0; i < {{ last_layer }}_out_meta.dims[1]; ++i) {

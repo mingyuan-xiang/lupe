@@ -9,7 +9,7 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def modelgen(code_dir, graph):
+def modelgen(code_dir, graph, debug):
     """Generate the model using jinja template"""
     model_name = graph.name
 
@@ -28,6 +28,7 @@ def modelgen(code_dir, graph):
         "model_name": model_name,
         "layer_list": nodes_dic,
         "last_layer": nodes[-1],
+        "debug" : debug,
     }
 
     jinja_gen(

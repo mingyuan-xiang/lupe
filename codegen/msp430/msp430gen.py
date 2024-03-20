@@ -25,6 +25,9 @@ class MSP430Gen:
             os.makedirs(self.src_dir)
         self.add_timer = add_timer
         self.graph = graph
+        self.debug = False
+        self.debug_input = None
+        self.debug_input_label = None
 
     def _parse_config(self, opt_config):
         """Parse the configuration file. Set default to False if not present."""
@@ -50,11 +53,12 @@ class MSP430Gen:
         # Generate the main file
         maingen(
             self.src_dir, model_name, dataset_size,
-            print_freq=print_freq, add_timer=self.add_timer
+            print_freq=print_freq, add_timer=self.add_timer,
+            debug=self.debug, label=self.debug_input_label
         )
 
         # Generate the model file
-        modelgen(self.src_dir, self.graph)
+        modelgen(self.src_dir, self.graph, self.debug)
 
         # Generate the weight and bias files
         params_dir = os.path.join(self.src_dir, "params")
@@ -68,7 +72,7 @@ class MSP430Gen:
         if not os.path.exists(buffer_dir):
             os.makedirs(buffer_dir)
             os.makedirs(os.path.join(buffer_dir, "include"))
-        arrgen(buffer_dir, self.graph, loc=loc)
+        arrgen(buffer_dir, self.graph, loc=loc, debug_input=self.debug_input)
 
         # Generate the layer code
         layer_dir = os.path.join(self.src_dir, "layers")
@@ -84,3 +88,9 @@ class MSP430Gen:
     def print_config(self):
         """Print the configuration"""
         pprint.pprint(self.opt_config)
+
+    def setup_debug_info(self, input_arr, label):
+        """Set up input array and label"""
+        self.debug = True
+        self.debug_input = input_arr
+        self.debug_input_label = label
