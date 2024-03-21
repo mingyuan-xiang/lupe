@@ -15,6 +15,6 @@ args = get_args()
 par = sync_reader(args.port, args.baud)
 
 np.set_printoptions(linewidth=np.inf, threshold=np.inf)
-# read start string
+
 while True:
     print(par.get_msg())

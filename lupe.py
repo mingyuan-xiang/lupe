@@ -71,6 +71,10 @@ def lupe_args():
         "--debug-dataset", choices=["MNIST"], default="MNIST",
         help="Set the input buffer to be the first image(data) in the dataset"
     )
+    par.add_argument(
+        "--debug-idx", type=int, default=0,
+        help="Set index of the input image(data) in the dataset for debugging"
+    )
 
     return par.parse_args()
 
@@ -122,7 +126,7 @@ def main():
             )
 
             if args.debug:
-                input_arr, label = get_input(args.debug_dataset)
+                input_arr, label = get_input(args.debug_dataset, args.debug_idx)
                 generator.setup_debug_info(input_arr, label)
 
             # Print the optimization configurations

@@ -1,0 +1,45 @@
+import torch
+import torch.nn as nn
+
+class DATE_LeNet(nn.Module):
+    """
+    The network is listed below:
+        + Conv 6 * 1 * 5 * 5
+        + AvgPool 6 * 14 * 14
+        + Conv 16 * 6 * 5 * 5
+        + AvgPool 16 * 5 * 5
+        + FC 256 * 256
+        + FC 10 * 256
+    """
+    def __init__(self):
+        super(DATE_LeNet, self).__init__()
+        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.pool1 = nn.AvgPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.pool2 = nn.AvgPool2d(2, 2)
+        self.fc1 = nn.Linear(256, 256)
+        self.fc2 = nn.Linear(256, 10)
+
+    def forward(self, x):
+        l = [x.detach().clone()]
+        x = self.conv1(x)
+        l.append(x.detach().clone())
+        x = torch.relu(x)
+        l.append(x.detach().clone())
+        x = self.pool1(x)
+        l.append(x.detach().clone())
+        x = self.conv2(x)
+        l.append(x.detach().clone())
+        x = torch.relu(x)
+        l.append(x.detach().clone())
+        x = self.pool2(x)
+        l.append(x.detach().clone())
+        x = torch.flatten(x, 0)
+        l.append(x.detach().clone())
+        x = self.fc1(x)
+        l.append(x.detach().clone())
+        x = torch.relu(x)
+        l.append(x.detach().clone())
+        x = self.fc2(x)
+        l.append(x.detach().clone())
+        return x, l

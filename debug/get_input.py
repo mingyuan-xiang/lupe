@@ -3,8 +3,8 @@
 from torchvision import datasets
 from torchvision import transforms
 
-def get_input(dataset):
-    """Return the first input image(data) in a numpy array"""
+def get_input(dataset, idx):
+    """Return the {idx} input image(data) in a numpy array"""
     if dataset.lower() == "mnist":
         d = datasets.MNIST('./data', train=False,
             transform=transforms.Compose([
@@ -14,6 +14,6 @@ def get_input(dataset):
     else:
         raise NotImplementedError(f"{dataset} is not supported")
 
-    arr, label = d[0]
+    arr, label = d[idx]
 
     return arr.cpu().detach().numpy(), label
