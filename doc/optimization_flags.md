@@ -1,11 +1,16 @@
 - [lea](#lea)
-- [model-fix](#model-fix)
-
-
-## Important Note
-
-Assume most of the optimization techniques are built on top of each other.
-Some techniques can support out of order invocation, e.g. `lea`.
+- [Optimization](#optimization)
+  - [Device-*Independent*](#device-independent)
+    - [layer-fusion](#layer-fusion)
+    - [prop-const+loop-unroll](#prop-constloop-unroll)
+  - [Device-*Dependent*](#device-dependent)
+    - [dma](#dma)
+    - [lea-opt](#lea-opt)
+- [Intermittent support](#intermittent-support)
+    - [inter](#inter)
+- [Undone](#undone)
+  - [CNN layers](#cnn-layers)
+  - [RNN](#rnn)
 
 ## lea
 
@@ -13,32 +18,49 @@ This flag will enable
 [low-energy accelerator (LEA)](https://www.ti.com/lit/an/slaa720/slaa720.pdf)
 to speed up execution.
 
-## layer-fusion
+## Optimization
 
-Fuse layers to avoid control flow overhead
+Use a **top-down** approach that could enable inter-module optimizations
 
-## loop-unroll
+### Device-*Independent*
 
-Unroll loops.
+#### layer-fusion
 
-## tailored-api
+Fuse layers to avoid control flow overhead, e.g.
+    + fuse batchnorm with convolution 
+    + fuse flatten (reshape)
+    + fuse bias addition
 
-Instead of having an unified ML layer API for the computation, Lupe will
-generate a tailored layer for the corresponding model.
+#### prop-const+loop-unroll
 
-## prop-const
-
-Propagate the constants so that the compiler can enable better optimizations.
+Propagate the constants so that the compiler can enable better loop-unrolling.
 This is only possible through a top-down view.
 
-## dma
+Note: By default GCC will only do loop unrolling in O3, which will fail
+to compile under CMU maker (*It could be my setting issue*)
 
-Optimize the DMA transaction functions. (**inter-module optimizations**)
+### Device-*Dependent*
 
-## lea-opt
+#### dma
 
-Optimize the LEA library APIs. (**inter-module optimizations**)
+Optimize the DMA transaction functions.
+#### lea-opt
 
-## loop-unroll
+Optimize the LEA library APIs.
 
-Unroll for loops
+## Intermittent support
+
+#### inter
+
+Add intermittent support for neural networks
+
+## Undone
+
+### CNN layers
+
++ shortcut
++ batchnorm
+
+### RNN
+
++ no implementation
