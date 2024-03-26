@@ -42,7 +42,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
 
   msp_fir_q15_params conv_params = {
-    .length = MAKE_ALIGN_2(input_line_size),
+    .length = MAKE_ALIGN_2(output_line_size),
     .tapLength = MAKE_ALIGN_2(kernel_size),
     .coeffs = lea_flt,
     .enableCircularBuffer = false 
