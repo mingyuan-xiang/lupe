@@ -9,17 +9,18 @@ sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, get_args
 
 PRINT_CNT = 100
+qf = 2
 
 mnist = datasets.MNIST("./data", train=False,
             transform=transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            transforms.Normalize((0.5,), (0.5,))
         ]), download=True)
 
 # pack the image to a 1D 16-bit array
-def parse_img(img):
+def parse_img(img, qf):
     img = img.numpy()
-    img = img.flatten() * (2 ** 15)
+    img = img.flatten() * (2 ** (15 - qf))
     img = img.astype(np.int16)
     return img
 
@@ -38,7 +39,7 @@ cnt = 0
 
 # Access each image as a matrix
 for idx, (image, label) in enumerate(mnist):
-    img_arr = parse_img(image)
+    img_arr = parse_img(image, qf)
     par.put_arr(img_arr)
 
     l = int(par.get_msg())

@@ -9,7 +9,7 @@ def get_input(dataset, idx):
         d = datasets.MNIST('./data', train=False,
             transform=transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize((0.1307,), (0.3081,))
+            transforms.Normalize((0.5,), (0.5,))
         ]), download=True)
     else:
         raise NotImplementedError(f"{dataset} is not supported")

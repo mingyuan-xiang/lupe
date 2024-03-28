@@ -14,8 +14,7 @@ import pprint
 
 class MSP430Gen:
     """The codegen class"""
-
-    def __init__(self, code_dir, opt_config, graph, add_timer=True):
+    def __init__(self, code_dir, opt_config, graph, qf, add_timer=True):
         """Initialize the codegen class"""
         self.opt_config = self._parse_config(opt_config)
         self.code_dir = code_dir
@@ -28,6 +27,7 @@ class MSP430Gen:
         self.debug = False
         self.debug_input = None
         self.debug_input_label = None
+        self.qf = qf
 
     def _parse_config(self, opt_config):
         """Parse the configuration file. Set default to False if not present."""
@@ -65,7 +65,7 @@ class MSP430Gen:
         if not os.path.exists(params_dir):
             os.makedirs(params_dir)
             os.makedirs(os.path.join(params_dir, "include"))
-        weightgen(params_dir, self.graph, loc=loc)
+        weightgen(params_dir, self.graph, self.qf, loc=loc)
 
         # Generate the buffer files
         buffer_dir = os.path.join(self.src_dir, "buffer")
@@ -80,7 +80,7 @@ class MSP430Gen:
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
         utilsgen(layer_dir, self.opt_config)
-        layergen(layer_dir, self.graph, self.opt_config)
+        layergen(layer_dir, self.graph, self.opt_config, self.qf)
 
         # Generate the makefile
         makefilegen(self.code_dir, self.graph)

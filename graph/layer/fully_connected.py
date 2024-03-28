@@ -57,7 +57,7 @@ class FullyConnected(LupeLayer):
         """If the layer has weights"""
         return True
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "fc.jinja")
 
@@ -66,6 +66,7 @@ class FullyConnected(LupeLayer):
             "prop_const" : opt_config["prop_const"],
             "in_col" : self.input_size[1],
             "out_col" : self.input_size[1],
+            "qf" : qf,
         }
 
         with open(path, "r", encoding="utf-8") as file:

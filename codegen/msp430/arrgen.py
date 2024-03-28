@@ -36,7 +36,7 @@ def _inputgen(code_dir, graph, loc="hi", debug_input=None):
     # Generate C file
     c_code = gen_c("buffer", input_file_name)
     c_code += gen_c_data_struct(input_data, None)
-    c_code += gen_c_data(input_data, True)
+    c_code += gen_c_data(input_data, False)
     save(
         c_code,
         os.path.join(code_dir, input_file_name + ".c")

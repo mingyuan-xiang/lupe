@@ -31,7 +31,7 @@ class Activation(LupeLayer):
             in_var (str): The input variable name
         """
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "activation.jinja")
 

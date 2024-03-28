@@ -46,7 +46,7 @@ class LupeLayer(ABC):
         """If the layer has weights"""
 
     @abstractmethod
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
 
     def _register(self, node):

@@ -75,6 +75,11 @@ def lupe_args():
         "--debug-idx", type=int, default=0,
         help="Set index of the input image(data) in the dataset for debugging"
     )
+    par.add_argument(
+        "--qf", type=int, default=2,
+        help=("Set the bit width of the integer part of the fixed point " +
+        "representation, e.g. pass `--qf 2` will have q2.13")
+    )
 
     return par.parse_args()
 
@@ -122,12 +127,12 @@ def main():
                 config = load_opt_config(args.config)
 
             generator = msp430gen()(
-                out_path, config, graph, add_timer=args.timer
+                out_path, config, graph, args.qf, add_timer=args.timer
             )
 
             if args.debug:
                 input_arr, label = get_input(args.debug_dataset, args.debug_idx)
-                generator.setup_debug_info(input_arr, label)
+                generator.setup_debug_info(input_arr / (2 ** args.qf), label)
 
             # Print the optimization configurations
             generator.print_config()

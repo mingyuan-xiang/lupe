@@ -54,7 +54,7 @@ class Convolution2D(LupeLayer):
         """If the layer has weights"""
         return True
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "conv.jinja")
 
@@ -70,6 +70,7 @@ class Convolution2D(LupeLayer):
             "in_line_size" : self.input_size[3], 
             "out_line_size" : self.output_size[3],
             "out_line_num" : self.output_size[2],
+            "qf" : qf,
         }
 
         with open(path, "r", encoding="utf-8") as file:

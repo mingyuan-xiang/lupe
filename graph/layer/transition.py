@@ -26,7 +26,7 @@ class Transition(LupeLayer):
     def _get_update(self):
         """Get the update for the layer"""
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "transition.jinja")
 

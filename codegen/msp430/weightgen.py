@@ -11,13 +11,17 @@ from .matrixgen import (
     gen_c, gen_c_data_struct, gen_c_data
 )
 
-def weightgen(code_dir, graph, loc="hi"):
+def weightgen(code_dir, graph, qf, loc="hi"):
     """Generate the weight and bias files"""
     for n in graph.graph:
         node = graph.node_list[n]
         if node.has_weights():
-            weight = Matrix(node.weight.name, node.weight.data, False, loc=loc)
-            bias = Matrix(node.bias.name, node.bias.data, False, loc=loc)
+            weight = Matrix(
+                node.weight.name, node.weight.data / (2 ** qf), False, loc=loc
+            )
+            bias = Matrix(
+                node.bias.name, node.bias.data / (2 ** qf), False, loc=loc
+            )
             param_file_name = node.name
 
             # Generate header file

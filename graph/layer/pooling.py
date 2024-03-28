@@ -48,7 +48,7 @@ class Pooling(LupeLayer):
     def _get_update(self, var, data):
         """Return how to update the pooling layer"""
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "pooling.jinja")
 
@@ -83,7 +83,7 @@ class AvgPooling(Pooling):
 
     def _get_update(self, var, data):
         """Return how to update the pooling layer"""
-        return f"{var} += ({data} >> 2)"
+        return f"{var} = __saturated_add_q15({var}, {data} >> 2)"
 
 
 class MaxPooling(Pooling):

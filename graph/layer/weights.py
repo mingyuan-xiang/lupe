@@ -20,7 +20,7 @@ class Tensor(LupeLayer):
         """If the layer has weights"""
         return False
 
-    def get_code(self, jinja_dir, opt_config):
+    def get_code(self, jinja_dir, opt_config, qf):
         """This will never get called"""
         raise NotImplementedError
 
