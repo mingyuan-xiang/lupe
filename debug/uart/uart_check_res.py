@@ -21,6 +21,7 @@ from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 from get_input import get_input
 from DATE_LeNet import DATE_LeNet
 from DATE_LeNet_quan import DATE_LeNet_quan
+from LeNet import LeNet
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
@@ -31,6 +32,7 @@ parser.add_argument('--baud', type=int, default=19200, help='UART baud rate')
 models = {
     "DATE_LeNet" : DATE_LeNet(),
     "DATE_LeNet_quan" : DATE_LeNet_quan(),
+    "LeNet" : LeNet(),
 }
 
 parser.add_argument('--dataset', default='mnist', choices=['mnist'],
@@ -86,8 +88,8 @@ for i, x in enumerate(l):
     x_exp = l_exp[i].cpu().detach().numpy()
     # Convert to q15
     x_exp = x_exp * (2 ** (15 - args.qf))
-    # Convert the overflow numbers to 0
-    x_exp = x_exp * (x_exp < max_i16 - 1)
+    # Convert the overflow numbers to max_i16
+    x_exp = x_exp * (x_exp < max_i16) + max_i16 * np.ones_like(x_exp) * (x_exp >= max_i16)
     x_exp = x_exp.astype(np.int16)
     print(f"\n++++++++++++++ {names[i]} ++++++++++++++\n")
     print("\n============== Error ==============\n")

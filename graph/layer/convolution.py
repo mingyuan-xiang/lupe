@@ -24,15 +24,30 @@ class Convolution2D(LupeLayer):
         ) if kernel_shape else None
         # pads
         pads = get_onnx_attr(node, "pads")
-        self.pads = tuple(pads.ints) if pads else None
+        self.padding = tuple(pads.ints) if pads else None
         # strides
         strides = get_onnx_attr(node, "strides")
         self.strides = tuple(strides.ints) if strides else None
 
+        # Resize the input based on the padding.
+        # The output size should be correct because onnx records
+        # the correct size.
+        # The order of the padding tuple is (left, right, top, bottom)
+        if sum(self.padding) > 0:
+            self.input_size = (
+                self.input_size[0],
+                self.input_size[1],
+                self.input_size[2] + self.padding[2] + self.padding[3],
+                self.input_size[3] + self.padding[0] + self.padding[1],
+            )
+            self.has_padding = True
+        else:
+            self.has_padding = False
+
     def __str__(self):
         s = f"{self.name}: Convolution2D("
         s += f"kernel_shape={self.kernel_shape}, "
-        s += f"pads={self.pads}, "
+        s += f"padding={self.padding}, "
         s += f"strides={self.strides}"
         if self.group:
             s += f", group={self.group}"
@@ -58,6 +73,16 @@ class Convolution2D(LupeLayer):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "conv.jinja")
 
+        if self.has_padding:
+            padding_params = {
+                "left" : self.padding[0],
+                "right" : self.padding[1],
+                "top" : self.padding[2],
+                "bottom" : self.padding[3],
+            }
+        else:
+            padding_params = None
+
         params = {
             "layer_name" : self.name,
             "prop_const" : opt_config["prop_const"],
@@ -69,8 +94,10 @@ class Convolution2D(LupeLayer):
             "flt_size" : get_stride(self.kernel_shape, 2),
             "in_line_size" : self.input_size[3], 
             "out_line_size" : self.output_size[3],
+            "in_line_num" : self.input_size[2],
             "out_line_num" : self.output_size[2],
             "qf" : qf,
+            "padding" : padding_params
         }
 
         with open(path, "r", encoding="utf-8") as file:

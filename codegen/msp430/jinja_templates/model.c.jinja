@@ -26,7 +26,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
   {%- if debug %}
   msp_send_printf("\n============== Input ==============\n");
-  msp_send_mat(&conv1_in_meta);
+  msp_send_mat(model_in);
   {%- endif %}
 {#- layers #}
   {%- for layer in layer_list %}
