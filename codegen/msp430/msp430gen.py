@@ -41,6 +41,12 @@ class MSP430Gen:
             opt_config["lea_dst_size"] = 100
         if "prop_const" not in opt_config:
             opt_config["prop_const"] = False
+        if "saturation" not in opt_config:
+            opt_config["saturation"] = "none"
+        if not opt_config["saturation"] in ("none", "scaled", "32bit"):
+            raise NotImplementedError("Saturation model of " +
+                f"`{opt_config['saturation']}` is not supported."
+            )
 
         return opt_config
 
@@ -87,7 +93,7 @@ class MSP430Gen:
 
     def print_config(self):
         """Print the configuration"""
-        pprint.pprint(self.opt_config)
+        pprint.pprint(dict(self.opt_config.items()))
 
     def setup_debug_info(self, input_arr, label):
         """Set up input array and label"""

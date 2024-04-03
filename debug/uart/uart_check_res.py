@@ -83,13 +83,22 @@ names = model.names
 assert(len(l) == len(l_exp) and len(names) == len(l))
 
 max_i16 = np.iinfo(np.int16).max
+min_i16 = np.iinfo(np.int16).min
 
 for i, x in enumerate(l):
     x_exp = l_exp[i].cpu().detach().numpy()
     # Convert to q15
     x_exp = x_exp * (2 ** (15 - args.qf))
-    # Convert the overflow numbers to max_i16
-    x_exp = x_exp * (x_exp < max_i16) + max_i16 * np.ones_like(x_exp) * (x_exp >= max_i16)
+    # Convert the overflow and underflow numbers to max_i16 and min_i16
+    x_exp_64 = x_exp.astype(np.int64)
+    x_exp = (
+        x_exp * (x_exp < max_i16) +
+        max_i16 * np.ones_like(x_exp) * (x_exp >= max_i16)
+    )
+    x_exp = (
+        x_exp * (x_exp > min_i16) +
+        min_i16 * np.ones_like(x_exp) * (x_exp <= min_i16)
+    )
     x_exp = x_exp.astype(np.int16)
     print(f"\n++++++++++++++ {names[i]} ++++++++++++++\n")
     print("\n============== Error ==============\n")
@@ -98,4 +107,6 @@ for i, x in enumerate(l):
     print(x)
     print("\n============== Expected ==============\n")
     print(x_exp)
+    print("\n============== Expected (int64) ==============\n")
+    print(x_exp_64)
     print("\n+++++++++++++++++++++++++++++++++++\n")

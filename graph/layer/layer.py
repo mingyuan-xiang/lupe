@@ -34,6 +34,7 @@ class LupeLayer(ABC):
         else:
             raise ValueError("Invalid io arguments")
 
+        # Get the input and output size before register a node
         self._register(node)
         self._register_weights(node, node_list)
 
@@ -44,6 +45,10 @@ class LupeLayer(ABC):
     @abstractmethod
     def has_weights(self):
         """If the layer has weights"""
+
+    def flip(self):
+        """If the layer should flip the weights"""
+        return False
 
     @abstractmethod
     def get_code(self, jinja_dir, opt_config, qf):

@@ -17,7 +17,7 @@ static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t*
     /* send weight row */
     DMA_makeTransfer(weight_fram_addr, (uint32_t)lea_tmp, line_size);
 
-    msp_mac_q15(mac_params, lea_src, lea_tmp, &lea_res[0]);
+    msp_mac_q15(mac_params, lea_src, lea_tmp, lea_res);
 
     res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
     output->data[i] = __saturated_add_q15(output->data[i], res);

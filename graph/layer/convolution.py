@@ -69,6 +69,10 @@ class Convolution2D(LupeLayer):
         """If the layer has weights"""
         return True
 
+    def flip(self):
+        """If the layer should flip the weights"""
+        return True
+
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "conv.jinja")

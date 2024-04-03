@@ -3,6 +3,7 @@
 """The front end interface of Lupe for enabling DNN on MSP430"""
 
 import argparse
+from collections import OrderedDict
 import os
 import pathlib
 import json
@@ -87,7 +88,7 @@ def load_opt_config(config):
     """Load the optimization configuration"""
     with open(config, "r", encoding="utf-8") as file:
         opt_config = json.load(file)
-        return opt_config
+        return OrderedDict(opt_config)
 
 def main():
     """The main function"""
