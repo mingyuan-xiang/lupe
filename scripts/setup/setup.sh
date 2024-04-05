@@ -232,7 +232,11 @@ main() {
     mspdebug=$CONDA_PREFIX/bin/mspdebug
     touch $mspdebug
     echo "#!/bin/bash" > $mspdebug
-    echo "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
+    if [[ "$1" == "linux" ]]; then
+      echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
+    else
+      echo "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
+    fi
     chmod +x $mspdebug
   fi
 }
