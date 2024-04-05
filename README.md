@@ -1,5 +1,10 @@
 ## Set up the environment
 
+### Dependency
+
++ conda
++ libboost
+
 ### Conda environment
 
 ```
@@ -17,6 +22,8 @@ Note:
 
 1. `<os>` has to be `mac` or `linux`
 2. The Ti GCC will be put in `.mspgcc` directory
+3. The library will be installed in `$HOME/.local`. Make sure to add that directory to your path.
+4/ Assume `Homebrew` is installed for mac.
 
 ## MSP430 port
 

@@ -3,17 +3,78 @@
 verify_input() {
   if [ "$#" -ne 1 ]; then
     echo "Usage: set_up_gcc.sh <linux | mac>"
-    exit 1
+    return 1
   fi
   if [ "$1" != "linux" ] && [ "$1" != "mac" ]; then
     echo "Invalid OS. Please use 'linux' or 'mac'"
-    exit 1
+    return 1
+  fi
+}
+
+export LINUX_PREFIX="$HOME/.local"
+
+linux_install() {
+  if [[ "$1" == "hidapi" ]]; then
+    if [ -d "$LINUX_PREFIX/include/hidapi" ] ; then
+      echo "hidapi already installed!"
+      return 0
+    fi
+
+    export PKG_CONFIG_PATH=$LINUX_PREFIX/lib/pkgconfig/
+    git clone https://github.com/libusb/hidapi.git
+    cd hidapi
+    ./bootstrap
+    ./configure --prefix=$LINUX_PREFIX
+    make
+    make install
+    cd ..
+  elif [[ "$1" == "libusb-compat" ]]; then
+    if [ -f "$LINUX_PREFIX/include/usb.h" ] ; then
+      echo "libusb-compat already installed!"
+      return 0
+    fi
+
+    git clone https://github.com/libusb/libusb.git
+    cd libusb
+    ./autogen.sh
+    ./configure --prefix=$LINUX_PREFIX
+    make
+    make install
+    cd ..
+
+    export PKG_CONFIG_PATH=$LINUX_PREFIX/lib/pkgconfig/
+    git clone https://github.com/libusb/libusb-compat-0.1.git
+    cd libusb-compat-0.1
+    ./autogen.sh
+    ./configure --prefix=$LINUX_PREFIX
+    make
+    make install
+    cd ..
+  elif [[ "$1" == "boost" ]]; then
+    if dpkg -s libboost-dev | grep -q "Version" ;  then
+      echo "libboost already installed!"
+      return 0
+    else
+      echo "Please install libboost!"
+      return 1
+    fi
+  else
+    echo "Installing $1 not implemented!"
+    return 1
   fi
 }
 
 install_deps() {
   if [[ "$1" == "linux" ]]; then
-    echo "Not implemented yet."
+    export LD_LIBRARY_PATH="$LINUX_PREFIX/lib/:$LD_LIBRARY_PATH"
+    export LD_RUN_PATH="$LINUX_PREFIX/lib/:$LD_RUN_PATH"
+
+    for d in ${@:2}; do
+      linux_install $d
+      if [ $? -eq 1 ]; then
+        return 1
+      fi
+    done;
   else
     local BREW_INSTALL=""
     for d in ${@:2}; do
@@ -32,24 +93,29 @@ install_deps() {
 
 main() {
   verify_input $@
-
-  TOOLCHAIN_DIR=`readlink -f ".toolchains/ti/mspgcc"`
-
-  DIR="tmp_downloads"
-  mkdir -p $DIR
-  pushd $DIR >/dev/null
+  if [ $? -eq 1 ]; then
+    return 1
+  fi
 
   ## Install mspdebug
   if ! hash mspdebug_unlinked 2>/dev/null; then
     echo "installing mspdebug deps"
-    install_deps $1 "hidapi" "libusb-compat"
+    install_deps $1 "libusb-compat" "hidapi" 
+    if [ $? -eq 1 ]; then
+      return 1
+    fi
 
     echo "installing mspdebug"
     git clone https://github.com/dlbeer/mspdebug
     cd mspdebug
 
     # hidapi fix for mspdebug
-    export CFLAGS="-I/opt/homebrew/include"
+    if [[ "$1" == "linux" ]]; then
+      export CFLAGS="-I$LINUX_PREFIX/include"
+      sed -i "s\-lusb\-L$HOME/.local/lib -lusb\g" Makefile
+    else
+      export CFLAGS="-I/opt/homebrew/include"
+    fi
 
     # make
     make --silent PREFIX=$CONDA_PREFIX install
@@ -59,27 +125,47 @@ main() {
     echo "mspdebug_unlinked installed"
   fi
 
-  ## Install the required dylib
-  if [ ! -f $CONDA_PREFIX/lib/libmsp430.dylib ]; then
-    echo "installing libmsp430.dylib deps"
-    install_deps $1 "hidapi" "boost"
-
-    echo "installing libmsp430.dylib"
-    wget --quiet "https://dr-download.ti.com/software-development/driver-or-library/MD-4vnqcP1Wk4/3.15.1.1/MSPDebugStack_OS_Package_3_15_1_1.zip"
-    unzip -q MSPDebugStack_OS_Package_3_15_1_1.zip -d mspds
-    cd mspds
-
+  if [[ "$1" == "linux" ]]; then
+    MSP_LIB=libmsp430.so
+    HID_PATH=$LINUX_PREFIX/include/hidapi/hidapi.h
+    MSP_BOOST_DIR=/usr/lib/x86_64-linux-gnu/
+  else
+    MSP_LIB=libmsp430.dylib
     HID_PATH=`brew --prefix hidapi`
     HID_PATH=$HID_PATH/include/hidapi/hidapi.h
+    MSP_BOOST_DIR=/opt/homebrew 
+  fi
+
+  ## Install the required dylib
+  if [ ! -f $CONDA_PREFIX/lib/$MSP_LIB ]; then
+    echo "installing $MSP_LIB deps"
+    install_deps $1 "hidapi" "boost"
+    if [ $? -eq 1 ]; then
+      return 1
+    fi
+
+    echo "installing $MSP_LIB"
+    wget --quiet "https://dr-download.ti.com/software-development/driver-or-library/MD-4vnqcP1Wk4/3.15.1.1/MSPDebugStack_OS_Package_3_15_1_1.zip"
+    unzip -q "MSPDebugStack_OS_Package_3_15_1_1.zip" -d mspds
+    cd mspds
+
     cp $HID_PATH ./ThirdParty/include/
+    
+    if [[ "$1" == "linux" ]]; then
+      cp $LINUX_PREFIX/lib/libhidapi-libusb.a ./ThirdParty/lib64/hid-libusb.o
+    fi
 
     cp ../../scripts/setup/mspds_makefile ./Makefile
 
-    make --silent BOOST_DIR=/opt/homebrew 
+    # make --silent BOOST_DIR=$MSP_BOOST_DIR
+    make BOOST_DIR=$MSP_BOOST_DIR
+
+    return 1
+
     make --silent PREFIX=$CONDA_PREFIX install
 
     cd ..
-    echo "libmsp430.dyblib installed"
+    echo "$MSP_LIB installed"
   fi
 
   # Install the msp430 libraries
@@ -107,9 +193,19 @@ main() {
     echo "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
     chmod +x $mspdebug
   fi
-
-  popd >/dev/null
-  rm -rf $DIR
 }
 
+mkdir -p ".toolchains/ti/mspgcc"
+export TOOLCHAIN_DIR=`readlink -f ".toolchains/ti/mspgcc"`
+
+export DIR="tmp_downloads"
+mkdir -p $DIR
+pushd $DIR >/dev/null
+
 main $@
+
+popd >/dev/null
+#rm -rf $DIR
+
+unset DIR
+unset LINUX_PREFIX
