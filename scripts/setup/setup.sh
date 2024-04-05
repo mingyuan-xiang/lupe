@@ -53,11 +53,37 @@ linux_install() {
   elif [[ "$1" == "boost" ]]; then
     if dpkg -s libboost-dev | grep -q "Version" ;  then
       echo "libboost already installed!"
+      export MSP_BOOST_DIR=/usr/lib/x86_64-linux-gnu/
+      export MSP_BOOST_INCLUDE=/usr/include/boost/
+      return 0
+    elif [ -d "$LINUX_PREFIX/include/boost" ] ; then
+      echo "boost already installed!"
+      export MSP_BOOST_DIR=$LINUX_PREFIX/lib
+      export MSP_BOOST_INCLUDE=$LINUX_PREFIX/include/boost
       return 0
     else
-      echo "Please install libboost!"
-      return 1
+      wget --quiet "https://boostorg.jfrog.io/artifactory/main/release/1.67.0/source/boost_1_67_0.tar.bz2"
+      tar --bzip2 -xf "boost_1_67_0.tar.bz2"
+      cd boost_1_67_0
+      ./bootstrap.sh --prefix=$LINUX_PREFIX
+      ./b2 install
+      export MSP_BOOST_DIR=$LINUX_PREFIX/lib
+      export MSP_BOOST_INCLUDE=$LINUX_PREFIX/include/boost
+      cd ..
     fi
+  elif [[ "$1" == "stow" ]]; then
+    if [ -d "$LINUX_PREFIX/include/stow" ] ; then
+      echo "stow already installed!"
+      return 0
+    fi
+
+    git clone https://github.com/aspiers/stow.git
+    cd stow
+    autoreconf -iv
+    ./configure --prefix=$LINUX_PREFIX
+    make
+    make install
+    cd ..
   else
     echo "Installing $1 not implemented!"
     return 1
@@ -157,11 +183,12 @@ main() {
 
     cp ../../scripts/setup/mspds_makefile ./Makefile
 
-    # make --silent BOOST_DIR=$MSP_BOOST_DIR
-    make BOOST_DIR=$MSP_BOOST_DIR
-
-    return 1
-
+    if [[ "$1" == "linux" ]]; then
+      export PKG_CONFIG_PATH=$LINUX_PREFIX/lib/pkgconfig/
+      make --silent BOOST_DIR=$MSP_BOOST_DIR BOOST_INCLUDE=$MSP_BOOST_INCLUDE
+    else
+      make --silent BOOST_DIR=$MSP_BOOST_DIR
+    fi
     make --silent PREFIX=$CONDA_PREFIX install
 
     cd ..
@@ -170,16 +197,31 @@ main() {
 
   # Install the msp430 libraries
   if ! hash msp430-elf-gcc 2>/dev/null; then
-    echo "installing mspgcc"
-    wget --quiet https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-LlCjWuAbzH/9.3.1.2/msp430-gcc-9.3.1.11_macos.tar.bz2
-    wget --quiet https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-LlCjWuAbzH/9.3.1.2/msp430-gcc-support-files-1.212.zip
+    echo "installing mspgcc deps"
+    install_deps $1 "stow"
+    if [ $? -eq 1 ]; then
+      return 1
+    fi
 
-    tar xjf msp430-gcc-9.3.1.11_macos.tar.bz2
+    echo "installing mspgcc"
+    if [[ "$1" == "linux" ]]; then
+      GCC_URL=https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-LlCjWuAbzH/9.3.1.2/msp430-gcc-9.3.1.11_linux64.tar.bz2
+      GCC_DIRNAME=msp430-gcc-9.3.1.11_linux64
+    else
+      GCC_URL=https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-LlCjWuAbzH/9.3.1.2/msp430-gcc-9.3.1.11_macos.tar.bz2
+      GCC_DIRNAME=msp430-gcc-9.3.1.11_macos
+    fi
+    GCC_SUP_URL=https://dr-download.ti.com/software-development/ide-configuration-compiler-or-debugger/MD-LlCjWuAbzH/9.3.1.2/msp430-gcc-support-files-1.212.zip
+
+    wget --quiet $GCC_URL
+    wget --quiet $GCC_SUP_URL
+
+    tar xjf "$GCC_DIRNAME.tar.bz2"
     unzip -qx msp430-gcc-support-files-1.212.zip
-    mv msp430-gcc-support-files/include/* msp430-gcc-9.3.1.11_macos/include
+    mv msp430-gcc-support-files/include/* $GCC_DIRNAME/include
 
     mkdir -p $TOOLCHAIN_DIR
-    mv msp430-gcc-9.3.1.11_macos/* $TOOLCHAIN_DIR
+    mv $GCC_DIRNAME/* $TOOLCHAIN_DIR
 
     cd $TOOLCHAIN_DIR
     stow -t $CONDA_PREFIX/bin bin
@@ -205,7 +247,7 @@ pushd $DIR >/dev/null
 main $@
 
 popd >/dev/null
-#rm -rf $DIR
+rm -rf $DIR
 
 unset DIR
 unset LINUX_PREFIX

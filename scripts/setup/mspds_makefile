@@ -17,6 +17,8 @@ MAKE_PCH += -x c++-header
 USE_PCH += -include $(PCH_HEADER)
 
 export BOOST_DIR
+export BOOST_INCLUDE
+export BOOST_LIB
 export STATIC
 export DEBUG
 
@@ -32,11 +34,6 @@ INCLUDES := \
 LIBS :=
 STATIC_LIBS :=
 
-ifdef STATIC
-STATIC_LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
-else
-LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
-endif
 
 LIBTHIRD := ./ThirdParty/lib64
 LIBDIRS := -L$(LIBTHIRD)
@@ -50,20 +47,22 @@ ifeq ($(PLATFORM),Linux)
 	OUTPUT := libmsp430.so
 	DEFINES += -DUNIX
 
-	ifdef STATIC
+    ifdef STATIC
+    STATIC_LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread
 	STATIC_LIBS += -lusb-1.0
-	else
-	LIBS += -lusb-1.0
-	endif
+    else
+    LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread
+    endif
 
-	LIBS += -lusb-1.0 -lrt -lpthread
+	LIBS += $(shell pkg-config --cflags --libs libusb) -lrt -lpthread
 
 	ifdef BOOST_DIR
-	INCLUDES += -I$(BOOST_DIR)
-	LIBDIRS += -L$(BOOST_DIR)/stage/lib
+	INCLUDES += -I$(BOOST_INCLUDE)
+	LIBDIRS += -L$(BOOST_LIB)
 	endif
 
 	OUTNAME := -Wl,-soname,
+    SHARED_LIB := $(OUTNAME)$(OUTPUT)
 	BSTATIC := -Wl,-Bstatic
 	BDYNAMIC := -Wl,-Bdynamic
 
@@ -74,11 +73,13 @@ else
 	OUTPUT := libmsp430.dylib
 	STATICOUTPUT := mac64
 
-	ifdef STATIC
+    ifdef STATIC
+    STATIC_LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
 	STATIC_LIBS += -framework CoreFoundation -framework IOKit -lhidapi
-	else
+    else
+    LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
 	LIBS += -framework CoreFoundation -framework IOKit -lhidapi
-	endif
+    endif
 
 	ifdef BOOST_DIR
 	INCLUDES += -I$(BOOST_DIR)/include
@@ -86,6 +87,7 @@ else
 	endif
 
 	OUTNAME := -install_name
+    SHARED_LIB := $(OUTNAME) $(OUTPUT)
 	BSTATIC :=
 	BDYNAMIC :=
 
@@ -124,7 +126,7 @@ SRC := \
 OBJS := $(patsubst %.cpp, %.o, $(SRC))
 
 all: $(BSLLIB) $(OBJS)
-	$(CXX) $(CXXFLAGS) -shared $(OUTNAME) $(OUTPUT) -o $(OUTPUT) $(OBJS) $(HIDOBJ) $(LIBDIRS) $(BSTATIC) $(STATIC_LIBS) $(BDYNAMIC) $(LIBS)
+	$(CXX) $(CXXFLAGS) -shared $(SHARED_LIB) -o $(OUTPUT) $(OBJS) $(HIDOBJ) $(LIBDIRS) $(BSTATIC) $(STATIC_LIBS) $(BDYNAMIC) $(LIBS)
 	rm -f $(STATICOUTPUT).a
 	ar -rs $(STATICOUTPUT).a $(OBJS)
 
