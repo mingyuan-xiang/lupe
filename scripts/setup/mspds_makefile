@@ -54,7 +54,7 @@ ifeq ($(PLATFORM),Linux)
     LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread
     endif
 
-	LIBS += $(shell pkg-config --cflags --libs libusb) -lrt -lpthread
+	LIBS += $(shell pkg-config --cflags --libs hidapi-libusb) -lrt -lpthread
 
 	ifdef BOOST_DIR
 	INCLUDES += -I$(BOOST_INCLUDE)
@@ -66,7 +66,7 @@ ifeq ($(PLATFORM),Linux)
 	BSTATIC := -Wl,-Bstatic
 	BDYNAMIC := -Wl,-Bdynamic
 
-	HIDOBJ := $(LIBTHIRD)/hid-libusb.o
+	HIDOBJ :=
 else
 	CXX:= clang++
 

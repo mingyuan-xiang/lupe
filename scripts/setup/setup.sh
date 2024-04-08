@@ -11,7 +11,7 @@ verify_input() {
   fi
 }
 
-export LINUX_PREFIX="$HOME/.local"
+export LINUX_PREFIX=$CONDA_PREFIX
 
 linux_install() {
   if [[ "$1" == "hidapi" ]]; then
@@ -56,20 +56,9 @@ linux_install() {
       export MSP_BOOST_DIR=/usr/lib/x86_64-linux-gnu/
       export MSP_BOOST_INCLUDE=/usr/include/boost/
       return 0
-    elif [ -d "$LINUX_PREFIX/include/boost" ] ; then
-      echo "boost already installed!"
-      export MSP_BOOST_DIR=$LINUX_PREFIX/lib
-      export MSP_BOOST_INCLUDE=$LINUX_PREFIX/include/boost
-      return 0
     else
-      wget --quiet "https://boostorg.jfrog.io/artifactory/main/release/1.67.0/source/boost_1_67_0.tar.bz2"
-      tar --bzip2 -xf "boost_1_67_0.tar.bz2"
-      cd boost_1_67_0
-      ./bootstrap.sh --prefix=$LINUX_PREFIX
-      ./b2 install
-      export MSP_BOOST_DIR=$LINUX_PREFIX/lib
-      export MSP_BOOST_INCLUDE=$LINUX_PREFIX/include/boost
-      cd ..
+      echo "Please install libboost"
+      return 1
     fi
   elif [[ "$1" == "stow" ]]; then
     if [ -d "$LINUX_PREFIX/include/stow" ] ; then
@@ -137,8 +126,10 @@ main() {
 
     # hidapi fix for mspdebug
     if [[ "$1" == "linux" ]]; then
-      export CFLAGS="-I$LINUX_PREFIX/include"
-      sed -i "s\-lusb\-L$HOME/.local/lib -lusb\g" Makefile
+      export PKG_CONFIG_PATH=$LINUX_PREFIX/lib/pkgconfig
+      export CFLAGS=$(pkg-config --cflags libusb hidapi-libusb)
+      LIB_FLAGS=$(pkg-config --libs libusb hidapi-libusb)
+      sed -i "s\-lusb\ $LIB_FLAGS\g" Makefile
     else
       export CFLAGS="-I/opt/homebrew/include"
     fi
@@ -177,10 +168,6 @@ main() {
 
     cp $HID_PATH ./ThirdParty/include/
     
-    if [[ "$1" == "linux" ]]; then
-      cp $LINUX_PREFIX/lib/libhidapi-libusb.a ./ThirdParty/lib64/hid-libusb.o
-    fi
-
     cp ../../scripts/setup/mspds_makefile ./Makefile
 
     if [[ "$1" == "linux" ]]; then
@@ -233,7 +220,7 @@ main() {
     touch $mspdebug
     echo "#!/bin/bash" > $mspdebug
     if [[ "$1" == "linux" ]]; then
-      echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
+      echo "LD_LIBRARY_PATH=\"$CONDA_PREFIX/lib\" mspdebug_unlinked \"\$@\"" >> $mspdebug
     else
       echo "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
     fi
@@ -251,7 +238,7 @@ pushd $DIR >/dev/null
 main $@
 
 popd >/dev/null
-rm -rf $DIR
+# rm -rf $DIR
 
 unset DIR
 unset LINUX_PREFIX
