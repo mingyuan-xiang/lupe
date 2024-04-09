@@ -154,7 +154,8 @@ def main():
             file_path = os.path.join(
                 os.path.dirname(os.path.realpath(__file__)), "Makefile"
             )
-            os.remove(file_path)
+            if os.path.isfile(file_path):
+                os.remove(file_path)
             with open(os.path.join(file_path), "w", encoding="utf-8") as file:
                 file.write(code_str)
         else:
