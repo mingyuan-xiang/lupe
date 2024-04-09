@@ -44,7 +44,7 @@ def lupe_args():
         help="Optimization configuration file for the model"
     )
     par.add_argument(
-        "--dataset-size", type=int, default=1000, help="Size of the dataset"
+        "--dataset-size", type=int, default=10000, help="Size of the dataset"
     )
     par.add_argument(
         "--timer", action=argparse.BooleanOptionalAction,

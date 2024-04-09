@@ -63,6 +63,8 @@ int main() {
     if (cnt == {{ print_freq - 1 }}) {
       msp_send_printf("total time: %n", total_time);
       cnt = 0;
+    } else {
+      ++cnt;
     }
 {%- endif %}
   }
