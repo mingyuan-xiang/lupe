@@ -2,7 +2,7 @@
 
 verify_input() {
   if [ "$#" -ne 1 ]; then
-    echo "Usage: set_up_gcc.sh <linux | mac>"
+    echo "Usage: setup.sh <linux | mac>"
     return 1
   fi
   if [ "$1" != "linux" ] && [ "$1" != "mac" ]; then
@@ -238,7 +238,7 @@ pushd $DIR >/dev/null
 main $@
 
 popd >/dev/null
-# rm -rf $DIR
+rm -rf $DIR
 
 unset DIR
 unset LINUX_PREFIX

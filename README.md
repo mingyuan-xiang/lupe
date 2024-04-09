@@ -1,29 +1,76 @@
-## Set up the environment
+# Set up the environment
 
-### Dependency
+## Dependency
 
-+ conda
-+ libboost
++ conda is required to manage the python environment
 
-### Conda environment
+## Conda environment
 
 ```
-$ conda env create -f env.yml
+$ conda env create -f < mac_env.yml | archlinux_env.yml >
 $ conda activate lupe
 ```
 
-### Ti GCC toolchain
-
-```
-$ . ./scripts/setup/setup.sh <os>
-```
+## Set up CMU [maker](https://github.com/CMUAbstract/maker) to compile and flash
 
 Note:
 
-1. `<os>` has to be `mac` or `linux`
-2. The Ti GCC will be put in `.mspgcc` directory
-3. The library will be installed in `$HOME/.local`. Make sure to add that directory to your path.
-4/ Assume `Homebrew` is installed for mac.
+1. The Ti GCC will be put in `.toolchains/ti/mspgcc/` directory
+
+### For MacOS
+
+Run the following command will install dependencies for the maker. (Assuming [**Homebrew**](https://brew.sh/) is installed)
+
+```
+$ . ./scripts/setup/setup.sh mac
+```
+
+### For Linux
+
+#### Arch Linux
+
+**Step 1**
+
+Ti CCS needs to be installed to initialize the driver (with root access).
+Check: [https://aur.archlinux.org/packages/ccstudio](https://aur.archlinux.org/packages/ccstudio)
+
+**Step 2**
+
+Install the following library:
+
++ [https://aur.archlinux.org/packages/mspdebug](https://aur.archlinux.org/packages/mspdebug)
++ [https://aur.archlinux.org/packages/mspds](https://aur.archlinux.org/packages/mspds)
+
+**Step 3**
+
+Install the mspgcc
+
+`<bin directory>` is where the mspgcc will be put
+
+```
+$ . ./scripts/setup/setup_toolchains.sh linux <bin directory>
+```
+
+
+#### Ubuntu
+
+**Step 1**
+
+Ti CCS needs to be installed to initialize the driver (with root access).
+Check: [https://software-dl.ti.com/ccs/esd/documents/ccsv11_linux_host_support.html#after-installation](https://software-dl.ti.com/ccs/esd/documents/ccsv11_linux_host_support.html#after-installation)
+
+**Step 2**
+
+Run the following command will install decencies for the maker (without root access).
+The library will be installed in `$HOME/.local` for ubuntu. Make sure to add it to your path.
+
+```
+$ . ./scripts/setup/setup.sh linux
+```
+
+Note: Haven't tested the ubuntu yet, though it should work.
+
+[1]: 
 
 ## MSP430 port
 
