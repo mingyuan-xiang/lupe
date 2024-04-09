@@ -60,7 +60,7 @@ int main() {
 {# Send the classification results through UART #}
     msp_send_printf("%u", l);
 {% if add_timer %}
-    if (cnt == {{ print_freq }}) {
+    if (cnt == {{ print_freq - 1 }}) {
       msp_send_printf("total time: %n", total_time);
       cnt = 0;
     }

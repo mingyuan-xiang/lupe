@@ -144,7 +144,7 @@ class sync_reader:
 def get_args():
     par = argparse.ArgumentParser()
     par.add_argument(
-        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
+        '--port', type=str, default='/dev/ttyACM1', help='UART port'
     )
     par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     args = par.parse_args()

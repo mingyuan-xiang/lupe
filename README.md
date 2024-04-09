@@ -68,9 +68,7 @@ The library will be installed in `$HOME/.local` for ubuntu. Make sure to add it 
 $ . ./scripts/setup/setup.sh linux
 ```
 
-Note: Haven't tested the ubuntu yet, though it should work.
-
-[1]: 
+**Note**: Haven't tested the ubuntu yet, though it should work.
 
 ## MSP430 port
 
