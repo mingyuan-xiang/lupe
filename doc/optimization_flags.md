@@ -7,8 +7,8 @@
     - [prop-const+loop-unroll](#prop-constloop-unroll)
     - [ring-buffer](#ring-buffer)
   - [Device-*Dependent*](#device-dependent)
-    - [dma](#dma)
-    - [lea-opt](#lea-opt)
+    - [dma (inter-module optimization)](#dma-inter-module-optimization)
+    - [lea-opt (inter-module optimization)](#lea-opt-inter-module-optimization)
 - [Intermittent support](#intermittent-support)
     - [inter](#inter)
 - [Undone](#undone)
@@ -140,10 +140,10 @@ void _conv_kernel(fixed *src_ptr, fixed *dst_ptr, mat_t *dst,
 
 ### Device-*Dependent*
 
-#### dma
+#### dma (inter-module optimization)
 
 Optimize the DMA transaction functions.
-#### lea-opt
+#### lea-opt (inter-module optimization)
 
 Optimize the LEA library APIs.
 

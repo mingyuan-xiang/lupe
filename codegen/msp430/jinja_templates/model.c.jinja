@@ -5,6 +5,7 @@
 #include <msp430.h>
 {%- if debug %}
 #include <libmspsyncioutils/mspsyncioutils.h>
+#include <libmsptimer/timekeeper.h>
 {%- endif %}
 
 #include <include/{{ model_name }}.h>

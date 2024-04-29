@@ -173,7 +173,10 @@ tmp/
 tmp_downloads
 
 # application folder
-apps/
+apps/*
+!apps/LeNet_breakdown
+!apps/LeNet_total
+!apps/inter_blink
 
 # maker outer Makefile
 Makefile
