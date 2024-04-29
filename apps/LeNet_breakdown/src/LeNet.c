@@ -32,8 +32,8 @@
 uint16_t LeNet(mat_t* model_in) {
   memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
   msp_send_printf("\n============== Input ==============\n");
-  start_timer();
   /* conv1 */
+  start_timer();
   memset(conv1_out_meta.data, 0, MAT_GET_SIZE(&conv1_out_meta)*sizeof(uint16_t));
   conv1(&conv1_in_meta, &conv1_out_meta, &conv1_weight_meta, &conv1_bias_meta);
   msp_send_printf("\n============== Output of conv1 ==============\n");
@@ -46,6 +46,7 @@ uint16_t LeNet(mat_t* model_in) {
   pool1_AveragePool(&pool1_AveragePool_in_meta, &pool1_AveragePool_out_meta);
   msp_send_printf("\n============== Output of pool1_AveragePool ==============\n");
   /* conv2 */
+  start_timer();
   memset(conv2_out_meta.data, 0, MAT_GET_SIZE(&conv2_out_meta)*sizeof(uint16_t));
   conv2(&conv2_in_meta, &conv2_out_meta, &conv2_weight_meta, &conv2_bias_meta);
   msp_send_printf("\n============== Output of conv2 ==============\n");
@@ -58,6 +59,7 @@ uint16_t LeNet(mat_t* model_in) {
   pool2_AveragePool(&pool2_AveragePool_in_meta, &pool2_AveragePool_out_meta);
   msp_send_printf("\n============== Output of pool2_AveragePool ==============\n");
   /* conv3 */
+  start_timer();
   memset(conv3_out_meta.data, 0, MAT_GET_SIZE(&conv3_out_meta)*sizeof(uint16_t));
   conv3(&conv3_in_meta, &conv3_out_meta, &conv3_weight_meta, &conv3_bias_meta);
   msp_send_printf("\n============== Output of conv3 ==============\n");

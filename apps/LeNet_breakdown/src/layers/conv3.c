@@ -32,6 +32,10 @@ void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
 
+  uint32_t init_time = 0;
+  uint32_t comp_time = 0;
+  uint32_t mem_time = 0;
+
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(output_line_size),
     .tapLength = MAKE_ALIGN_2(kernel_size),
@@ -53,6 +57,8 @@ void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   fill_params.length = LEA_DST_SIZE;
   msp_fill_q15(&fill_params, lea_tmp); 
 
+  init_time += stop_timer();
+
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
     input_fram_addr = (uint32_t)(input->data);
@@ -68,44 +74,64 @@ void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         */
         flt_lea_addr += sizeof(uint16_t);
         fill_params.length = LEA_FLT_SIZE;
+
+        start_timer();
         msp_fill_q15(&fill_params, lea_flt);
+        init_time += stop_timer();
 
         for (uint16_t k = 0; k < kernel_size; ++k) {
+          start_timer();
           DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
+          mem_time += stop_timer();
+
           flt_lea_addr += flt_addr_padding_offset;
           flt_fram_addr += flt_addr_row_offset;
         }
         /* restore flt_lea_addr pointer to the beginning of the array */
         flt_lea_addr = (uint32_t)lea_flt;
       } else {
+        start_timer();
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
+        mem_time += stop_timer();
+
         flt_fram_addr += flt_addr_offset;
       }
 
       for (uint16_t l = 0; l < output_line_num; ++l) {
         uint32_t tmp_input_addr = input_channel_addr;
         /* send output to LEA RAM */
+        start_timer();
         DMA_makeTransfer(tmp_output_addr, output_lea_addr, output_line_size);
+        mem_time += stop_timer();
 
         conv_flt = lea_flt;
 
         for (uint16_t k = 0; k < kernel_size; ++k) {
           /* send input to LEA RAM */
+          start_timer();
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, input_line_size);
+          mem_time += stop_timer();
+
           conv_params.coeffs = conv_flt;
 
           /* convolution */
+          start_timer();
           msp_fir_q15(&conv_params, lea_src, lea_tmp);
+          comp_time += stop_timer();
 
           /* accumulate results for a 2D convolution */
+          start_timer();
           msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+          comp_time += stop_timer();
 
           conv_flt += conv_params.tapLength;
           tmp_input_addr += input_line_size_offset;
         }
 
         /* bring back output from LEA RAM */
+        start_timer();
         DMA_makeTransfer(output_lea_addr, tmp_output_addr, output_line_size);
+        mem_time += stop_timer();
 
         tmp_output_addr += output_line_size_offset;
         input_channel_addr += input_line_size_offset; 
@@ -116,6 +142,7 @@ void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   /* add bias */
+  start_timer();
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
     for (uint16_t j = 0; j < output_len; ++j) {
@@ -125,4 +152,9 @@ void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       ++pos;
     }
   }
+  comp_time += stop_timer();
+
+  msp_send_printf("initialization time: %n", init_time);
+  msp_send_printf("compute time: %n", comp_time);
+  msp_send_printf("memory time: %n", mem_time);
 }
