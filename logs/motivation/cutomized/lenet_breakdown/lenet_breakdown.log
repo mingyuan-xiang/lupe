@@ -1,0 +1,46 @@
+============== Input ==============
+
+initialization time: 1408
+compute time: 6435
+memory time: 909
+
+============== Output of conv1 ==============
+
+
+============== Output of Relu ==============
+
+
+============== Output of pool1_AveragePool ==============
+
+initialization time: 305
+compute time: 17205
+memory time: 4007
+
+============== Output of conv2 ==============
+
+
+============== Output of Relu_1 ==============
+
+
+============== Output of pool2_AveragePool ==============
+
+initialization time: 2977
+compute time: 27792
+memory time: 9776
+
+============== Output of conv3 ==============
+
+
+============== Output of Relu_2 ==============
+
+
+============== Output of Flatten ==============
+
+
+============== Output of fc1 ==============
+
+
+============== Output of Relu_3 ==============
+
+
+============== Output of fc2 ==============
