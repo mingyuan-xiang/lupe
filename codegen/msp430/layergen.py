@@ -5,7 +5,7 @@ import os
 from . import JINJA_DIR, INDENT
 from .helpers import jinja_gen
 
-def layergen(code_dir, graph, opt_config, qf):
+def layergen(code_dir, graph, opt_config, qf, debug):
     """Generates code for each layer of the graph
     
     Args:
@@ -28,6 +28,7 @@ def layergen(code_dir, graph, opt_config, qf):
         cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
         cfile_params = {
             "layer_name": node.name,
+            "debug" : debug,
             "code" : node.get_code(jinja_dir, opt_config, qf)
         }
 

@@ -147,6 +147,11 @@ Optimize the DMA transaction functions.
 
 Optimize the LEA library APIs.
 
+remove this
+```
+LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
+```
+
 ## Intermittent support
 
 #### inter
