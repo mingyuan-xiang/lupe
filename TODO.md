@@ -1,10 +1,15 @@
-# Deal with cyclic graph
+# NOTE
 
-residual shortcut / recurrent
+fir param: output length
 
-# Dilations
+# Optimization
 
-# Prune
++ ring buffer
++ fir
+  + **NOTE**: Weights are flipped, so we need to change the weights accordingly 
+  + Calling FIR on small arrays is bad. We should either:
+    + Concatenate multiple rows and call at once
+    + Call mac on the whole matrix (we need to pad zeros at the end of each kernel row when the input row size is not the same as the kernel row)
 
 # Nice Chart
 

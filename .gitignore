@@ -178,6 +178,8 @@ apps/*
 !apps/LeNet_breakdown_unroll
 !apps/LeNet_total
 !apps/LeNet_total_unroll
+!apps/LeNet_total_unroll_mac
+!apps/LeNet_total_unroll_mac_special
 !apps/inter_blink
 
 # maker outer Makefile

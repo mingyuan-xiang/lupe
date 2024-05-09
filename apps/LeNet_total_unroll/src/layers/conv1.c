@@ -107,7 +107,6 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
         conv_flt = lea_flt;
 
-        #pragma GCC unroll 5
         for (uint16_t k = 0; k < 5; ++k) {
           /* send input to LEA RAM */
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, input_line_size);

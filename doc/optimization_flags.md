@@ -6,6 +6,7 @@
     - [layer-fusion](#layer-fusion)
     - [prop-const+loop-unroll](#prop-constloop-unroll)
     - [ring-buffer](#ring-buffer)
+    - [concatenate FIR](#concatenate-fir)
   - [Device-*Dependent*](#device-dependent)
     - [dma (inter-module optimization)](#dma-inter-module-optimization)
     - [lea-opt (inter-module optimization)](#lea-opt-inter-module-optimization)
@@ -137,6 +138,12 @@ void _conv_kernel(fixed *src_ptr, fixed *dst_ptr, mat_t *dst,
   }
 }
 ```
+
+#### concatenate FIR
+
+Calling FIR on small arrays is bad. We should either:
+  + Concatenate multiple rows and call at once
+  + Call mac on the whole matrix (we need to pad zeros at the end of each kernel row when the input row size is not the same as the kernel row)
 
 ### Device-*Dependent*
 

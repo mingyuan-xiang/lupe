@@ -3,23 +3,23 @@
 
 ============== Output of conv1 ==============
 
-total time: 9658
+total time: 29564
 
 ============== Output of Relu ==============
 
-total time: 739
+total time: 738
 
 ============== Output of pool1_AveragePool ==============
 
-total time: 1856
+total time: 1855
 
 ============== Output of conv2 ==============
 
-total time: 27497
+total time: 53183
 
 ============== Output of Relu_1 ==============
 
-total time: 251
+total time: 250
 
 ============== Output of pool2_AveragePool ==============
 
@@ -27,7 +27,7 @@ total time: 646
 
 ============== Output of conv3 ==============
 
-total time: 50722
+total time: 8664
 
 ============== Output of Relu_2 ==============
 
@@ -42,10 +42,10 @@ total time: 666
 
 ============== Output of Relu_3 ==============
 
-total time: 12
+total time: 13
 
 ============== Output of fc2 ==============
 
-total time: 51
-Got 4, Expecting: 7
+total time: 52
+Got 0, Expecting: 7
 @@@@
