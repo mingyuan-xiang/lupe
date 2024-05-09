@@ -1,13 +1,16 @@
+Test LeNet
+
+
 ============== Input ==============
 
 
 ============== Output of conv1 ==============
 
-total time: 29564
+total time: 29827
 
 ============== Output of Relu ==============
 
-total time: 738
+total time: 739
 
 ============== Output of pool1_AveragePool ==============
 
@@ -15,7 +18,7 @@ total time: 1855
 
 ============== Output of conv2 ==============
 
-total time: 53183
+total time: 54271
 
 ============== Output of Relu_1 ==============
 
@@ -27,7 +30,7 @@ total time: 646
 
 ============== Output of conv3 ==============
 
-total time: 8664
+total time: 22576
 
 ============== Output of Relu_2 ==============
 
@@ -47,5 +50,5 @@ total time: 13
 ============== Output of fc2 ==============
 
 total time: 52
-Got 0, Expecting: 7
+Got 7, Expecting: 7
 @@@@

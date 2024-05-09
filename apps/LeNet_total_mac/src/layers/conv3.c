@@ -1,10 +1,10 @@
 #include <layers/include/utils.h>
-#include <layers/include/conv2.h>
+#include <layers/include/conv3.h>
 #include <buffer/include/buffer.h>
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <libmsptimer/timekeeper.h>
 
-void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+void conv3(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
   uint16_t flt_len = weight->strides[1];
@@ -56,7 +56,6 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_fill_q15(&fill_params, lea_tmp);
 
   /* convolution */
-  uint16_t flt_pos = 0;
   uint16_t out_pos = 0;
   int16_t res;
 
@@ -68,16 +67,21 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       /* send kernel to LEA RAM */
       if (kernel_size % 2) {
-        uint16_t lea_flt_pos = 0;
-        #pragma GCC unroll 5
-        for (uint16_t k = 0; k < 5; ++k) {
-          #pragma GCC unroll 5
-          for (uint16_t s = 0; s < 5; ++s) {
-            lea_flt[lea_flt_pos] = weight->data[flt_pos];
-            flt_pos++;
-            lea_flt_pos++;
-          }
+        /*
+        * pad zero to the beginning of the filter if the filter's size is
+        * not aligned to 2
+        */
+        flt_lea_addr += sizeof(uint16_t);
+        fill_params.length = LEA_FLT_SIZE;
+        msp_fill_q15(&fill_params, lea_flt);
+
+        for (uint16_t k = 0; k < kernel_size; ++k) {
+          DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
+          flt_lea_addr += flt_addr_padding_offset;
+          flt_fram_addr += flt_addr_row_offset;
         }
+        /* restore flt_lea_addr pointer to the beginning of the array */
+        flt_lea_addr = (uint32_t)lea_flt;
       } else {
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
         flt_fram_addr += flt_addr_offset;
