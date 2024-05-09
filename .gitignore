@@ -181,6 +181,7 @@ apps/*
 !apps/LeNet_total_unroll_mac
 !apps/LeNet_total_unroll_mac_special
 !apps/inter_blink
+!apps/memcpy
 
 # maker outer Makefile
 Makefile
