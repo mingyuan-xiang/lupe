@@ -2,6 +2,8 @@
 
 fir param: output length
 
+add LEA_MIN_SIZE
+
 # Optimization
 
 + ring buffer

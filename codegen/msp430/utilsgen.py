@@ -12,6 +12,11 @@ def utilsgen(code_dir, opt_config):
         code_dir: The directory to save the code
         opt_config: The optimization configuration
     """
+    # LEA size has to be multiple of 2
+    if (opt_config["lea_flt_size"] % 2 or opt_config["lea_src_size"] % 2 or
+        opt_config["lea_dst_size"] % 2):
+        raise ValueError('LEA size has to be multiple of 2')
+
     # utils header
     header_template_path = os.path.join(JINJA_DIR, "utils.h.jinja")
     header_params = {
