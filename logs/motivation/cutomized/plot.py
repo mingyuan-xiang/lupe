@@ -31,7 +31,8 @@ new_colors = maps(np.linspace(0.25, 0.75, 256))
 new_cmap = mcolors.LinearSegmentedColormap.from_list("Set2_mod", new_colors)
 
 ax = time_df.plot(
-    kind="barh", linewidth=0, ax=ax, legend=False, grid=False, cmap=new_cmap
+    kind="barh", linewidth=0, ax=ax, legend=False, grid=False,
+    width=0.65, cmap=new_cmap
 )
 
 ax.set_xlabel('Time/Sec')
@@ -39,3 +40,4 @@ ax.legend()
 
 fig.tight_layout(pad=0.1)
 plt.savefig('lenet_unroll.png', dpi=1000)
+# plt.show()
