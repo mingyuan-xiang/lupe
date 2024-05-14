@@ -12,7 +12,12 @@ from .matrixgen import (
 )
 
 def weightgen(code_dir, graph, qf, loc="hi"):
-    """Generate the weight and bias files"""
+    """
+    Generate the weight and bias files
+    Return:
+        The kernel matrix size
+    """
+    flt_sizes = []
     for n in graph.graph:
         node = graph.node_list[n]
         if node.has_weights():
@@ -44,3 +49,7 @@ def weightgen(code_dir, graph, qf, loc="hi"):
                 c_code,
                 os.path.join(code_dir, param_file_name + ".c")
             )
+
+            flt_sizes.append(node.weight.data[0,0,:,:].size)
+
+    return flt_sizes

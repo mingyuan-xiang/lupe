@@ -5,7 +5,7 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def utilsgen(code_dir, opt_config):
+def utilsgen(code_dir, opt_config, flt_sizes):
     """Generates common helper functions for each layer
     
     Args:
@@ -16,6 +16,12 @@ def utilsgen(code_dir, opt_config):
     if (opt_config["lea_flt_size"] % 2 or opt_config["lea_src_size"] % 2 or
         opt_config["lea_dst_size"] % 2):
         raise ValueError('LEA size has to be multiple of 2')
+
+    for s in flt_sizes:
+        if opt_config["lea_flt_size"] < s:
+            raise ValueError(
+                'LEA filter array must be greater than the kernel matrix size'
+            )
 
     # utils header
     header_template_path = os.path.join(JINJA_DIR, "utils.h.jinja")

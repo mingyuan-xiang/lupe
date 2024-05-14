@@ -71,7 +71,7 @@ class MSP430Gen:
         if not os.path.exists(params_dir):
             os.makedirs(params_dir)
             os.makedirs(os.path.join(params_dir, "include"))
-        weightgen(params_dir, self.graph, self.qf, loc=loc)
+        flt_sizes = weightgen(params_dir, self.graph, self.qf, loc=loc)
 
         # Generate the buffer files
         buffer_dir = os.path.join(self.src_dir, "buffer")
@@ -85,7 +85,7 @@ class MSP430Gen:
         if not os.path.exists(layer_dir):
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
-        utilsgen(layer_dir, self.opt_config)
+        utilsgen(layer_dir, self.opt_config, flt_sizes)
         layergen(layer_dir, self.graph, self.opt_config, self.qf, self.debug)
 
         # Generate the makefile
