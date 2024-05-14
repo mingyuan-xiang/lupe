@@ -176,12 +176,7 @@ tmp_downloads
 apps/*
 !apps/LeNet_breakdown
 !apps/LeNet_breakdown_unroll
-!apps/LeNet_total
-!apps/LeNet_total_mac
-!apps/LeNet_total_unroll
-!apps/LeNet_total_unroll_mac
-!apps/LeNet_total_unroll_mac_special
-!apps/LeNet_total_handcraft
+!apps/LeNet_total*
 !apps/inter_blink
 !apps/memcpy
 

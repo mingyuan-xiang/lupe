@@ -10,7 +10,6 @@
 #define LEA_FLT_SIZE 100
 #define LEA_SRC_SIZE 100
 #define LEA_DST_SIZE 100
-#define LEA_MIN_SIZE 100
 
 #define LUPE_MIN 0x8000
 #define LUPE_Q15_MAX 32766 // 2^15 - 2
