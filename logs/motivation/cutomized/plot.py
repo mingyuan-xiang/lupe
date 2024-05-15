@@ -8,16 +8,16 @@ import matplotlib.colors as mcolors
 FREQ = 32767
 
 time = np.array(
-    [[59268, 45729, 14107, 13248],
-    [27994, 27719, 31386, 35716],
-    [9699, 10863, 20463, 22274]]
+    [[13248, 14107, 45729, 59268],
+    [35716, 31386, 27719, 27994],
+    [22274, 20463, 10863, 9699]]
 ) / FREQ
 
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
     columns=[
-        'FIR', 'FIR + Loop Unrolling',
-        'MAC', 'MAC + Loop Unrolling']
+        'MAC + DMA', 'MAC + Loop Assign',
+        'FIR + DMA', 'FIR + Loop Assign']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -36,7 +36,8 @@ ax = time_df.plot(
 )
 
 ax.set_xlabel('Time/Sec')
-ax.legend()
+handles, labels = ax.get_legend_handles_labels()
+ax.legend(handles[::-1], labels[::-1])
 
 fig.tight_layout(pad=0.1)
 plt.savefig('lenet_unroll.png', dpi=1000)
