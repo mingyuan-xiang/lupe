@@ -25,26 +25,30 @@ extern _iq31 lea_res[2];
 
 extern DMA_initParam dma_config;
 
-#define DMA_makeTransfer(src, dst, size) {\
-  uint8_t channel = dma_config.channelSelect; \
-  /* DMA_setTransferSize */ \
-  HWREG16(DMA_BASE + channel + OFS_DMA0SZ) = size; \
-  /* DMA_setSrcAddress */ \
-  __data16_write_addr((unsigned short)(DMA_BASE + channel + OFS_DMA0SA), src); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) &= ~(DMASRCINCR_3); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMA_DIRECTION_INCREMENT; \
-  /* DMA_setDstAddress */ \
-  __data16_write_addr((unsigned short)(DMA_BASE + channel + OFS_DMA0DA), dst); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) &= ~(DMADSTINCR_3); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= (DMA_DIRECTION_INCREMENT << 2); \
-  /* DMA_DMA_enableTransfers */ \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMAEN; \
-  /* shut off CPU and make DMA transfer */ \
-  uint16_t interruptState = __get_interrupt_state(); \
-  __disable_interrupt(); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMAREQ; \
-  __bis_SR_register(GIE + LPM0_bits); \
-  __set_interrupt_state(interruptState); \
+#define __STICH(A, B) A##B
+#define STICH(A, B) __STICH(A, B)
+#define __STIC3(A, B, C) A##B##C
+#define STIC3(A, B, C) __STIC3(A, B, C)
+
+// Should generate the channel instead of hardcode 0
+// #define DMA_makeTransfer_opt(CHANNEL, SRCADDR, DSTADDR, SIZE) {             \
+//     STIC3(DMA, CHANNEL, CTL) = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_3 |      \
+//       DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE;                          \
+//     __data16_write_addr((uintptr_t)(&STIC3(DMA, CHANNEL, SA)), SRCADDR);    \
+//     __data16_write_addr((uintptr_t)(&STIC3(DMA, CHANNEL, DA)), DSTADDR);    \
+//     STIC3(DMA, CHANNEL, SZ) = SIZE;                                         \
+//     STIC3(DMA, CHANNEL, CTL) |= DMAEN | DMAREQ;                             \
+//     __bis_SR_register(GIE + LPM0_bits);                                     \
+//   }
+
+#define DMA_makeTransfer(SRCADDR, DSTADDR, SIZE) {                     \
+  STIC3(DMA, 0, CTL) = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_3 |         \
+    DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE;                       \
+  __data16_write_addr((uintptr_t)(&STIC3(DMA, 0, SA)), SRCADDR);       \
+  __data16_write_addr((uintptr_t)(&STIC3(DMA, 0, DA)), DSTADDR);       \
+  STIC3(DMA, 0, SZ) = SIZE;                                            \
+  STIC3(DMA, 0, CTL) |= DMAEN | DMAREQ;                                \
+  __bis_SR_register(GIE + LPM0_bits);                                  \
 }
 
 void init_lupe();
