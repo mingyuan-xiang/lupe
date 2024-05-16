@@ -16,7 +16,7 @@ time = np.array(
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
     columns=[
-        'Hybrid', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
+        'Lupe', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
