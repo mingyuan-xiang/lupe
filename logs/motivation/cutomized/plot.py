@@ -8,15 +8,15 @@ import matplotlib.colors as mcolors
 FREQ = 32767
 
 time = np.array(
-    [[11473, 13169, 13248, 55203, 45729],
-    [26935, 29228, 35716, 26844, 27719],
-    [9488, 19064, 22274, 9508, 10863]]
+    [[11473, 29827, 13169, 13248, 55203, 45729],
+    [26935, 54271, 29228, 35716, 26844, 27719],
+    [9488, 22576, 19064, 22274, 9508, 10863]]
 ) / FREQ
 
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
     columns=[
-        'Lupe', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
+        'Lupe', 'MAC + DMA (No Restructure)', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -26,7 +26,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111)
 
 maps = plt.colormaps['Set2']
-new_colors = maps(np.linspace(0.25, 0.75, 256))
+new_colors = maps(np.linspace(0.125, 0.825, 256))
 new_cmap = mcolors.LinearSegmentedColormap.from_list("Set2_mod", new_colors)
 
 ax = time_df.plot(
@@ -39,5 +39,5 @@ handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles[::-1], labels[::-1])
 
 fig.tight_layout(pad=0.1)
-plt.savefig('lenet_unroll.png', dpi=1000)
+plt.savefig('lenet_unroll.png', dpi=4000)
 # plt.show()
