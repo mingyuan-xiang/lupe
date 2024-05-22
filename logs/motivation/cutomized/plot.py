@@ -16,7 +16,7 @@ time = np.array(
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
     columns=[
-        'Lupe', 'MAC + DMA (No Restructure)', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
+        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -39,5 +39,5 @@ handles, labels = ax.get_legend_handles_labels()
 ax.legend(handles[::-1], labels[::-1])
 
 fig.tight_layout(pad=0.1)
-plt.savefig('lenet_unroll.png', dpi=4000)
+plt.savefig('lenet_unroll.png', dpi=2000)
 # plt.show()
