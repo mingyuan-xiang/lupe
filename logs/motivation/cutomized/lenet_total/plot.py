@@ -2,13 +2,13 @@ import matplotlib.pyplot as plt
 
 model = ('LeNet5')
 data = {
-    'conv1' : 9699,
-    'pool1' : 1856,
-    'conv2' : 27994,
-    'pool2' : 646,
-    'conv3' : 59268,
-    'fc1' : 667,
-    'fc2' : 52,
+    'conv1' : 5435,
+    'pool1' : 1108,
+    'conv2' : 15751,
+    'pool2' : 388,
+    'conv3' : 32737,
+    'fc1' : 376,
+    'fc2' : 29,
 }
 
 width = 0.01

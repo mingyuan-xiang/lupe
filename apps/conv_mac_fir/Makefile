@@ -1,8 +1,8 @@
-EXEC = inter_blink
+EXEC = conv
 
-OBJECTS = main.o
+OBJECTS = main.o input.o conv1.o utils.o mac_buffer.o
 
-DEPS = libdsp:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmsppoweroff:gcc librng:gcc libmspdriver:gcc libmsp:gcc
+DEPS = libdsp:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
 
 # clock config
 export LIBMSP_CLK_DCOFREQ = 16

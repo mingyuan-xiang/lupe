@@ -1,6 +1,6 @@
-EXEC = {{ model_name }}
+EXEC = LeNet
 
-OBJECTS = main.o {{model_name}}.o buffer/input.o buffer/buffer.o layers/utils.o{%for l in layer_list%} layers/{{l}}.o{%endfor%}{%for l in layers_with_weights%} params/{{l}}.o{%endfor%}
+OBJECTS = main.o LeNet.o buffer/input.o buffer/buffer.o layers/utils.o layers/conv1.o layers/Relu.o layers/pool1_AveragePool.o layers/conv2.o layers/Relu_1.o layers/pool2_AveragePool.o layers/conv3.o layers/Relu_2.o layers/Flatten.o layers/fc1.o layers/Relu_3.o layers/fc2.o params/conv1.o params/conv2.o params/conv3.o params/fc1.o params/fc2.o
 
 DEPS = libdsp:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
 

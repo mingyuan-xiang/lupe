@@ -182,7 +182,7 @@ apps/*
 !apps/memcpy
 
 # maker outer Makefile
-Makefile
+/Makefile
 
 # gcc folder
 .toolchains/

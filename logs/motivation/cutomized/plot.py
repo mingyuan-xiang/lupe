@@ -8,15 +8,19 @@ import matplotlib.colors as mcolors
 FREQ = 32767
 
 time = np.array(
-    [[11473, 29827, 13169, 13248, 55203, 45729],
-    [26935, 54271, 29228, 35716, 26844, 27719],
-    [9488, 22576, 19064, 22274, 9508, 10863]]
-) / FREQ
+    [[6853, 13421, 7882, 8096, 32737, 27353],
+    [15823, 32684, 17618, 21963, 15751, 16387],
+    [5448, 18020, 11549, 13722, 5435, 6337]]
+).astype('float64')
+lupe = time[:, 0].reshape(-1, 1) 
+time = time / lupe
+
 
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
     columns=[
-        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy', 'FIR + DMA', 'FIR + Loop Copy']
+        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy',
+        'FIR + DMA', 'FIR + Loop Copy']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -34,10 +38,22 @@ ax = time_df.plot(
     width=0.7, cmap=new_cmap
 )
 
-ax.set_xlabel('Time/Sec')
+bars = ax.patches
+# patterns = [ "/" , "\\" , "|" , "-" , "+" , "x", "o", "O", ".", "*" ]
+patterns = ["oo", "++",  "\\\\" , "||", "---", "xx"]
+
+hatches = []
+for p in patterns:
+    for _ in range(len(time)):
+        hatches.append(p)
+
+for bar, hatch in zip(bars, hatches):
+    bar.set_hatch(hatch)
+
+ax.set_xlabel('Normalized to Inference Time of Lupe')
 handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1])
+ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.54, 0.295))
 
 fig.tight_layout(pad=0.1)
-plt.savefig('lenet_unroll.png', dpi=2000)
+plt.savefig('lenet_unroll.png', dpi=1000)
 # plt.show()

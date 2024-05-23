@@ -1,46 +1,54 @@
+Test LeNet
+
+
+============== Input ==============
+
+
 ============== Output of conv1 ==============
 
-total time: 9699
+total time: 5435
 
 ============== Output of Relu ==============
 
-total time: 738
+total time: 389
 
 ============== Output of pool1_AveragePool ==============
 
-total time: 1856
+total time: 1108
 
 ============== Output of conv2 ==============
 
-total time: 27994
+total time: 15751
 
 ============== Output of Relu_1 ==============
 
-total time: 251
+total time: 134
 
 ============== Output of pool2_AveragePool ==============
 
-total time: 646
+total time: 388
 
 ============== Output of conv3 ==============
 
-total time: 59268
+total time: 32737
 
 ============== Output of Relu_2 ==============
 
-total time: 19
+total time: 10
 
 ============== Output of Flatten ==============
 
 
 ============== Output of fc1 ==============
 
-total time: 667
+total time: 376
 
 ============== Output of Relu_3 ==============
 
-total time: 13
+total time: 6
 
 ============== Output of fc2 ==============
 
-total time: 52
+total time: 29
+Got 9, Expecting: 7
+@@@@
