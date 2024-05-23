@@ -7,9 +7,6 @@
 [submodule "ext/libmatAbstract"]
 	path = ext/libmatAbstract
 	url = git@github.com:mingyuan-xiang/libmatAbstract.git
-[submodule "ext/libmsp"]
-	path = ext/libmsp
-	url = git@github.com:Mahdigho/libmsp.git
 [submodule "ext/libmspio"]
 	path = ext/libmspio
 	url = git@github.com:mingyuan-xiang/libmspio.git
@@ -43,3 +40,6 @@
 [submodule "models"]
 	path = models
 	url = git@github.com:mingyuan-xiang/models.git
+[submodule "ext/libmsp"]
+	path = ext/libmsp
+	url = git@github.com:Mahdigho/libmsp.git
