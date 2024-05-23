@@ -7,20 +7,30 @@ import matplotlib.colors as mcolors
 
 FREQ = 32767
 
+# time = np.array(
+#     [[6853, 13421, 7882, 8096, 32737, 27353],
+#     [15823, 32684, 17618, 21963, 15751, 16387],
+#     [5448, 18020, 11549, 13722, 5435, 6337]]
+# ).astype('float64')
+
+# no loop unroll
 time = np.array(
-    [[6853, 13421, 7882, 8096, 32737, 27353],
-    [15823, 32684, 17618, 21963, 15751, 16387],
-    [5448, 18020, 11549, 13722, 5435, 6337]]
+    [[6853, 13421, 7882, 32737],
+    [15823, 32684, 17618, 15751],
+    [5448, 18020, 11549, 5435]]
 ).astype('float64')
+
 lupe = time[:, 0].reshape(-1, 1) 
 time = time / lupe
 
 
 time_df = pd.DataFrame(time,
     index=['conv3', 'conv2', 'conv1'],
+    # columns=[
+    #     'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy',
+    #     'FIR + DMA', 'FIR + Loop Copy']
     columns=[
-        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy',
-        'FIR + DMA', 'FIR + Loop Copy']
+        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'FIR + DMA']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -40,7 +50,7 @@ ax = time_df.plot(
 
 bars = ax.patches
 # patterns = [ "/" , "\\" , "|" , "-" , "+" , "x", "o", "O", ".", "*" ]
-patterns = ["oo", "++",  "\\\\" , "||", "---", "xx"]
+patterns = ["oo", "++",  "\\\\" , "||"]
 
 hatches = []
 for p in patterns:
@@ -52,7 +62,7 @@ for bar, hatch in zip(bars, hatches):
 
 ax.set_xlabel('Normalized to Inference Time of Lupe')
 handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.54, 0.295))
+ax.legend(handles[::-1], labels[::-1], loc='center right')#bbox_to_anchor=(0.54, 0.295))
 
 fig.tight_layout(pad=0.1)
 plt.savefig('lenet_unroll.png', dpi=1000)
