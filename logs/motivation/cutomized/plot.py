@@ -30,7 +30,7 @@ time_df = pd.DataFrame(time,
     #     'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy',
     #     'FIR + DMA', 'FIR + Loop Copy']
     columns=[
-        'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'FIR + DMA']
+        'Lupe', 'MAC', 'MAC (Reorder)', 'FIR']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
@@ -62,7 +62,7 @@ for bar, hatch in zip(bars, hatches):
 
 ax.set_xlabel('Normalized to Inference Time of Lupe')
 handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1], loc='center right')#bbox_to_anchor=(0.54, 0.295))
+ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1, 1), loc=1, borderaxespad=0)
 
 fig.tight_layout(pad=0.1)
 plt.savefig('lenet_unroll.png', dpi=1000)
