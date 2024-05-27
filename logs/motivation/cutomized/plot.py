@@ -15,9 +15,9 @@ FREQ = 32767
 
 # no loop unroll
 time = np.array(
-    [[6853, 13421, 7882, 32737],
-    [15823, 32684, 17618, 15751],
-    [5448, 18020, 11549, 5435]]
+    [[6853, 7882, 32737],
+    [15823, 17618, 15751],
+    [5448, 11549, 5435]]
 ).astype('float64')
 
 lupe = time[:, 0].reshape(-1, 1) 
@@ -30,11 +30,13 @@ time_df = pd.DataFrame(time,
     #     'Lupe', 'MAC + DMA (Static)', 'MAC + DMA', 'MAC + Loop Copy',
     #     'FIR + DMA', 'FIR + Loop Copy']
     columns=[
-        'Lupe', 'MAC', 'MAC (Reorder)', 'FIR']
+        'Top-down', 'MAC', 'FIR']
 )
 
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 14})
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
 
 fig = plt.figure()
 ax = fig.add_subplot(111)
@@ -50,7 +52,7 @@ ax = time_df.plot(
 
 bars = ax.patches
 # patterns = [ "/" , "\\" , "|" , "-" , "+" , "x", "o", "O", ".", "*" ]
-patterns = ["oo", "++",  "\\\\" , "||"]
+patterns = ["oo", "++", "\\\\"]
 
 hatches = []
 for p in patterns:
@@ -62,8 +64,8 @@ for bar, hatch in zip(bars, hatches):
 
 ax.set_xlabel('Normalized to Inference Time of Lupe')
 handles, labels = ax.get_legend_handles_labels()
-ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(1, 1), loc=1, borderaxespad=0)
+ax.legend(handles[::-1], labels[::-1], loc='upper right')
 
 fig.tight_layout(pad=0.1)
-plt.savefig('lenet_unroll.png', dpi=1000)
+plt.savefig('lenet_unroll.png', dpi=500)
 # plt.show()
