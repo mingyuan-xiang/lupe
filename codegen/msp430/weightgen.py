@@ -50,6 +50,7 @@ def weightgen(code_dir, graph, qf, loc="hi"):
                 os.path.join(code_dir, param_file_name + ".c")
             )
 
-            flt_sizes.append(node.weight.data[0,0,:,:].size)
+            if "conv" in node.name:
+                flt_sizes.append(node.weight.data[0,0,:,:].size)
 
     return flt_sizes

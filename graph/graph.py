@@ -38,7 +38,7 @@ class LupeGraph:
         self._register(model)
 
     def _register_weights(self, model):
-        """Register the weights"""
+        """Register tensors only in the node_list"""
         weights = model.graph.initializer
 
         for w in weights:
@@ -50,6 +50,14 @@ class LupeGraph:
             elif "bias" in w.name:
                 bias = get_layer_constructor(LupeType.BIAS)(w, None, None)
                 self.node_list[bias.name] = bias
+
+        for node in model.graph.node:
+            if "Constant" in node.name:
+                lupe_type = get_lupe_type(node.op_type)
+
+                layer = get_layer_constructor(lupe_type)(node, None, None)
+                name = layer.name
+                self.node_list[name] = layer
 
     def _register(self, model):
         """Use BFS to register all the nodes in the graph
@@ -76,6 +84,9 @@ class LupeGraph:
         self.output_name = o.name
 
         for node in model.graph.node:
+            if "Constant" in node.name:
+                # Skip the constant node
+                continue
             self._add_layer(node, model)
 
     def _add_layer(self, node, model):
@@ -120,6 +131,7 @@ class LupeGraph:
         print(f" {self.name} ", end="")
         print("====================================")
         print()
+
         for node in self.graph:
             self.node_list[node].print()
             print()

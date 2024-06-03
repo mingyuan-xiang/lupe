@@ -8,6 +8,8 @@ from .activation import Relu, Tanh
 from .transition import Flatten
 from .fully_connected import FullyConnected
 from .weights import Bias, Weight
+from .constant import Constant
+from .clip import Clip
 
 class LupeType(Enum):
     """Supported layer types"""
@@ -24,6 +26,7 @@ class LupeType(Enum):
     RESHAPE = auto()
     TANH = auto()
     WEIGHT = auto()
+    CLIP = auto()
 
 def get_lupe_type(onnx_type):
     """Get the Lupe supported type based on the ONNX operation type
@@ -52,6 +55,8 @@ def get_lupe_type(onnx_type):
         ty = LupeType.CONSTANT
     elif onnx_type == "Flatten":
         ty = LupeType.FLATTEN
+    elif onnx_type == "Clip":
+        ty = LupeType.CLIP
     else:
         raise ValueError(f"Unsupported ONNX operation type: {onnx_type}")
 
@@ -90,6 +95,8 @@ def lupe_type_to_string(lupe_type):
         string = "Tanh"
     elif lupe_type == LupeType.WEIGHT:
         string = "Weight"
+    elif lupe_type == LupeType.CLIP:
+        string = "Clip"
     else:
         raise ValueError(f"Unsupported LupeType: {lupe_type}")
 
@@ -117,6 +124,10 @@ def get_layer_constructor(lupe_type):
         layer = Bias
     elif lupe_type == LupeType.WEIGHT:
         layer = Weight
+    elif lupe_type == LupeType.CONSTANT:
+        layer = Constant
+    elif lupe_type == LupeType.CLIP:
+        layer = Clip
     else:
         raise ValueError(f"Unsupported Lupe type: {lupe_type}")
 

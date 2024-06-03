@@ -2,7 +2,7 @@
 
 import os
 
-from . import JINJA_DIR, INDENT
+from . import JINJA_DIR
 from .helpers import jinja_gen
 
 def layergen(code_dir, graph, opt_config, qf, debug):

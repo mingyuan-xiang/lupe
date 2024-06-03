@@ -1,19 +1,16 @@
-void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
-  {%- if prop_const %}
-  uint16_t in_channels = {{ in_ch }};
-  uint16_t out_channels = {{ out_ch }};
-  uint16_t flt_len = {{ flt_len }};
-  uint16_t output_len = {{ out_len }};
-  uint16_t input_len = {{ in_len }};
-  uint16_t kernel_size = {{ flt_size }};
-  {% else %}
+#include <layers/include/utils.h>
+#include <layers/include/conv1.h>
+#include <buffer/include/buffer.h>
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <libmsptimer/timekeeper.h>
+
+void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
   uint16_t flt_len = weight->strides[1];
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
-  {%- endif %}
 
   uint32_t flt_lea_addr = (uint32_t)lea_flt;
   uint32_t flt_fram_addr = (uint32_t)(weight->data);
@@ -29,15 +26,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint32_t output_addr_offset = output_len * sizeof(int16_t);
 
   int16_t* conv_flt = lea_flt;
-  {%- if prop_const %}
-  uint16_t input_line_size = {{ in_line_size }};
-  uint16_t output_line_size = {{ out_line_size }};
-  uint16_t output_line_num = {{ out_line_num }};
-  {% else %}
   uint16_t input_line_size = input->dims[3];
   uint16_t output_line_size = output->dims[3];
   uint16_t output_line_num = output->dims[2];
-  {%- endif %}
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
 
@@ -61,35 +52,28 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   fill_params.length = LEA_DST_SIZE;
   msp_fill_q15(&fill_params, lea_tmp);
-  {%- if padding %}
 
-  /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
-  {%- if prop_const %}
-  uint16_t input_line_num = {{ in_line_num }} - {{ padding["top"] + padding["bottom"]}};
-  uint16_t input_line_size_bf = {{ in_line_size }} - {{ padding["left"] + padding["right"] }};
-  {% else %}
-  uint16_t input_line_num = input->dims[2] - {{ padding["top"] + padding["bottom"] }};
-  uint16_t input_line_size_bf = input->dims[3] - {{ padding["left"] + padding["right"] }};
-  {%- endif %}
+  /* Pad the input for (2, 2, 2, 2) */
+  uint16_t input_line_num = input->dims[2] - 4;
+  uint16_t input_line_size_bf = input->dims[3] - 4;
   _q15* padding_ptr_in = input->data;
   _q15* padding_ptr_out = output->data;
   for (uint16_t i = 0; i < in_channels; ++i) {
-    {%- for n in range(padding["top"]) %}
     padding_ptr_out += input_line_size;
-    {%- endfor %}
+    padding_ptr_out += input_line_size;
     for (uint16_t j = 0; j < input_line_num; ++j) {
-      padding_ptr_out += {{ padding["left"] }};
+      padding_ptr_out += 2;
       memcpy(padding_ptr_out, padding_ptr_in, input_line_size_bf*sizeof(uint16_t));
       padding_ptr_in += input_line_size_bf;
-      padding_ptr_out += ({{ padding["right"] }} + input_line_size_bf);
+      padding_ptr_out += (2 + input_line_size_bf);
     }
-    {%- for n in range(padding["bottom"]) %}
     padding_ptr_out += input_line_size;
-    {%- endfor %}
+    padding_ptr_out += input_line_size;
   }
   memcpy(input->data, output->data, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
-  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
-  {%- endif %} 
+  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t)); 
+
+  msp_send_mat(&conv1_in_meta);
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -99,28 +83,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_channel_addr = input_fram_addr;
 
       /* send kernel to LEA RAM */
-      {%- if prop_const %} 
-      {%- if flt_size % 2 != 0 %}
-      /*
-      * pad zero to the beginning of the filter if the filter's size is
-      * not aligned to 2
-      */
-      flt_lea_addr += sizeof(uint16_t);
-      fill_params.length = LEA_FLT_SIZE;
-      msp_fill_q15(&fill_params, lea_flt);
-
-      for (uint16_t k = 0; k < kernel_size; ++k) {
-        DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
-        flt_lea_addr += flt_addr_padding_offset;
-        flt_fram_addr += flt_addr_row_offset;
-      }
-      /* restore flt_lea_addr pointer to the beginning of the array */
-      flt_lea_addr = (uint32_t)lea_flt;
-      {% else %}
-      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
-      flt_fram_addr += flt_addr_offset;
-      {%- endif %}
-      {% else %}
       if (kernel_size % 2) {
         /*
         * pad zero to the beginning of the filter if the filter's size is
@@ -141,7 +103,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
         flt_fram_addr += flt_addr_offset;
       }
-      {%- endif %}
 
       for (uint16_t l = 0; l < output_line_num; ++l) {
         uint32_t tmp_input_addr = input_channel_addr;
@@ -180,10 +141,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
     for (uint16_t j = 0; j < output_len; ++j) {
-    {#- Saturate left shift #}
-    {%- for n in range(qf) %}
       output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
-    {%- endfor %}
+      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
       output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);
       ++pos;
     }

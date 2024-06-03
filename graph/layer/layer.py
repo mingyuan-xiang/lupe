@@ -70,9 +70,18 @@ class LupeLayer(ABC):
                     bias_name = name_conversion(input_name)
                     self.bias = node_list[bias_name]
 
+        # register min and max for clip
+        if "Clip" in node.name:
+            if node_list is None:
+                raise ValueError("node_list is None")
+            min_name = name_conversion(node.input[1])
+            self.min = node_list[min_name].value
+            max_name = name_conversion(node.input[2])
+            self.max = node_list[max_name].value
+
     def _get_input_size(self, node, model):
         """Set the input size"""
-        if model is None or len(node.output) < 1:
+        if model is None or len(node.input) < 1:
             return None
         # Assume the input is the first element in inputs
         input_name = node.input[0]

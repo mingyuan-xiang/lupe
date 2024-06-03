@@ -94,4 +94,8 @@ make apps/<app name>/bld/gcc/depclean
 
 # Python requirements
 
-TODO
+# Print the model
+
+```
+./lupe.py print --model-name LeNet --model-path models/onnx/LeNet.onnx
+```
