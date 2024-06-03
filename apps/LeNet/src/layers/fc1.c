@@ -1,8 +1,6 @@
 #include <layers/include/utils.h>
 #include <layers/include/fc1.h>
 #include <buffer/include/buffer.h>
-#include <libmspsyncioutils/mspsyncioutils.h>
-#include <libmsptimer/timekeeper.h>
 
 static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output, uint16_t line_size, msp_mac_q15_params* mac_params) {
   uint32_t weight_fram_addr = (uint32_t)weight->data + (input_fram_addr - ((uint32_t)input->data));
@@ -21,7 +19,7 @@ static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t*
 
     msp_mac_q15(mac_params, lea_src, lea_tmp, lea_res);
 
-    res = (int16_t)(lea_res[0] >> 14);
+    res = (int16_t)(lea_res[0] >> 13);
     output->data[i] = __saturated_add_q15(output->data[i], res);
 
     weight_fram_addr += weight_line_offset;

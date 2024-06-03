@@ -1,8 +1,6 @@
 #include <layers/include/utils.h>
 #include <layers/include/conv1.h>
 #include <buffer/include/buffer.h>
-#include <libmspsyncioutils/mspsyncioutils.h>
-#include <libmsptimer/timekeeper.h>
 
 void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
@@ -73,8 +71,6 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   memcpy(input->data, output->data, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
   memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t)); 
 
-  msp_send_mat(&conv1_in_meta);
-
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
     input_fram_addr = (uint32_t)(input->data);
@@ -141,6 +137,7 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
     for (uint16_t j = 0; j < output_len; ++j) {
+      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
       output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
       output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
       output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);

@@ -1,8 +1,6 @@
 #include <layers/include/utils.h>
 #include <layers/include/pool1_AveragePool.h>
 #include <buffer/include/buffer.h>
-#include <libmspsyncioutils/mspsyncioutils.h>
-#include <libmsptimer/timekeeper.h>
 
 void pool1_AveragePool(mat_t* input, mat_t* output) {
   uint16_t in_ch = input->dims[1];

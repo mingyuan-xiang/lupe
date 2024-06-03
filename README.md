@@ -99,3 +99,9 @@ make apps/<app name>/bld/gcc/depclean
 ```
 ./lupe.py print --model-name LeNet --model-path models/onnx/LeNet.onnx
 ```
+
+# Model
+
++ LeNet
+    - Clip(-1, 1) both runtime and training
+    - q3.12
