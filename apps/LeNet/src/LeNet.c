@@ -30,6 +30,8 @@
 #include <layers/include/Clip_5.h>
 #include <layers/include/fc2.h>
 #include <layers/include/Clip_6.h>
+#include <layers/include/utils.h>
+
 
 #include <params/include/conv1.h>
 #include <params/include/conv2.h>
@@ -38,7 +40,7 @@
 #include <params/include/fc2.h>
 
 uint16_t LeNet(mat_t* model_in) {
-  memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
+  DMA_makeTransfer((uint32_t)(model_in->data), (uint32_t)(conv1_in_meta.data), MAT_GET_SIZE(model_in));
   /* conv1 */
   memset(conv1_out_meta.data, 0, MAT_GET_SIZE(&conv1_out_meta)*sizeof(uint16_t));
   conv1(&conv1_in_meta, &conv1_out_meta, &conv1_weight_meta, &conv1_bias_meta);

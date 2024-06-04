@@ -25,25 +25,15 @@ extern _iq31 lea_res[2];
 extern DMA_initParam dma_config;
 
 #define DMA_makeTransfer(src, dst, size) {\
-  uint8_t channel = dma_config.channelSelect; \
-  /* DMA_setTransferSize */ \
-  HWREG16(DMA_BASE + channel + OFS_DMA0SZ) = size; \
-  /* DMA_setSrcAddress */ \
-  __data16_write_addr((unsigned short)(DMA_BASE + channel + OFS_DMA0SA), src); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) &= ~(DMASRCINCR_3); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMA_DIRECTION_INCREMENT; \
-  /* DMA_setDstAddress */ \
-  __data16_write_addr((unsigned short)(DMA_BASE + channel + OFS_DMA0DA), dst); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) &= ~(DMADSTINCR_3); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= (DMA_DIRECTION_INCREMENT << 2); \
-  /* DMA_DMA_enableTransfers */ \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMAEN; \
-  /* shut off CPU and make DMA transfer */ \
+	DMA_setTransferSize(dma_config.channelSelect, size); \
+	DMA_setSrcAddress(dma_config.channelSelect, src, DMA_DIRECTION_INCREMENT); \
+  DMA_setDstAddress(dma_config.channelSelect, dst, DMA_DIRECTION_INCREMENT); \
+	DMA_enableTransfers(dma_config.channelSelect); \
   uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
-  HWREG16(DMA_BASE + channel + OFS_DMA0CTL) |= DMAREQ; \
-  __bis_SR_register(GIE + LPM0_bits); \
-  __set_interrupt_state(interruptState); \
+  DMA_startTransfer(dma_config.channelSelect); \
+	__bis_SR_register(GIE + LPM0_bits); \ 
+	__set_interrupt_state(interruptState); \
 }
 
 void init_lupe();

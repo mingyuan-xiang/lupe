@@ -61,6 +61,7 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     padding_ptr_out += input_line_size;
     for (uint16_t j = 0; j < input_line_num; ++j) {
       padding_ptr_out += 2;
+      DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
       memcpy(padding_ptr_out, padding_ptr_in, input_line_size_bf*sizeof(uint16_t));
       padding_ptr_in += input_line_size_bf;
       padding_ptr_out += (2 + input_line_size_bf);
@@ -68,7 +69,8 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     padding_ptr_out += input_line_size;
     padding_ptr_out += input_line_size;
   }
-  memcpy(input->data, output->data, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
+
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t)); 
 
   /* convolution */

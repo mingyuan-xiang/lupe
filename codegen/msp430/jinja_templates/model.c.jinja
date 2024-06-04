@@ -18,6 +18,7 @@
 {% for layer in layer_list -%}
 #include <layers/include/{{ layer.name }}.h>
 {% endfor -%}
+#include <layers/include/utils.h>
 
 {% for layer in layer_list -%}
 {% if layer.has_weights %}
@@ -27,7 +28,7 @@
 
 uint16_t {{ model_name }}(mat_t* model_in) {
 {#- Prepare the input data #}
-  memcpy(conv1_in_meta.data, model_in->data, MAT_GET_SIZE(model_in)*sizeof(uint16_t));
+  DMA_makeTransfer((uint32_t)(model_in->data), (uint32_t)(conv1_in_meta.data), MAT_GET_SIZE(model_in));
   {%- if debug %}
   msp_send_printf("\n============== Input ==============\n");
   msp_send_mat(model_in);

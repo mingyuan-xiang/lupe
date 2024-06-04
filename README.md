@@ -102,6 +102,11 @@ make apps/<app name>/bld/gcc/depclean
 
 # Model
 
-+ LeNet
-    - Clip(-1, 1) both runtime and training
-    - q3.12
+## LeNet
+
++ Clip(-1, 1) both runtime and training
++ q3.12
+
+```
+./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 3
+```
