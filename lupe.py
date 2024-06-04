@@ -124,6 +124,7 @@ def main():
             graph = LupeGraph(args.model_name, model, out_path)
 
             # Read the optimization configuration
+            config = {}
             if os.path.isfile(args.config):
                 config = load_opt_config(args.config)
 
