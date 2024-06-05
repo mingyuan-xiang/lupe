@@ -1,8 +1,0 @@
-{
-    "lea" : true,
-    "layer-fusion" : true,
-    "loop-unroll" : true,
-    "prop-const" : true,
-    "dma" : true,
-    "lea-opt" : true
-}
