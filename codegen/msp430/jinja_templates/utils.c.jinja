@@ -29,13 +29,12 @@ void init_lupe() {
     DMA0CTL &= ~(DMADSTINCR_3);
     DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
 {%- endif %}
-{% if lea_opt %}
+{%- if lea_opt %}
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {
       msp_lea_init();
   }
 {%- endif %}
-
     DMA_is_init = 1;
   }
 }

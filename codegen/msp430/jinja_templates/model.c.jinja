@@ -36,7 +36,6 @@ uint16_t {{ model_name }}(mat_t* model_in) {
 {#- layers #}
   {%- for layer in layer_list %}
   /* {{ layer.name }} */
-  memset({{ layer.name }}_out_meta.data, 0, MAT_GET_SIZE(&{{ layer.name }}_out_meta)*sizeof(uint16_t));
   {%- if layer.has_weights %}
   {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.name }}_weight_meta, &{{ layer.name }}_bias_meta);
   {%- else %}

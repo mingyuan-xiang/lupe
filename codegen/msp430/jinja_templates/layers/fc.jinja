@@ -77,6 +77,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   fill_params.length = LEA_DST_SIZE;
   msp_fill_q15(&fill_params, lea_tmp);
 
+  /* add bias first so that we don't need to set the input to 0 */
+  for (uint16_t i = 0; i < output_size; ++i) {
+    output->data[i] = __saturated_add_q15(output->data[i], bias->data[i]);
+  }
+
   /*
   * Do the remaining size MAC first. Otherwise, we have to use an additional branching
   * when (`lea_line_size > input_size`), which need call `do_mac()` with input_size instead.
@@ -101,11 +106,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
 
     input_fram_addr += lea_line_offset;
-  }
-
-  /* update bias */
-  for (uint16_t i = 0; i < output_size; ++i) {
-    output->data[i] = __saturated_add_q15(output->data[i], bias->data[i]);
   }
   {% if lea_opt %}
   mac_clear();
