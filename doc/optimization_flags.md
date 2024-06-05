@@ -1,6 +1,3 @@
-- [lea](#lea)
-- [Overflow](#overflow)
-  - [saturation](#saturation)
 - [Optimization](#optimization)
   - [Device-*Independent*](#device-independent)
     - [layer-fusion](#layer-fusion)
@@ -15,24 +12,6 @@
 - [Undone](#undone)
   - [CNN layers](#cnn-layers)
   - [RNN](#rnn)
-
-## lea
-
-This flag will enable
-[low-energy accelerator (LEA)](https://www.ti.com/lit/an/slaa720/slaa720.pdf)
-to speed up execution.
-
-## Overflow
-
-### saturation
-
-Set the behavior of the saturation. There are three options here:
-
-+ `none`: Use 16-bit for intermediate results.
-+ `scaled`: Use 16-bit for intermediate results, but use the scaled LEA
-commands.
-+ `32bit`: Use 32-bit for intermediate results as well as the LEA commands
-(q31).
 
 ## Optimization
 
