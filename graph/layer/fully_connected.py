@@ -67,6 +67,7 @@ class FullyConnected(LupeLayer):
             "in_col" : self.input_size[1],
             "out_col" : self.input_size[1],
             "qf" : qf,
+            "lea_opt" : opt_config["lea_opt"],
         }
 
         with open(path, "r", encoding="utf-8") as file:

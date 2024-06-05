@@ -23,6 +23,12 @@ extern _q15 lea_dst[LEA_DST_SIZE];
 extern _iq31 lea_res[2];
 
 extern DMA_initParam dma_config;
+{% if lea_opt %}
+extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
+extern MSP_LEA_FIR_PARAMS* lea_fir_params;
+extern MSP_LEA_MAC_PARAMS* lea_mac_params;
+{%- endif %}
+
 {% if dma_opt %}
 // DMAEN | DMAREQ
 #define DMA_EN_SIG 0x0011
@@ -47,6 +53,20 @@ extern DMA_initParam dma_config;
 	__bis_SR_register(GIE + LPM0_bits); \ 
 	__set_interrupt_state(interruptState); \
 }
+{%- endif %}
+
+{% if lea_opt %}
+void add_init(uint16_t length);
+
+void fir_init(uint16_t length, uint16_t tapLength);
+
+void mac_init(uint16_t length);
+
+void add_clear();
+
+void fir_clear();
+
+void mac_clear();
 {%- endif %}
 
 void init_lupe();

@@ -2,6 +2,8 @@
 #include <layers/include/conv2.h>
 #include <buffer/include/buffer.h>
 
+
+
 void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
@@ -29,7 +31,7 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_num = output->dims[2];
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
-
+  
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(output_line_size),
     .tapLength = MAKE_ALIGN_2(kernel_size),
@@ -97,7 +99,6 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
           /* accumulate results for a 2D convolution */
           msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
-
           conv_flt += conv_params.tapLength;
           tmp_input_addr += input_line_size_offset;
         }
@@ -124,4 +125,5 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       ++pos;
     }
   }
+  
 }

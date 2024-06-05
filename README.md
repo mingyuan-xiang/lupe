@@ -106,6 +106,7 @@ make apps/<app name>/bld/gcc/depclean
 
 + Clip(-1, 1) both runtime and training
 + q3.12
++ test accuracy in PyTorch (98.94%)
 
 ```
 ./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 3

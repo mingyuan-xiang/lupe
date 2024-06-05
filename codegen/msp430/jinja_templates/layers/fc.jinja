@@ -1,8 +1,25 @@
+{%- if lea_opt %}
+static inline void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
+  lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_mac_params);
+
+  /* Invoke the LEACMD__MAC command. */
+  msp_lea_invokeCommand(LEACMD__MAC);
+}
+{%- endif %}
+{% if lea_opt %}
+static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output, uint16_t line_size) {
+{%- else %}
 static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t* output, uint16_t line_size, msp_mac_q15_params* mac_params) {
+{%- endif %}
   uint32_t weight_fram_addr = (uint32_t)weight->data + (input_fram_addr - ((uint32_t)input->data));
   uint32_t weight_line_offset = (weight->dims[1]) * sizeof(int16_t);
-
+  {%- if not lea_opt %}
   mac_params->length = MAKE_ALIGN_2(line_size);
+  {%- endif %}
   {%- if prop_const %}
   uint16_t output_size = {{ out_col }};
   {% else %}
@@ -17,7 +34,11 @@ static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t*
     /* send weight row */
     DMA_makeTransfer(weight_fram_addr, (uint32_t)lea_tmp, line_size);
 
+    {%- if lea_opt %}
+    new_mac_q15(lea_src, lea_tmp);
+    {%- else %}
     msp_mac_q15(mac_params, lea_src, lea_tmp, lea_res);
+    {%- endif %}
 
     res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
     output->data[i] = __saturated_add_q15(output->data[i], res);
@@ -43,8 +64,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint32_t input_fram_addr = (uint32_t)input->data;
   uint32_t lea_line_offset = lea_line_size * sizeof(int16_t);
 
-  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_line_size) };
   msp_fill_q15_params fill_params = { .length = LEA_SRC_SIZE, .value = 0 };
+  {%- if lea_opt %}
+  mac_init(MAKE_ALIGN_2(lea_input_line_remain_size));
+  {%- else %}
+  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_line_size) };
+  {%- endif %}
 
   /* reset LEA's RAM */
   msp_fill_q15(&fill_params, lea_src);
@@ -58,11 +83,22 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   */
   if (lea_input_line_remain_size) {
     uint32_t remaining_fram_addr = (uint32_t)input->data + (input_size - lea_input_line_remain_size) * sizeof(int16_t);
+    {%- if lea_opt %}
+    do_mac(weight, input, remaining_fram_addr, output, lea_input_line_remain_size);
+    {%- else %}
     do_mac(weight, input, remaining_fram_addr, output, lea_input_line_remain_size, &mac_params);
+    {%- endif %}
   }
 
+  {%- if lea_opt %}
+  lea_mac_params->vectorSize = MAKE_ALIGN_2(lea_line_size);
+  {%- endif %}
   for (uint16_t l = lea_input_line_remain_size; l < input_size; l += lea_line_size) {
+    {%- if lea_opt %}
+    do_mac(weight, input, input_fram_addr, output, lea_line_size);
+    {%- else %}
     do_mac(weight, input, input_fram_addr, output, lea_line_size, &mac_params);
+    {%- endif %}
 
     input_fram_addr += lea_line_offset;
   }
@@ -71,4 +107,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   for (uint16_t i = 0; i < output_size; ++i) {
     output->data[i] = __saturated_add_q15(output->data[i], bias->data[i]);
   }
+  {% if lea_opt %}
+  mac_clear();
+  {%- endif %}
 }

@@ -29,12 +29,16 @@ def utilsgen(code_dir, opt_config, flt_sizes):
         "dma_opt": opt_config["dma_opt"],
         "lea_flt_size" : opt_config["lea_flt_size"],
         "lea_src_size" : opt_config["lea_src_size"],
-        "lea_dst_size" : opt_config["lea_dst_size"]
+        "lea_dst_size" : opt_config["lea_dst_size"],
+        "lea_opt" : opt_config["lea_opt"],
     }
 
     # utils c file
     cfile_template_path = os.path.join(JINJA_DIR, "utils.c.jinja")
-    cfile_params = { "dma_opt": opt_config["dma_opt"] }
+    cfile_params = {
+        "dma_opt": opt_config["dma_opt"],
+        "lea_opt" : opt_config["lea_opt"],
+    }
 
     jinja_gen(
         (cfile_template_path, cfile_params),

@@ -31,6 +31,8 @@ class MSP430Gen:
 
     def _parse_config(self, opt_config):
         """Parse the configuration file. Set default to False if not present."""
+        if "lea_opt" not in opt_config:
+            opt_config["lea_opt"] = False
         if "dma_opt" not in opt_config:
             opt_config["dma_opt"] = False
         if "lea_flt_size" not in opt_config:
@@ -41,12 +43,6 @@ class MSP430Gen:
             opt_config["lea_dst_size"] = 100
         if "prop_const" not in opt_config:
             opt_config["prop_const"] = False
-        if "saturation" not in opt_config:
-            opt_config["saturation"] = "none"
-        if not opt_config["saturation"] in ("none", "scaled", "32bit"):
-            raise NotImplementedError("Saturation model of " +
-                f"`{opt_config['saturation']}` is not supported."
-            )
 
         return opt_config
 

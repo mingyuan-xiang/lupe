@@ -90,6 +90,7 @@ class Convolution2D(LupeLayer):
         params = {
             "layer_name" : self.name,
             "prop_const" : opt_config["prop_const"],
+            "lea_opt" : opt_config["lea_opt"],
             "in_ch" : self.input_size[1],
             "out_ch" : self.output_size[1],
             "flt_len" : get_stride(self.kernel_shape, 1),
