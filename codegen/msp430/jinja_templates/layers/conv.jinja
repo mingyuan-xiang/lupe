@@ -122,21 +122,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
-  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
   {%- endif %} 
-
-  /* add bias first so that we don't need to set the input to 0 */
-  uint16_t pos = 0;
-  for (uint16_t i = 0; i < out_channels; ++i) {
-    for (uint16_t j = 0; j < output_len; ++j) {
-    {#- Saturate left shift #}
-    {%- for n in range(qf) %}
-      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
-    {%- endfor %}
-      output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);
-      ++pos;
-    }
-  }
+  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(uint16_t));
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -235,6 +222,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_fram_addr += input_channel_offset;
     }
     output_fram_addr += output_addr_offset;
+  }
+
+  /* add bias and rescale the output */
+  uint16_t pos = 0;
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    for (uint16_t j = 0; j < output_len; ++j) {
+    {#- Saturate left shift #}
+    {%- for n in range(qf) %}
+      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
+    {%- endfor %}
+      output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);
+      ++pos;
+    }
   }
   {% if lea_opt %}
   fir_clear();
