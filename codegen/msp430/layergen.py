@@ -14,6 +14,7 @@ def layergen(code_dir, graph, opt_config, qf, debug):
         opt_config: The optimization configuration
     """
     nodes = graph.get_hidden_layers()
+
     for n in nodes:
         node = graph.node_list[n]
         # header
@@ -29,7 +30,8 @@ def layergen(code_dir, graph, opt_config, qf, debug):
         cfile_params = {
             "layer_name": node.name,
             "debug" : debug,
-            "code" : node.get_code(jinja_dir, opt_config, qf)
+            "code" : node.get_code(jinja_dir, opt_config, qf),
+            "has_extra_buffer" : node.get_buffer_size() is not None
         }
 
         jinja_gen(

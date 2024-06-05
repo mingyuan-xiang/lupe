@@ -20,11 +20,7 @@ static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t*
   {%- if not lea_opt %}
   mac_params->length = MAKE_ALIGN_2(line_size);
   {%- endif %}
-  {%- if prop_const %}
-  uint16_t output_size = {{ out_col }};
-  {% else %}
   uint16_t output_size = output->dims[1];
-  {%- endif %}
   int16_t res;
 
   /* send input neurons */
@@ -48,16 +44,8 @@ static void do_mac(mat_t* weight, mat_t* input, uint32_t input_fram_addr, mat_t*
 }
 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
-  {%- if prop_const %}
-  uint16_t input_size = {{ in_col }};
-  {% else %}
   uint16_t input_size = input->dims[1];
-  {%- endif %}
-  {%- if prop_const %}
-  uint16_t output_size = {{ out_col }};
-  {% else %}
   uint16_t output_size = output->dims[1];
-  {%- endif %}
   uint16_t lea_line_size = LEA_SRC_SIZE;
   uint16_t lea_input_line_remain_size = input_size % lea_line_size;
 

@@ -6,6 +6,9 @@ DSPLIB_DATA(lea_tmp, 2) _q15 lea_tmp[LEA_DST_SIZE];
 DSPLIB_DATA(lea_dst, 2) _q15 lea_dst[LEA_DST_SIZE];
 DSPLIB_DATA(lea_res, 4) _iq31 lea_res[2];
 
+MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
+MSP_LEA_FIR_PARAMS* lea_fir_params;
+MSP_LEA_MAC_PARAMS* lea_mac_params;
 
 DMA_initParam dma_config;
 static int DMA_is_init = 0;
@@ -19,12 +22,51 @@ void init_lupe() {
     DMA_init(&dma_config);
     DMA_enableInterrupt(dma_config.channelSelect);
 
-
-
+    /* set DMA address direction */
+    DMA0CTL &= ~(DMASRCINCR_3);
+    DMA0CTL |= DMA_DIRECTION_INCREMENT;
+    DMA0CTL &= ~(DMADSTINCR_3);
+    DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
+  /* init LEA */
+  if (!(LEAPMCTL & LEACMDEN)) {
+      msp_lea_init();
+  }
     DMA_is_init = 1;
   }
 }
 
+void add_init(uint16_t length) {
+  lea_add_params = (MSP_LEA_ADDMATRIX_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));
+  lea_add_params->vectorSize = length;
+  lea_add_params->input1Offset = 1;
+  lea_add_params->input2Offset = 1;
+  lea_add_params->outputOffset = 1;
+}
+
+void fir_init(uint16_t length, uint16_t tapLength) {
+  lea_fir_params = (MSP_LEA_FIR_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_FIR_PARAMS)/sizeof(uint32_t));
+  lea_fir_params->vectorSize = length;
+  lea_fir_params->tapLength = tapLength;
+  lea_fir_params->bufferMask = 0xffff;
+}
+
+void mac_init(uint16_t length) {
+  lea_mac_params = (MSP_LEA_MAC_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_MAC_PARAMS)/sizeof(uint32_t));
+  lea_mac_params->vectorSize = length;
+  lea_mac_params->output = MSP_LEA_CONVERT_ADDRESS(lea_res);
+}
+
+void add_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));
+}
+
+void fir_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_FIR_PARAMS)/sizeof(uint32_t));
+}
+
+void mac_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_MAC_PARAMS)/sizeof(uint32_t));
+}
 
 /* Wake up CPU once DMA is complete */
 void __attribute__((interrupt(DMA_VECTOR))) dma_isr_handler(void) {

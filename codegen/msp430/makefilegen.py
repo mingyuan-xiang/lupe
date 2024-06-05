@@ -10,7 +10,7 @@ from jinja2 import Template
 
 from . import JINJA_DIR
 
-def makefilegen(code_dir, graph):
+def makefilegen(code_dir, graph, has_extra_buffer):
     """Generate the Makefile using jinja template"""
     template_path = os.path.join(JINJA_DIR, "makefile.jinja")
 
@@ -20,6 +20,7 @@ def makefilegen(code_dir, graph):
         "model_name" : graph.name,
         "layer_list" : nodes,
         "layers_with_weights" : nodes_with_weights,
+        "has_extra_buffer" : has_extra_buffer,
     }
 
     with open(template_path, "r", encoding="utf-8") as file:

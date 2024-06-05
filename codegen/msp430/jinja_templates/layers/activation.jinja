@@ -1,9 +1,5 @@
 void {{ layer_name }}(mat_t* input, mat_t* output) {
-  {%- if prop_const %}
-  uint16_t size = {{ in_stride }};
-  {% else %}
   uint16_t size = input->strides[0];
-  {% endif %}
   for (uint16_t i = 0; i < size; ++i) {
     int16_t val = input->data[i];
     output->data[i] = {{ update_code }};

@@ -10,7 +10,6 @@ void pool1_AveragePool(mat_t* input, mat_t* output) {
   uint16_t in_row_stride = input->strides[2];
   uint16_t out_ch_stride = output->strides[1];
   uint16_t out_row_stride = output->strides[2];
-  
   uint16_t height = 2;
   uint16_t width = 2;
   uint16_t out_r = 0;

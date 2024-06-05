@@ -20,6 +20,10 @@ class Activation(LupeLayer):
         """If the layer has weights"""
         return False
 
+    def get_buffer_size(self):
+        """If the layer needs extra buffer. Return the buffer shape tuple"""
+        return None
+
     def __str__(self):
         return f"{self.name}: {self.__class__.__name__}()"
 
@@ -37,7 +41,6 @@ class Activation(LupeLayer):
 
         params = {
             "layer_name" : self.name,
-            "prop_const" : opt_config["prop_const"],
             "in_stride" : get_stride(self.input_size, 0),
             "update_code" : self._get_update( "val"),
         }

@@ -42,6 +42,33 @@ def _inputgen(code_dir, graph, loc="hi", debug_input=None):
         os.path.join(code_dir, input_file_name + ".c")
     )
 
+def _extra_buffergen(code_dir, size, loc="hi"):
+    """Generate the input files"""
+    shape = list(size)
+    while len(shape) < 4:
+        shape.insert(0, 1)
+
+    buffer_name = "lupe_buffer"
+    buffer_data = Matrix(buffer_name, np.zeros(size), False, loc=loc)
+
+    # Generate header file
+    h_code = gen_header_includes(buffer_name)
+    h_code += gen_header_data(buffer_data) + "\n"
+    h_code += "#endif\n"
+    save(
+        h_code,
+        os.path.join(code_dir, "include", buffer_name + ".h")
+    )
+
+    # Generate C file
+    c_code = gen_c("buffer", buffer_name)
+    c_code += gen_c_data_struct(buffer_data, None)
+    c_code += gen_c_data(buffer_data, False)
+    save(
+        c_code,
+        os.path.join(code_dir, buffer_name + ".c")
+    )
+
 def _buffergen(code_dir, graph, loc="hi"):
     """Generate the buffer files"""
     def list_mul(l):
@@ -109,7 +136,9 @@ def _buffergen(code_dir, graph, loc="hi"):
         os.path.join(code_dir, file_name + ".c")
     )
 
-def arrgen(code_dir, graph, loc="hi", debug_input=None):
+def arrgen(code_dir, graph, size, loc="hi", debug_input=None):
     """Generate the pre-allocated arrays"""
     _inputgen(code_dir, graph, loc, debug_input)
     _buffergen(code_dir, graph, loc)
+    if size is not None:
+        _extra_buffergen(code_dir, size, loc=loc)

@@ -160,8 +160,6 @@ void conv1(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
     for (uint16_t j = 0; j < output_len; ++j) {
-      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
-      output->data[pos] = __saturated_add_q15(output->data[pos], output->data[pos]);
       output->data[pos] = __saturated_add_q15(output->data[pos], bias->data[i]);
       ++pos;
     }

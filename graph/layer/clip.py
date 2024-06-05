@@ -18,6 +18,10 @@ class Clip(LupeLayer):
         """If the layer has weights"""
         return False
 
+    def get_buffer_size(self):
+        """If the layer needs extra buffer. Return the buffer shape tuple"""
+        return None
+
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
         if not (isinstance(self.min, (int, float)) or

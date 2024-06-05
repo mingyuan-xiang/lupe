@@ -31,6 +31,8 @@ class MSP430Gen:
 
     def _parse_config(self, opt_config):
         """Parse the configuration file. Set default to False if not present."""
+        if "adaptive_gen_lea" not in opt_config:
+            opt_config["adaptive_gen_lea"] = False
         if "lea_opt" not in opt_config:
             opt_config["lea_opt"] = False
         if "dma_opt" not in opt_config:
@@ -41,8 +43,6 @@ class MSP430Gen:
             opt_config["lea_src_size"] = 100
         if "lea_dst_size" not in opt_config:
             opt_config["lea_dst_size"] = 100
-        if "prop_const" not in opt_config:
-            opt_config["prop_const"] = False
 
         return opt_config
 
@@ -69,12 +69,33 @@ class MSP430Gen:
             os.makedirs(os.path.join(params_dir, "include"))
         flt_sizes = weightgen(params_dir, self.graph, self.qf, loc=loc)
 
+        # check if the model needs extra buffer
+        has_extra_buffer = False
+        max_buffer_size = 0
+        max_buffer_shape = None
+        for n in self.graph.get_hidden_layers():
+            node = self.graph.node_list[n]
+            if node.get_buffer_size() is not None:
+                size = node.get_buffer_size()
+                new_size = 1
+                for s in size:
+                    new_size *= s
+
+                if max_buffer_size < new_size:
+                    max_buffer_size = new_size
+                    max_buffer_shape = size
+
+                has_extra_buffer = True
+
         # Generate the buffer files
         buffer_dir = os.path.join(self.src_dir, "buffer")
         if not os.path.exists(buffer_dir):
             os.makedirs(buffer_dir)
             os.makedirs(os.path.join(buffer_dir, "include"))
-        arrgen(buffer_dir, self.graph, loc=loc, debug_input=self.debug_input)
+        arrgen(
+            buffer_dir, self.graph, max_buffer_shape, loc=loc,
+            debug_input=self.debug_input
+        )
 
         # Generate the layer code
         layer_dir = os.path.join(self.src_dir, "layers")
@@ -85,7 +106,7 @@ class MSP430Gen:
         layergen(layer_dir, self.graph, self.opt_config, self.qf, self.debug)
 
         # Generate the makefile
-        makefilegen(self.code_dir, self.graph)
+        makefilegen(self.code_dir, self.graph, has_extra_buffer)
 
     def print_config(self):
         """Print the configuration"""

@@ -18,6 +18,10 @@ class Constant(LupeLayer):
         """If the layer has weights"""
         return False
 
+    def get_buffer_size(self):
+        """If the layer needs extra buffer. Return the buffer shape tuple"""
+        return None
+
     def __str__(self):
         return f"{self.value}"
 

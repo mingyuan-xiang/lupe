@@ -40,6 +40,10 @@ class Pooling(LupeLayer):
         """If the layer has weights"""
         return False
 
+    def get_buffer_size(self):
+        """If the layer needs extra buffer. Return the buffer shape tuple"""
+        return None
+
     @abstractmethod
     def _get_init_val(self):
         """Get the initial value for the pooling layer"""
@@ -54,7 +58,6 @@ class Pooling(LupeLayer):
 
         params = {
             "layer_name" : self.name,
-            "prop_const" : opt_config["prop_const"],
             "agg_init" : self._get_init_val(),
             "update_agg" : self._get_update("agg", "in_data"),
             "height" : self.kernel_shape[0],

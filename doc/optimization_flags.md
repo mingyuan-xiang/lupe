@@ -22,3 +22,7 @@ Boolean. Enable DMA optimization
 ### `lea_opt`
 
 Boolean. Enable LEA optimization
+
+### `adaptive_gen_lea`
+
+Boolean. Enable Adaptive generation of LEA accelerations

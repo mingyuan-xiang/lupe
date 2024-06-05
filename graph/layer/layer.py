@@ -46,6 +46,10 @@ class LupeLayer(ABC):
     def has_weights(self):
         """If the layer has weights"""
 
+    @abstractmethod
+    def get_buffer_size(self):
+        """If the layer needs extra buffer. Return the buffer shape tuple"""
+
     def flip(self):
         """If the layer should flip the weights"""
         return False

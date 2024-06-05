@@ -31,6 +31,11 @@ def utilsgen(code_dir, opt_config, flt_sizes):
         "lea_src_size" : opt_config["lea_src_size"],
         "lea_dst_size" : opt_config["lea_dst_size"],
         "lea_opt" : opt_config["lea_opt"],
+        "lea_min_size" : min(
+            opt_config["lea_flt_size"],
+            opt_config["lea_src_size"],
+            opt_config["lea_dst_size"]
+        ),
     }
 
     # utils c file

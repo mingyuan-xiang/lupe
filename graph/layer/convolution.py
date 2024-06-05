@@ -44,6 +44,8 @@ class Convolution2D(LupeLayer):
         else:
             self.has_padding = False
 
+        self._acceleration = self._decide_acceleration()
+
     def __str__(self):
         s = f"{self.name}: Convolution2D("
         s += f"kernel_shape={self.kernel_shape}, "
@@ -69,9 +71,25 @@ class Convolution2D(LupeLayer):
         """If the layer has weights"""
         return True
 
+    def get_buffer_size(self):
+        """Return the mac buffer size if needed"""
+        if self._acceleration == "mac":
+            return (1, self.input_size[2] * self.input_size[3],
+                self.kernel_shape[3] * self.kernel_shape[3]
+            )
+        return None
+
     def flip(self):
         """If the layer should flip the weights"""
-        return True
+        if self._acceleration == "fir":
+            return True
+
+        return False
+
+    def _decide_acceleration(self):
+        """Decide how which operation to use"""
+        # TODO: We should do something smarter for the decider
+        return "mac"
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
@@ -89,7 +107,6 @@ class Convolution2D(LupeLayer):
 
         params = {
             "layer_name" : self.name,
-            "prop_const" : opt_config["prop_const"],
             "lea_opt" : opt_config["lea_opt"],
             "in_ch" : self.input_size[1],
             "out_ch" : self.output_size[1],
@@ -104,6 +121,12 @@ class Convolution2D(LupeLayer):
             "qf" : qf,
             "padding" : padding_params
         }
+
+        # select correct operators
+        if opt_config["adaptive_gen_lea"]:
+            params["acceleration"]  = self._acceleration
+        else:
+            params["acceleration"] = "fir"
 
         with open(path, "r", encoding="utf-8") as file:
             template = file.read()
