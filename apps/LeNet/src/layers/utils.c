@@ -17,6 +17,13 @@ void init_lupe() {
     dma_config.transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD;
     DMA_init(&dma_config);
     DMA_enableInterrupt(dma_config.channelSelect);
+
+    /* set DMA address direction */
+    DMA0CTL &= ~(DMASRCINCR_3);
+    DMA0CTL |= DMA_DIRECTION_INCREMENT;
+    DMA0CTL &= ~(DMADSTINCR_3);
+    DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
+
     DMA_is_init = 1;
   }
 }

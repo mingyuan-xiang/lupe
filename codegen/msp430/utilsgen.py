@@ -34,7 +34,7 @@ def utilsgen(code_dir, opt_config, flt_sizes):
 
     # utils c file
     cfile_template_path = os.path.join(JINJA_DIR, "utils.c.jinja")
-    cfile_params = {}
+    cfile_params = { "dma_opt": opt_config["dma_opt"] }
 
     jinja_gen(
         (cfile_template_path, cfile_params),

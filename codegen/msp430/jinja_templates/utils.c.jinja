@@ -8,26 +8,7 @@ DSPLIB_DATA(lea_res, 4) _iq31 lea_res[2];
 
 DMA_initParam dma_config;
 static int DMA_is_init = 0;
-{% if dma_opt %}
-void init_DMA() {
-  if (DMA_is_init == 0) {
-    DMA_disableTransferDuringReadModifyWrite();
-    dma_config.channelSelect = 0;
-    dma_config.transferModeSelect = DMA_TRANSFER_BLOCK;
-    dma_config.transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD;
-    DMA_init(&dma_config);
-    DMA_enableInterrupt(dma_config.channelSelect);
 
-    /* set DMA address direction */
-    DMA0CTL &= ~(DMASRCINCR_3);
-    DMA0CTL |= DMA_DIRECTION_INCREMENT;
-    DMA0CTL &= ~(DMADSTINCR_3);
-    DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
-
-    DMA_is_init = 1;
-  }
-}
-{% else %}
 void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
@@ -36,10 +17,17 @@ void init_lupe() {
     dma_config.transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD;
     DMA_init(&dma_config);
     DMA_enableInterrupt(dma_config.channelSelect);
+{% if dma_opt %}
+    /* set DMA address direction */
+    DMA0CTL &= ~(DMASRCINCR_3);
+    DMA0CTL |= DMA_DIRECTION_INCREMENT;
+    DMA0CTL &= ~(DMADSTINCR_3);
+    DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
+{%- endif %}
+
     DMA_is_init = 1;
   }
 }
-{%- endif %}
 
 /* Wake up CPU once DMA is complete */
 void __attribute__((interrupt(DMA_VECTOR))) dma_isr_handler(void) {
