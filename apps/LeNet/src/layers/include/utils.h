@@ -25,36 +25,21 @@ extern _iq31 lea_res[2];
 
 extern DMA_initParam dma_config;
 
-extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
-extern MSP_LEA_FIR_PARAMS* lea_fir_params;
-extern MSP_LEA_MAC_PARAMS* lea_mac_params;
 
-
-// DMAEN | DMAREQ
-#define DMA_EN_SIG 0x0011
 
 #define DMA_makeTransfer(src, dst, size) {\
+	DMA_setTransferSize(dma_config.channelSelect, size); \
+	DMA_setSrcAddress(dma_config.channelSelect, src, DMA_DIRECTION_INCREMENT); \
+  DMA_setDstAddress(dma_config.channelSelect, dst, DMA_DIRECTION_INCREMENT); \
+	DMA_enableTransfers(dma_config.channelSelect); \
+  uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
-  __data16_write_addr((uintptr_t)(&DMA0SA), src); \
-  __data16_write_addr((uintptr_t)(&DMA0DA), dst); \
-  DMA0SZ = size; \
-  DMA0CTL |= DMA_EN_SIG; \
-  __bis_SR_register(GIE + LPM0_bits); \
+  DMA_startTransfer(dma_config.channelSelect); \
+	__bis_SR_register(GIE + LPM0_bits); \ 
+	__set_interrupt_state(interruptState); \
 }
 
 
-
-void add_init(uint16_t length);
-
-void fir_init(uint16_t length, uint16_t tapLength);
-
-void mac_init(uint16_t length);
-
-void add_clear();
-
-void fir_clear();
-
-void mac_clear();
 
 void init_lupe();
 

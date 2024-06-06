@@ -3,30 +3,6 @@
 #include <buffer/include/buffer.h>
 
 
-static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
-  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
-  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
-
-  /* Load source arguments to LEA. */
-  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
-  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
-
-  /* Invoke the LEACMD__ADDMATRIX command. */
-  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
-}
-
-static inline void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
-  /* Set MSP_LEA_FIR_PARAMS structure. */
-  lea_fir_params->coeffs = MSP_LEA_CONVERT_ADDRESS(coeffs);
-  lea_fir_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
-
-  /* Load source arguments to LEA. */
-  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
-  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_fir_params);
-
-  /* Invoke the LEACMD__FIR command. */
-  msp_lea_invokeCommand(LEACMD__FIR);
-}
 
 void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
@@ -54,9 +30,13 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
   
-  uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
-  add_init(MAKE_ALIGN_2(output_line_size));
-  fir_init(MAKE_ALIGN_2(output_line_size), tapLength);
+  msp_fir_q15_params conv_params = {
+    .length = MAKE_ALIGN_2(output_line_size),
+    .tapLength = MAKE_ALIGN_2(kernel_size),
+    .coeffs = lea_flt,
+    .enableCircularBuffer = false 
+  };
+  msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(output_line_size) };
   msp_fill_q15_params fill_params = { .length = LEA_SRC_SIZE, .value = 0 };
 
   /* reset LEA's RAM */
@@ -106,13 +86,14 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         for (uint16_t k = 0; k < kernel_size; ++k) {
           /* send input to LEA RAM */
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, input_line_size);
+          conv_params.coeffs = conv_flt;
 
           /* convolution */
-          new_fir_q15(conv_flt, lea_src, lea_tmp);
+          msp_fir_q15(&conv_params, lea_src, lea_tmp);
 
           /* accumulate results for a 2D convolution */
-          new_add_q15(lea_dst, lea_tmp, lea_dst);
-          conv_flt += tapLength;
+          msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+          conv_flt += conv_params.tapLength;
           tmp_input_addr += input_line_size_offset;
         }
 
@@ -139,6 +120,4 @@ void conv2(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
   }
   
-  fir_clear();
-  add_clear();
 }
