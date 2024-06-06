@@ -16,7 +16,7 @@ class MSP430Gen:
     """The codegen class"""
     def __init__(self, code_dir, opt_config, graph, qf, add_timer=True):
         """Initialize the codegen class"""
-        self.opt_config = self._parse_config(opt_config)
+        self.opt_config = opt_config
         self.code_dir = code_dir
         # Create the source directory
         self.src_dir = os.path.join(code_dir, "src")
@@ -28,23 +28,6 @@ class MSP430Gen:
         self.debug_input = None
         self.debug_input_label = None
         self.qf = qf
-
-    def _parse_config(self, opt_config):
-        """Parse the configuration file. Set default to False if not present."""
-        if "adaptive_gen_lea" not in opt_config:
-            opt_config["adaptive_gen_lea"] = False
-        if "lea_opt" not in opt_config:
-            opt_config["lea_opt"] = False
-        if "dma_opt" not in opt_config:
-            opt_config["dma_opt"] = False
-        if "lea_flt_size" not in opt_config:
-            opt_config["lea_flt_size"] = 100
-        if "lea_src_size" not in opt_config:
-            opt_config["lea_src_size"] = 100
-        if "lea_dst_size" not in opt_config:
-            opt_config["lea_dst_size"] = 100
-
-        return opt_config
 
     def gen(self, model_name, dataset_size, print_freq=100, loc="hi"):
         """Generate the code"""

@@ -29,14 +29,14 @@ static inline void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
-  uint16_t flt_len = weight->strides[1];
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
 
   uint32_t flt_lea_addr = (uint32_t)lea_flt;
   uint32_t flt_fram_addr = (uint32_t)(weight->data);
-  {%- if flt_size % 2 != 0 %}
+  {%- if flt_size % 2 == 0 %}
+  uint16_t flt_len = weight->strides[1];
   uint32_t flt_addr_offset = flt_len * sizeof(int16_t);
   {%- endif %}
   uint32_t flt_addr_row_offset = kernel_size * sizeof(int16_t);

@@ -87,8 +87,22 @@ def lupe_args():
 def load_opt_config(config):
     """Load the optimization configuration"""
     with open(config, "r", encoding="utf-8") as file:
-        opt_config = json.load(file)
-        return OrderedDict(opt_config)
+        opt_config = OrderedDict(json.load(file))
+        # Parse the configuration file. Set default to False if not present.
+        if "adaptive_gen_lea" not in opt_config:
+            opt_config["adaptive_gen_lea"] = False
+        if "lea_opt" not in opt_config:
+            opt_config["lea_opt"] = False
+        if "dma_opt" not in opt_config:
+            opt_config["dma_opt"] = False
+        if "lea_flt_size" not in opt_config:
+            opt_config["lea_flt_size"] = 100
+        if "lea_src_size" not in opt_config:
+            opt_config["lea_src_size"] = 100
+        if "lea_dst_size" not in opt_config:
+            opt_config["lea_dst_size"] = 100
+
+        return opt_config
 
 def main():
     """The main function"""
@@ -100,7 +114,7 @@ def main():
             model = onnx.load(args.model_path)
             checker.check_model(model)
 
-            graph = LupeGraph(args.model_name, model, "")
+            graph = LupeGraph(args.model_name, model, "", {})
             graph.print()
     elif args.mode == "code-gen":
         # Load onnx model
@@ -121,12 +135,12 @@ def main():
             if not os.path.exists(out_path):
                 os.makedirs(out_path)
 
-            graph = LupeGraph(args.model_name, model, out_path)
-
             # Read the optimization configuration
             config = {}
             if os.path.isfile(args.config):
                 config = load_opt_config(args.config)
+
+            graph = LupeGraph(args.model_name, model, out_path, config)
 
             generator = msp430gen()(
                 out_path, config, graph, args.qf, add_timer=args.timer
