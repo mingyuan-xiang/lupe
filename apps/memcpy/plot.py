@@ -40,7 +40,7 @@ ax.set_xlabel('Words (2 Btyes)')
 ax.set_ylabel('Time/MicroSec')
 ax.set_xlim([0, 100])
 ax.set_ylim([0, 180])
-ax.set_title('Latency of Data Movement')
+ax.set_title('Latency of Data Movement (16 MHz)')
 
 freq = ((2 ** 15 - 1) * 10000) / 1000000
 
@@ -61,7 +61,7 @@ for method, data in parsed_data.items():
     regression_results[method] = (slope, intercept)
 
 slope1, intercept1 = regression_results['DMA (Optimized)']
-slope2, intercept2 = regression_results['Loop Assign (Unrolled)']
+slope2, intercept2 = regression_results['Loop Copy (Unrolled)']
 x_intersection = int((intercept2 - intercept1) / (slope1 - slope2))
 y_intersection = slope1 * x_intersection + intercept1
 
@@ -73,4 +73,4 @@ ax.text(x_intersection, -0.026, f'{x_intersection}', horizontalalignment='center
 
 ax.legend()
 
-plt.savefig('data_movement.png', dpi=1000)
+plt.savefig('data_movement.png', dpi=500)
