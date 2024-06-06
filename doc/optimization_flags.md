@@ -26,3 +26,7 @@ Boolean. Enable LEA optimization
 ### `adaptive_gen_lea`
 
 Boolean. Enable Adaptive generation of LEA accelerations
+
+### `adaptive_gen_mem`
+
+Boolean. Enable Adaptive generation of memory movement

@@ -77,6 +77,7 @@ class Convolution2D(LupeLayer):
             return (1, self.input_size[2] * self.input_size[3],
                 self.kernel_shape[3] * self.kernel_shape[3]
             )
+
         return None
 
     def flip(self):
@@ -89,6 +90,12 @@ class Convolution2D(LupeLayer):
     def _decide_acceleration(self):
         """Decide how which operation to use"""
         # TODO: We should do something smarter for the decider
+        if self.kernel_shape[-1] == 5:
+            if self.input_size[-1] < 14:
+                return "mac"
+
+            return "fir"
+
         return "mac"
 
     def get_code(self, jinja_dir, opt_config, qf):
