@@ -89,17 +89,16 @@ class Convolution2D(LupeLayer):
 
     def _decide_acceleration(self):
         """Decide how which operation to use"""
-        return "mac"
         # TODO: We should do something smarter for the decider
-        # if ("adaptive_gen_lea" not in self.opt_config or
-        #     not self.opt_config["adaptive_gen_lea"]):
-        #     return "fir"
+        if ("adaptive_gen_lea" not in self.opt_config or
+            not self.opt_config["adaptive_gen_lea"]):
+            return "fir"
 
-        # if self.kernel_shape[-1] == 5:
-        #     if self.input_size[-1] < 14:
-        #         return "mac"
+        if self.kernel_shape[-1] == 5:
+            if self.input_size[-1] < 14:
+                return "mac"
 
-        #     return "fir"
+            return "fir"
 
 
     def get_code(self, jinja_dir, opt_config, qf):
