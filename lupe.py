@@ -87,24 +87,26 @@ def lupe_args():
 def load_opt_config(config):
     """Load the optimization configuration"""
     with open(config, "r", encoding="utf-8") as file:
-        opt_config = OrderedDict(json.load(file))
-        # Parse the configuration file. Set default to False if not present.
-        if "adaptive_gen_mem" not in opt_config:
-            opt_config["adaptive_gen_lea"] = False
-        if "adaptive_gen_lea" not in opt_config:
-            opt_config["adaptive_gen_lea"] = False
-        if "lea_opt" not in opt_config:
-            opt_config["lea_opt"] = False
-        if "dma_opt" not in opt_config:
-            opt_config["dma_opt"] = False
-        if "lea_flt_size" not in opt_config:
-            opt_config["lea_flt_size"] = 100
-        if "lea_src_size" not in opt_config:
-            opt_config["lea_src_size"] = 100
-        if "lea_dst_size" not in opt_config:
-            opt_config["lea_dst_size"] = 100
+        return OrderedDict(json.load(file))
 
-        return opt_config
+def parse_opt_config(opt_config):
+    """Parse the configuration file. Set default to False if not present."""
+    if "adaptive_gen_mem" not in opt_config:
+        opt_config["adaptive_gen_lea"] = False
+    if "adaptive_gen_lea" not in opt_config:
+        opt_config["adaptive_gen_lea"] = False
+    if "lea_opt" not in opt_config:
+        opt_config["lea_opt"] = False
+    if "dma_opt" not in opt_config:
+        opt_config["dma_opt"] = False
+    if "lea_flt_size" not in opt_config:
+        opt_config["lea_flt_size"] = 100
+    if "lea_src_size" not in opt_config:
+        opt_config["lea_src_size"] = 100
+    if "lea_dst_size" not in opt_config:
+        opt_config["lea_dst_size"] = 100
+
+    return opt_config
 
 def main():
     """The main function"""
@@ -141,6 +143,8 @@ def main():
             config = {}
             if os.path.isfile(args.config):
                 config = load_opt_config(args.config)
+
+            parse_opt_config(config)
 
             graph = LupeGraph(args.model_name, model, out_path, config)
 
