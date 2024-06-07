@@ -65,15 +65,27 @@ class FullyConnected(LupeLayer):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "fc.jinja")
 
+        has_adaptive_gen_mem = False
+        if opt_config["adaptive_gen_mem"]:
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                self.output_size[1] < opt_config["adaptive_gen_mem_size"]
+            )
+
         params = {
             "layer_name" : self.name,
-            "in_col" : self.input_size[1],
-            "out_col" : self.output_size[1],
+            "input_size" : self.input_size[1],
+            "output_size" : self.output_size[1],
             "qf" : qf,
             "lea_opt" : opt_config["lea_opt"],
             "lea_src_size" : opt_config["lea_src_size"],
             "has_loop_cpy" : True,
+            "has_adaptive_gen_mem" : has_adaptive_gen_mem,
         }
+
+        if opt_config["adaptive_gen_mem"]:
+            params["adaptive_gen_mem_size"] = (
+                opt_config["adaptive_gen_mem_size"]
+            )
 
         with open(path, "r", encoding="utf-8") as file:
             template = file.read()

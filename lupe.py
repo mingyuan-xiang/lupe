@@ -92,7 +92,7 @@ def load_opt_config(config):
 def parse_opt_config(opt_config):
     """Parse the configuration file. Set default to False if not present."""
     if "adaptive_gen_mem" not in opt_config:
-        opt_config["adaptive_gen_lea"] = False
+        opt_config["adaptive_gen_mem"] = False
     if "adaptive_gen_lea" not in opt_config:
         opt_config["adaptive_gen_lea"] = False
     if "lea_opt" not in opt_config:
@@ -105,6 +105,10 @@ def parse_opt_config(opt_config):
         opt_config["lea_src_size"] = 100
     if "lea_dst_size" not in opt_config:
         opt_config["lea_dst_size"] = 100
+
+    if opt_config["adaptive_gen_mem"]:
+        # The cutoff size for dma and loop copy on MSP430
+        opt_config["adaptive_gen_mem_size"] = 11
 
     return opt_config
 

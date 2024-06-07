@@ -69,6 +69,23 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(output_line_size) };
   {%- endif %}
   msp_fill_q15_params fill_params = { .length = LEA_SRC_SIZE, .value = 0 };
+  {%- if has_adaptive_gen_mem %}
+  uint16_t dst_pos;
+  uint16_t s_start, s_end;
+  {%- if flt_size < adaptive_gen_mem_size %}
+  uint16_t flt_lea_pos = 0;
+  uint16_t flt_fram_pos = 0;
+  {%- endif %}
+
+  {%- if out_line_size < adaptive_gen_mem_size %}
+  uint16_t output_fram_pos = 0;
+  {%- endif %}
+
+  {%- if in_line_size < adaptive_gen_mem_size %}
+  uint16_t input_fram_pos = 0;
+  uint16_t input_channel_pos = 0;
+  {%- endif %}
+  {%- endif %}
 
   /* reset LEA's RAM */
   msp_fill_q15(&fill_params, lea_src);
@@ -94,10 +111,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
     for (uint16_t j = 0; j < input_line_num; ++j) {
       padding_ptr_out += {{ padding["left"] }};
+      {%- if has_adaptive_gen_mem and (in_line_size - padding["left"] - padding["right"] < adaptive_gen_mem_size) %}
+      #pragma GCC unroll {{ in_line_size - padding["left"] - padding["right"] }}
+      for (uint16_t s = 0; s < {{ in_line_size - padding["left"] - padding["right"] }}; ++s) {
+        *padding_ptr_out = *padding_ptr_in;
+        ++padding_ptr_out;
+        ++padding_ptr_in;
+      }
+      padding_ptr_out += {{ padding["right"] }};
+      {%- else %}
       DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
-      memcpy(padding_ptr_out, padding_ptr_in, input_line_size_bf*sizeof(int16_t));
       padding_ptr_in += input_line_size_bf;
       padding_ptr_out += ({{ padding["right"] }} + input_line_size_bf);
+      {%- endif %}
     }
     {%- for n in range(padding["bottom"]) %}
     padding_ptr_out += input_line_size;
@@ -110,10 +136,23 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
+    {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+    input_fram_pos = 0;
+    {%- else %}
     input_fram_addr = (uint32_t)(input->data);
+    {%- endif %}
     for (uint16_t j = 0; j < in_channels; ++j) {
+      {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+      uint16_t tmp_output_pos = output_fram_pos;
+      {%- else %}
       uint32_t tmp_output_addr = output_fram_addr;
+      {%- endif %}
+
+      {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+      input_channel_pos = input_fram_pos;
+      {%- else %}
       input_channel_addr = input_fram_addr;
+      {%- endif %}
 
       /* send kernel to LEA RAM */
       {%- if flt_size % 2 != 0 %}
@@ -121,32 +160,95 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       * pad zero to the beginning of the filter if the filter's size is
       * not aligned to 2
       */
+      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      ++flt_lea_pos;
+      {%- else %}
       flt_lea_addr += sizeof(uint16_t);
+      {%- endif %}
       fill_params.length = LEA_FLT_SIZE;
       msp_fill_q15(&fill_params, lea_flt);
 
       for (uint16_t k = 0; k < kernel_size; ++k) {
+        {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+        s_start = flt_fram_pos;
+        s_end = flt_fram_pos + {{ flt_size }};
+        dst_pos = flt_lea_pos;
+        #pragma GCC unroll {{ flt_size }}
+        for (uint16_t s = s_start; s < s_end; ++s) {
+          lea_flt[dst_pos] = weight->data[s];
+          dst_pos++;
+        }
+        flt_lea_pos += {{ flt_size + 1 }};
+        flt_fram_pos += kernel_size;
+        {%- else %}
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
         flt_lea_addr += flt_addr_padding_offset;
         flt_fram_addr += flt_addr_row_offset;
+        {%- endif %}
       }
       /* restore flt_lea_addr pointer to the beginning of the array */
+      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      flt_lea_pos = 0;
+      {%- else %}
       flt_lea_addr = (uint32_t)lea_flt;
+      {%- endif %}
+
+      {%- else %}
+
+      {%- if has_adaptive_gen_mem and flt_len < adaptive_gen_mem_size %}
+      s_start = flt_fram_pos;
+      s_end = flt_fram_pos + {{ flt_len }};
+      dst_pos = 0;
+      #pragma GCC unroll {{ flt_len }}
+      for (uint16_t s = s_start; s < s_end; ++s) {
+        lea_flt[dst_pos] = weight->data[s];
+        dst_pos++;
+      }
+      flt_fram_pos += flt_len;
       {%- else %}
       DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
       flt_fram_addr += flt_addr_offset;
       {%- endif %}
 
+      {%- endif %}
+
       for (uint16_t l = 0; l < output_line_num; ++l) {
+        {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+        uint16_t tmp_input_pos = input_channel_pos;
+        {%- else %}
         uint32_t tmp_input_addr = input_channel_addr;
+        {%- endif %}
         /* send output to LEA RAM */
+        {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+        s_start = tmp_output_pos;
+        s_end = tmp_output_pos + {{ out_line_size }};
+        dst_pos = 0;
+        #pragma GCC unroll {{ out_line_size }}
+        for (uint16_t s = s_start; s < s_end; ++s) {
+          lea_dst[dst_pos] = output->data[s];
+          dst_pos++;
+        }
+        {%- else %}
         DMA_makeTransfer(tmp_output_addr, output_lea_addr, output_line_size);
+        {%- endif %}
 
         conv_flt = lea_flt;
 
         for (uint16_t k = 0; k < kernel_size; ++k) {
           /* send input to LEA RAM */
+          {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+          s_start = tmp_input_pos;
+          s_end = tmp_input_pos + {{ in_line_size }};
+          dst_pos = 0;
+          #pragma GCC unroll {{ in_line_size }}
+          for (uint16_t s = s_start; s < s_end; ++s) {
+            lea_src[dst_pos] = input->data[s];
+            dst_pos++;
+          }
+          {%- else %}
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, input_line_size);
+          {%- endif %}
+
           {%- if not lea_opt %}
           conv_params.coeffs = conv_flt;
           {%- endif %}
@@ -170,18 +272,51 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- else %}
           conv_flt += conv_params.tapLength;
           {%- endif %}
+
+          {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+          tmp_input_pos += input_line_size;
+          {%- else %}
           tmp_input_addr += input_line_size_offset;
+          {%- endif %}
         }
 
         /* bring back output from LEA RAM */
+        {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+        s_start = 0;
+        s_end = {{ out_line_size }};
+        dst_pos = tmp_output_pos;
+        #pragma GCC unroll {{ out_line_size }}
+        for (uint16_t s = s_start; s < s_end; ++s) {
+          output->data[dst_pos] = lea_dst[s];
+          dst_pos++;
+        }
+        {%- else %}
         DMA_makeTransfer(output_lea_addr, tmp_output_addr, output_line_size);
+        {%- endif %}
 
+        {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+        tmp_output_pos += output_line_size;
+        {%- else %}
         tmp_output_addr += output_line_size_offset;
+        {%- endif %}
+
+        {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+        input_channel_pos += input_line_size;
+        {%- else %}
         input_channel_addr += input_line_size_offset; 
+        {%- endif %}
       }
+      {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+      input_fram_pos += input_len;
+      {%- else %}
       input_fram_addr += input_channel_offset;
+      {%- endif %}
     }
+    {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+    output_fram_pos += output_len;
+    {%- else %}
     output_fram_addr += output_addr_offset;
+    {%- endif %}
   }
 
   /* add bias and rescale the output */
@@ -196,7 +331,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       ++pos;
     }
   }
-  {% if lea_opt %}
+  {%- if lea_opt %}
   fir_clear();
   add_clear();
   {%- endif %}
@@ -307,8 +442,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   /* add bias */
   uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
-    memset(output->data + pos, bias->data[i], output_len*sizeof(int16_t));
-    pos += output_len;
+    for (uint16_t j = 0; j < output_len; ++j) {
+      output->data[pos] = bias->data[i];
+      ++pos;
+    }
   }
 
   /* convolution */
@@ -414,7 +551,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     input_fram_addr += input_channel_offset;
     flt_fram_addr += flt_addr_offset;
   }
-  {% if lea_opt %}
+  {%- if lea_opt %}
   add_clear();
   mac_clear();
   {%- endif %}

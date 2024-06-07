@@ -14,4 +14,7 @@ export LIBMSPPRINTF_PRINT_PORT = 0
 
 override CFLAGS += -Wno-pointer-to-int-cast
 override CFLAGS += -Wno-missing-braces
+{%- if adaptive_gen_mem %}
+override CFLAGS += -Wno-unused-variable
+{%- endif %}
 include tools/maker/Makefile

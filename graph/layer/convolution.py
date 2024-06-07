@@ -115,6 +115,24 @@ class Convolution2D(LupeLayer):
         else:
             padding_params = None
 
+        has_adaptive_gen_mem = False
+        if opt_config["adaptive_gen_mem"]:
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or (
+                padding_params is not None and (self.input_size[3] -
+                    padding_params["left"] - padding_params["right"] <
+                    opt_config["adaptive_gen_mem_size"])
+                )
+            )
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                self.kernel_shape[2] < opt_config["adaptive_gen_mem_size"]
+            )
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                self.output_size[3] < opt_config["adaptive_gen_mem_size"]
+            )
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                self.input_size[3] < opt_config["adaptive_gen_mem_size"]
+            )
+
         params = {
             "layer_name" : self.name,
             "lea_opt" : opt_config["lea_opt"],
@@ -123,7 +141,7 @@ class Convolution2D(LupeLayer):
             "flt_len" : get_stride(self.kernel_shape, 1),
             "out_len" : get_stride(self.output_size, 1),
             "in_len" : get_stride(self.input_size, 1),
-            "flt_size" : get_stride(self.kernel_shape, 2),
+            "flt_size" : self.kernel_shape[2],
             "in_line_size" : self.input_size[3], 
             "out_line_size" : self.output_size[3],
             "in_line_num" : self.input_size[2],
@@ -133,7 +151,13 @@ class Convolution2D(LupeLayer):
             "lea_min_size" : min(
                 opt_config["lea_src_size"], opt_config["lea_dst_size"],
                 opt_config["lea_flt_size"]),
+            "has_adaptive_gen_mem" : has_adaptive_gen_mem,
         }
+
+        if opt_config["adaptive_gen_mem"]:
+            params["adaptive_gen_mem_size"] = (
+                opt_config["adaptive_gen_mem_size"]
+            )
 
         # select correct operators
         if opt_config["adaptive_gen_lea"]:

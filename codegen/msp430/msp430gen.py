@@ -89,7 +89,9 @@ class MSP430Gen:
         layergen(layer_dir, self.graph, self.opt_config, self.qf, self.debug)
 
         # Generate the makefile
-        makefilegen(self.code_dir, self.graph, has_extra_buffer)
+        makefilegen(
+            self.code_dir, self.graph, has_extra_buffer, self.opt_config
+        )
 
     def print_config(self):
         """Print the configuration"""

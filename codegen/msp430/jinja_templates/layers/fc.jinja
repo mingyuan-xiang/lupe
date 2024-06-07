@@ -20,7 +20,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uint32_t input_fram_addr = (uint32_t)input->data;
   uint32_t weight_fram_addr = (uint32_t)weight->data;
-  uint32_t lea_line_offset = lea_line_size * sizeof(int16_t);
+  {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
+  uint16_t weight_fram_pos = 0;
+  {%- endif %}
 
   msp_fill_q15_params fill_params = { .length = LEA_SRC_SIZE, .value = 0 };
   {%- if lea_opt %}
@@ -29,6 +31,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_line_size) };
   {%- endif %}
   int16_t res;
+  {%- if has_adaptive_gen_mem %}
+  uint16_t dst_pos;
+  uint16_t s_start, s_end;
+  {%- endif %}
 
   /* reset LEA's RAM */
   msp_fill_q15(&fill_params, lea_src);
@@ -37,23 +43,55 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_fill_q15(&fill_params, lea_tmp);
 
   /* add bias first so that we don't need to set the input to 0 */
+  {%- if has_adaptive_gen_mem and output_size < adaptive_gen_mem_size %}
+  s_start = 0;
+  s_end = {{ output_size }};
+  dst_pos = 0;
+  #pragma GCC unroll {{ output_size }}
+  for (uint16_t s = s_start; s < s_end; ++s) {
+    output->data[dst_pos] = bias->data[s];
+    dst_pos++;
+  }
+  {%- else %}
   DMA_makeTransfer((uint32_t)(bias->data), (uint32_t)(output->data), output_size);
+  {%- endif %}
 
   /*
   * Do the remaining size MAC when the input size is not a multiple
   * of the lea buffer size
   */
-  {%- if (in_col % lea_src_size) != 0 %}
+  {%- if (input_size % lea_src_size) != 0 %}
   {%- if not lea_opt %}
   mac_params.length = MAKE_ALIGN_2(lea_input_line_remain_size);
   {%- endif %}
-
   /* send input neurons */
+  {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
+  s_start = 0;
+  s_end = {{ input_size % lea_src_size }};
+  dst_pos = 0;
+  #pragma GCC unroll {{ input_size % lea_src_size }}
+  for (uint16_t s = s_start; s < s_end; ++s) {
+    lea_src[dst_pos] = input->data[s];
+    dst_pos++;
+  }
+  {%- else %}
   DMA_makeTransfer(input_fram_addr, (uint32_t)lea_src, lea_input_line_remain_size);
+  {%- endif %}
 
   for (uint16_t i = 0; i < output_size; ++i) {
     /* send weight row */
+    {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
+    s_start = weight_fram_pos;
+    s_end = weight_fram_pos + {{ input_size % lea_src_size }};
+    dst_pos = 0;
+    #pragma GCC unroll {{ input_size % lea_src_size }}
+    for (uint16_t s = s_start; s < s_end; ++s) {
+      lea_tmp[dst_pos] = weight->data[s];
+      dst_pos++;
+    }
+    {%- else %}
     DMA_makeTransfer(weight_fram_addr, (uint32_t)lea_tmp, lea_input_line_remain_size);
+    {%- endif %}
 
     {%- if lea_opt %}
     new_mac_q15(lea_src, lea_tmp);
@@ -64,20 +102,25 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
     output->data[i] = __saturated_add_q15(output->data[i], res);
 
+    {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
+    weight_fram_pos += weight->dims[1];
+    {%- else %}
     weight_fram_addr += weight_line_offset;
+    {%- endif %}
   }
-  input_fram_addr += lea_input_line_remain_size * sizeof(int16_t);
   {%- endif %}
 
+  {%- if input_size > lea_src_size %}
   /* Compute the rest MAC */
+  input_fram_addr += lea_input_line_remain_size * sizeof(int16_t);
+  uint32_t lea_line_offset = lea_line_size * sizeof(int16_t);
   {%- if lea_opt %}
   lea_mac_params->vectorSize = MAKE_ALIGN_2(lea_line_size);
+  {%- else %}
+  mac_params.length = MAKE_ALIGN_2(lea_line_size);
   {%- endif %}
   for (uint16_t l = lea_input_line_remain_size; l < input_size; l += lea_line_size) {
     weight_fram_addr = (uint32_t)weight->data + (input_fram_addr - ((uint32_t)input->data));
-    {%- if not lea_opt %}
-    mac_params.length = MAKE_ALIGN_2(lea_line_size);
-    {%- endif %}
 
     /* send input neurons */
     DMA_makeTransfer(input_fram_addr, (uint32_t)lea_src, lea_line_size);
@@ -99,7 +142,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
     input_fram_addr += lea_line_offset;
   }
-  {% if lea_opt %}
+  {%- endif %}
+  {%- if lea_opt %}
   mac_clear();
   {%- endif %}
 }
