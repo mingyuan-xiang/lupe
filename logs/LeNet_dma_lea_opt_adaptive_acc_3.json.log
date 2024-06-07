@@ -24,9 +24,3 @@ Image 22, true label: 6, predicted label: 6, accumulative accuracy: 1.0
 Image 23, true label: 5, predicted label: 5, accumulative accuracy: 1.0
 Image 24, true label: 4, predicted label: 4, accumulative accuracy: 1.0
 Image 25, true label: 0, predicted label: 0, accumulative accuracy: 1.0
-Image 26, true label: 7, predicted label: 7, accumulative accuracy: 1.0
-Image 27, true label: 4, predicted label: 4, accumulative accuracy: 1.0
-Image 28, true label: 0, predicted label: 0, accumulative accuracy: 1.0
-Image 29, true label: 1, predicted label: 1, accumulative accuracy: 1.0
-Image 30, true label: 3, predicted label: 3, accumulative accuracy: 1.0
-Image 31, true label: 1, predicted label: 1, accumulative accuracy: 1.0

@@ -89,6 +89,8 @@ def load_opt_config(config):
     with open(config, "r", encoding="utf-8") as file:
         opt_config = OrderedDict(json.load(file))
         # Parse the configuration file. Set default to False if not present.
+        if "adaptive_gen_mem" not in opt_config:
+            opt_config["adaptive_gen_lea"] = False
         if "adaptive_gen_lea" not in opt_config:
             opt_config["adaptive_gen_lea"] = False
         if "lea_opt" not in opt_config:
