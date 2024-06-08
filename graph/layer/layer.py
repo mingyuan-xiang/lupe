@@ -38,7 +38,7 @@ class LupeLayer(ABC):
 
         # Get the input and output size before register a node
         self._register(node)
-        self._register_weights(node, node_list)
+        self._add_weights(node, node_list)
 
     @abstractmethod
     def _get_name(self, node):
@@ -63,18 +63,16 @@ class LupeLayer(ABC):
     def _register(self, node):
         """Register the layer"""
 
-    def _register_weights(self, node, node_list):
+    def _add_weights(self, node, node_list):
         """Register the weights"""
         if self.has_weights():
             if node_list is None:
                 raise ValueError("node_list is None")
-            for input_name in node.input:
-                if "weight" in input_name:
-                    weight_name = name_conversion(input_name)
-                    self.weight = node_list[weight_name]
-                if "bias" in input_name:
-                    bias_name = name_conversion(input_name)
-                    self.bias = node_list[bias_name]
+            if node.op_type in ("Conv", "Gemm"):
+                weight_name = name_conversion(node.input[1])
+                self.weight = node_list[weight_name]
+                bias_name = name_conversion(node.input[2])
+                self.bias = node_list[bias_name]
 
         # register min and max for clip
         if "Clip" in node.name:

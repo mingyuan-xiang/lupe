@@ -59,13 +59,7 @@ class Convolution2D(LupeLayer):
 
     def _get_name(self, node):
         """Get the name of the layer"""
-        for i in node.input:
-            if "weight" in i:
-                return name_conversion(i)[:-len("_weight")]
-
-        raise NameError(
-            f"The convolution layer {node.name} doesn't have weights"
-        )
+        return name_conversion(node.name)
 
     def has_weights(self):
         """If the layer has weights"""

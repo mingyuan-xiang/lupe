@@ -20,10 +20,17 @@ def modelgen(code_dir, graph, debug):
     # model c file
     cfile_template_path = os.path.join(JINJA_DIR, "model.c.jinja")
     nodes = graph.get_hidden_layers()
-    nodes_dic = [{
-        "name" : n,
-        "has_weights" : graph.node_list[n].has_weights()
-    } for n in nodes]
+    nodes_dic = []
+    for n in nodes:
+        d = {
+            "name" : n,
+            "has_weights" : graph.node_list[n].has_weights()
+        }
+        if graph.node_list[n].has_weights():
+            d["weight_name"] = graph.node_list[n].weight.name
+            d["bias_name"] = graph.node_list[n].bias.name
+
+        nodes_dic.append(d)
     cfile_params = {
         "model_name": model_name,
         "layer_list": nodes_dic,

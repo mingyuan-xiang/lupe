@@ -28,7 +28,7 @@
 
 uint16_t {{ model_name }}(mat_t* model_in) {
 {#- Prepare the input data #}
-  DMA_makeTransfer((uint32_t)(model_in->data), (uint32_t)(conv1_in_meta.data), MAT_GET_SIZE(model_in));
+  DMA_makeTransfer((uint32_t)(model_in->data), (uint32_t)({{ layer_list[0].name }}_in_meta.data), MAT_GET_SIZE(model_in));
   {%- if debug %}
   msp_send_printf("\n============== Input ==============\n");
   msp_send_mat(model_in);
@@ -37,7 +37,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- for layer in layer_list %}
   /* {{ layer.name }} */
   {%- if layer.has_weights %}
-  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.name }}_weight_meta, &{{ layer.name }}_bias_meta);
+  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.weight_name }}_meta, &{{ layer.bias_name }}_meta);
   {%- else %}
   {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
   {%- endif -%}

@@ -111,3 +111,7 @@ make apps/<app name>/bld/gcc/depclean
 ```
 ./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 3
 ```
+
+# TODO
+
+model clip does not pass to the model constructor (pytorch)

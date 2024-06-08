@@ -13,7 +13,7 @@ def get_onnx_attr(node, s):
 
 def name_conversion(name):
     """Convert the name to a valid python variable name"""
-    n = name.replace(".", "_").replace("-", "_").replace("/", "_")
+    n = name.replace(".", "_").replace("-", "_").replace("/", "_").replace(":", "_")
     if n[0] == "_":
         n = n[1:]
     return n

@@ -34,6 +34,7 @@ class LupeGraph:
         # Infer the shapes of the model
         model = shape_inference.infer_shapes(model)
 
+        # Register the weights first
         self._register_weights(model)
 
         # Get the node dictionary from the ONNX model
@@ -44,6 +45,8 @@ class LupeGraph:
         weights = model.graph.initializer
 
         for w in weights:
+            print(w.name)
+            print(w.dims)
             # weights
             if "weight" in w.name:
                 wei = get_layer_constructor(LupeType.WEIGHT)(w, None, None, self.opt_config)
