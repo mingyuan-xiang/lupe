@@ -40,21 +40,15 @@ class LupeGraph:
         # Get the node dictionary from the ONNX model
         self._register(model)
 
+        self.add_buffer_list = self._register_add()
+
     def _register_weights(self, model):
         """Register tensors only in the node_list"""
         weights = model.graph.initializer
 
         for w in weights:
-            print(w.name)
-            print(w.dims)
-            # weights
-            if "weight" in w.name:
-                wei = get_layer_constructor(LupeType.WEIGHT)(w, None, None, self.opt_config)
-                self.node_list[wei.name] = wei
-            # biases
-            elif "bias" in w.name:
-                bias = get_layer_constructor(LupeType.BIAS)(w, None, None, self.opt_config)
-                self.node_list[bias.name] = bias
+            wei = get_layer_constructor(LupeType.WEIGHT)(w, None, None, self.opt_config)
+            self.node_list[wei.name] = wei
 
         for node in model.graph.node:
             if "Constant" in node.name:
@@ -129,6 +123,34 @@ class LupeGraph:
                     "children" : []
                 }
                 self.graph[name]["children"].append(output_node)
+
+    def _register_add(self):
+        """Register the layers to be stored in the extra add buffer"""
+        def get_previous_key(d, key):
+            # Get previous key
+            keys = list(d.keys())
+            key_index = keys.index(key)
+            if key_index > 0:
+                return keys[key_index - 1]
+            return None
+
+        add_buffer_list = []
+        for n in self.graph:
+            if "Add" in n:
+                prev = get_previous_key(self.graph, n)
+                if prev is None:
+                    raise AssertionError("The Add has not previous layer")
+
+                add_node = self.node_list[n]
+                buffered_input = None
+                for l in add_node.input:
+                    if prev != l:
+                        buffered_input = l
+                        break
+
+                add_buffer_list.append(buffered_input)
+
+        return add_buffer_list
 
     def print(self):
         """Print the graph"""

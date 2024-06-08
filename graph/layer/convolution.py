@@ -14,6 +14,7 @@ class Convolution2D(LupeLayer):
     """2D Convolution layer"""
     def _register(self, node):
         """Register the layer"""
+        self.input = name_conversion(node.input[0])[:-len("_output_0")]
         # group
         group = get_onnx_attr(node, "group")
         self.group = group.i if group else None
@@ -48,6 +49,7 @@ class Convolution2D(LupeLayer):
 
     def __str__(self):
         s = f"{self.name}: Convolution2D("
+        s += f"input={self.input}, "
         s += f"kernel_shape={self.kernel_shape}, "
         s += f"padding={self.padding}, "
         s += f"strides={self.strides}"

@@ -28,7 +28,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if lea_opt %}
   mac_init(MAKE_ALIGN_2(lea_input_line_remain_size));
   {%- else %}
-  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_line_size) };
+  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_input_line_remain_size) };
   {%- endif %}
   int16_t res;
   {%- if has_adaptive_gen_mem %}
@@ -61,9 +61,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   * of the lea buffer size
   */
   {%- if (input_size % lea_src_size) != 0 %}
-  {%- if not lea_opt %}
-  mac_params.length = MAKE_ALIGN_2(lea_input_line_remain_size);
-  {%- endif %}
   /* send input neurons */
   {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
   s_start = 0;
@@ -110,7 +107,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
   {%- endif %}
 
-  {%- if input_size > lea_src_size %}
+  {%- if input_size >= lea_src_size %}
   /* Compute the rest MAC */
   input_fram_addr += lea_input_line_remain_size * sizeof(int16_t);
   uint32_t lea_line_offset = lea_line_size * sizeof(int16_t);

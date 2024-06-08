@@ -1,0 +1,3 @@
+Image 0, true label: 7, predicted label: 7, accumulative accuracy: 1.0
+Image 1, true label: 2, predicted label: 2, accumulative accuracy: 1.0
+Image 2, true label: 1, predicted label: 1, accumulative accuracy: 1.0

@@ -5,7 +5,7 @@ import onnx.numpy_helper
 from .layer import LupeLayer
 from .layer_utils import name_conversion
 
-class Tensor(LupeLayer):
+class Weight(LupeLayer):
     """Tensor layer"""
     def _register(self, node):
         """Register the layer"""
@@ -27,9 +27,3 @@ class Tensor(LupeLayer):
     def get_code(self, jinja_dir, opt_config, qf):
         """This will never get called"""
         raise NotImplementedError
-
-class Weight(Tensor):
-    """Weight"""
-
-class Bias(Tensor):
-    """Bias"""

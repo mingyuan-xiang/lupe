@@ -8,6 +8,14 @@ from .matrixgen import (
     gen_c, gen_c_data_struct, gen_c_data
 )
 
+def _list_mul(l):
+    """Multiply the elements of a list"""
+    result = 1
+    for i in l:
+        result *= i
+    return result
+
+
 def _inputgen(code_dir, graph, loc="hi", debug_input=None):
     """Generate the input files"""
     input_data = graph.node_list[graph.input_name]
@@ -43,7 +51,7 @@ def _inputgen(code_dir, graph, loc="hi", debug_input=None):
     )
 
 def _extra_buffergen(code_dir, size, loc="hi"):
-    """Generate the input files"""
+    """Generate the extra buffer files"""
     shape = list(size)
     while len(shape) < 4:
         shape.insert(0, 1)
@@ -69,14 +77,50 @@ def _extra_buffergen(code_dir, size, loc="hi"):
         os.path.join(code_dir, buffer_name + ".c")
     )
 
+def _add_buffergen(code_dir, graph, loc="hi"):
+    """Generate the add buffer files"""
+    file_name = "add_buffer"
+    buffer_name = "add_buffer"
+
+    h_code = gen_header_includes(file_name)
+    c_code = gen_c("buffer", file_name)
+
+    buffer_size = 0
+    for l in graph.add_buffer_list:
+        node = graph.node_list[l]
+        if _list_mul(node.output_size) > buffer_size:
+            buffer_size = _list_mul(node.output_size)
+
+        mat = Matrix(
+            node.name + "_add_buffer", np.zeros(node.output_size),
+            False, loc=loc
+        )
+
+        # Generate header file
+        h_code += gen_header_data(mat) + "\n"
+        # Generate C file
+        c_code += gen_c_data_struct(mat, buffer_name)
+
+    # Generate header file
+    mat = Matrix(buffer_name, np.zeros(buffer_size), False, loc=loc)
+    h_code += gen_header_data(mat) + "\n"
+
+    h_code += "#endif\n"
+    save(
+        h_code,
+        os.path.join(code_dir, "include", file_name + ".h")
+    )
+
+    # Generate C file
+    c_code += gen_c_data_struct(mat, None)
+    c_code += gen_c_data(mat, False)
+    save(
+        c_code,
+        os.path.join(code_dir, file_name + ".c")
+    )
+
 def _buffergen(code_dir, graph, loc="hi"):
     """Generate the buffer files"""
-    def list_mul(l):
-        """Multiply the elements of a list"""
-        result = 1
-        for i in l:
-            result *= i
-        return result
 
     file_name = "buffer"
     in_buffer_name = "in_buffer"
@@ -85,7 +129,7 @@ def _buffergen(code_dir, graph, loc="hi"):
     h_code = gen_header_includes(file_name)
     c_code = gen_c("buffer", file_name)
 
-    buffer_size = list_mul(graph.node_list[graph.input_name].shape)
+    buffer_size = _list_mul(graph.node_list[graph.input_name].shape)
     in_buffer_ptr = in_buffer_name
     out_buffer_ptr = out_buffer_name
     for n in graph.graph:
@@ -93,10 +137,10 @@ def _buffergen(code_dir, graph, loc="hi"):
         if n in (graph.input_name, graph.output_name):
             continue
         node = graph.node_list[n]
-        if list_mul(node.input_size) > buffer_size:
-            buffer_size = list_mul(node.input_size)
-        if list_mul(node.output_size) > buffer_size:
-            buffer_size = list_mul(node.output_size)
+        if _list_mul(node.input_size) > buffer_size:
+            buffer_size = _list_mul(node.input_size)
+        if _list_mul(node.output_size) > buffer_size:
+            buffer_size = _list_mul(node.output_size)
 
         in_mat = Matrix(
             node.name + "_in", np.zeros(node.input_size), False, loc=loc
@@ -140,5 +184,7 @@ def arrgen(code_dir, graph, size, loc="hi", debug_input=None):
     """Generate the pre-allocated arrays"""
     _inputgen(code_dir, graph, loc, debug_input)
     _buffergen(code_dir, graph, loc)
+    if len(graph.add_buffer_list) > 0:
+        _add_buffergen(code_dir, graph, loc)
     if size is not None:
         _extra_buffergen(code_dir, size, loc=loc)

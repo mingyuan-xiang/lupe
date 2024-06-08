@@ -7,14 +7,14 @@ from .pooling import AvgPooling, MaxPooling
 from .activation import Relu, Tanh
 from .transition import Flatten
 from .fully_connected import FullyConnected
-from .weights import Bias, Weight
+from .weights import Weight
 from .constant import Constant
 from .clip import Clip
+from .add import Add
 
 class LupeType(Enum):
     """Supported layer types"""
     AVG_POOL = auto()
-    BIAS = auto()
     CONSTANT = auto()
     CONV2D = auto()
     FC = auto()
@@ -27,6 +27,7 @@ class LupeType(Enum):
     TANH = auto()
     WEIGHT = auto()
     CLIP = auto()
+    ADD = auto()
 
 def get_lupe_type(onnx_type):
     """Get the Lupe supported type based on the ONNX operation type
@@ -57,6 +58,8 @@ def get_lupe_type(onnx_type):
         ty = LupeType.FLATTEN
     elif onnx_type == "Clip":
         ty = LupeType.CLIP
+    elif onnx_type == "Add":
+        ty = LupeType.ADD
     else:
         raise ValueError(f"Unsupported ONNX operation type: {onnx_type}")
 
@@ -73,9 +76,7 @@ def lupe_type_to_string(lupe_type):
     """
     string = ""
 
-    if lupe_type == LupeType.BIAS:
-        string = "Bias"
-    elif lupe_type == LupeType.CONSTANT:
+    if lupe_type == LupeType.CONSTANT:
         string = "Constant"
     elif lupe_type == LupeType.CONV2D:
         string = "Conv2D"
@@ -97,6 +98,8 @@ def lupe_type_to_string(lupe_type):
         string = "Weight"
     elif lupe_type == LupeType.CLIP:
         string = "Clip"
+    elif lupe_type == LupeType.ADD:
+        string = "Add"
     else:
         raise ValueError(f"Unsupported LupeType: {lupe_type}")
 
@@ -120,14 +123,14 @@ def get_layer_constructor(lupe_type):
         layer = Flatten
     elif lupe_type == LupeType.FC:
         layer = FullyConnected
-    elif lupe_type == LupeType.BIAS:
-        layer = Bias
     elif lupe_type == LupeType.WEIGHT:
         layer = Weight
     elif lupe_type == LupeType.CONSTANT:
         layer = Constant
     elif lupe_type == LupeType.CLIP:
         layer = Clip
+    elif lupe_type == LupeType.ADD:
+        layer = Add
     else:
         raise ValueError(f"Unsupported Lupe type: {lupe_type}")
 

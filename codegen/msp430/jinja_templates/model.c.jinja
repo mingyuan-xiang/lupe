@@ -14,6 +14,9 @@
 #include <include/{{ model_name }}.h>
 #include <buffer/include/buffer.h>
 #include <buffer/include/input.h>
+{%- if has_add_buffer %}
+#include <buffer/include/add_buffer.h>
+{%- endif %}
 
 {% for layer in layer_list -%}
 #include <layers/include/{{ layer.name }}.h>
@@ -41,6 +44,11 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- else %}
   {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
   {%- endif -%}
+
+  {%- if layer.name in add_buffer_list %}
+  DMA_makeTransfer((uint32_t)({{ layer.name }}_out_meta.data), (uint32_t)({{ layer.name }}_add_buffer_meta.data), MAT_GET_SIZE({{ layer.name }}_out_meta));
+  {%- endif %}
+
   {%- if debug %}
   msp_send_printf("\n============== Output of {{ layer.name }} ==============\n");
   msp_send_mat(&{{ layer.name }}_out_meta);

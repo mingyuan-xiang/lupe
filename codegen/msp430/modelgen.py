@@ -27,6 +27,7 @@ def modelgen(code_dir, graph, debug):
             "has_weights" : graph.node_list[n].has_weights()
         }
         if graph.node_list[n].has_weights():
+            d["input_name"] = graph.node_list[n].input
             d["weight_name"] = graph.node_list[n].weight.name
             d["bias_name"] = graph.node_list[n].bias.name
 
@@ -36,7 +37,12 @@ def modelgen(code_dir, graph, debug):
         "layer_list": nodes_dic,
         "last_layer": nodes[-1],
         "debug" : debug,
+        "has_add_buffer" : False,
     }
+
+    if len(graph.add_buffer_list) > 0:
+        cfile_params["has_add_buffer"] = True
+        cfile_params["add_buffer_list"] = graph.add_buffer_list
 
     jinja_gen(
         (cfile_template_path, cfile_params),

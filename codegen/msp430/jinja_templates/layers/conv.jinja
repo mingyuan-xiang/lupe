@@ -514,6 +514,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       tmp_output_addr += output_remain_size_offset;
       {%- endif %}
 
+      {%- if out_len >= lea_min_size %}
       {%- if lea_opt %}
       {%- if (out_len % lea_min_size) != 0 %}
       lea_add_params->vectorSize = LEA_MIN_SIZE;
@@ -544,6 +545,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
         tmp_output_addr += output_lea_min_size_offset;
       }
+      {%- endif %}
 
       flt_tmp_addr += flt_channel_offset;
       output_channel_addr += output_addr_offset;

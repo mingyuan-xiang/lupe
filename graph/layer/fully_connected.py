@@ -18,6 +18,7 @@ class FullyConnected(LupeLayer):
     """
     def _register(self, node):
         """Register the layer"""
+        self.input = name_conversion(node.input[0])[:-len("_output_0")]
         # alpha
         alpha = get_onnx_attr(node, "alpha")
         self.alpha = alpha.f if alpha else None
@@ -33,6 +34,7 @@ class FullyConnected(LupeLayer):
 
     def __str__(self):
         s = f"{self.name}: FullyConnected("
+        s += f"input={self.input}, "
         if self.alpha:
             s += f"alpha={self.alpha}, "
         if self.beta:
@@ -45,13 +47,7 @@ class FullyConnected(LupeLayer):
 
     def _get_name(self, node):
         """Get the name of the layer"""
-        for i in node.input:
-            if "weight" in i:
-                return name_conversion(i)[:-len("_weight")]
-
-        raise NameError(
-            f"The convolution layer {node.name} doesn't have weights"
-        )
+        return name_conversion(node.name)
 
     def has_weights(self):
         """If the layer has weights"""

@@ -7,11 +7,19 @@ from jinja2 import Template
 
 from .layer import LupeLayer
 from .layer_utils import name_conversion
+from .helpers import get_stride
 
-class Clip(LupeLayer):
-    """Clip layer"""
+class Add(LupeLayer):
+    """Add layer"""
+    def _register(self, node):
+        self.input = [
+            name_conversion(node.input[0])[:-len("_output_0")],
+            name_conversion(node.input[1])[:-len("_output_0")],
+        ]
+
+
     def _get_name(self, node):
-        """name of the clip layer"""
+        """name of the add layer"""
         return name_conversion(node.name)
 
     def has_weights(self):
@@ -24,16 +32,13 @@ class Clip(LupeLayer):
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
-        if not (isinstance(self.min, (int, float)) or
-            isinstance(self.max, (int, float))):
-            raise TypeError
-
-        path = os.path.join(jinja_dir, "clip.jinja")
+        path = os.path.join(jinja_dir, "add.jinja")
 
         params = {
             "layer_name" : self.name,
-            "min" : int(self.min * (2 ** (15 - qf))),
-            "max" : int(self.max * (2 ** (15 - qf))),
+            "lea_opt" : opt_config["lea_opt"],
+            "lea_src_size" : opt_config["lea_src_size"],
+            "input_size" : get_stride(self.input_size, 0),
         }
 
         with open(path, "r", encoding="utf-8") as file:
@@ -44,6 +49,6 @@ class Clip(LupeLayer):
             return code_str
 
     def __str__(self):
-        s = f"{self.name}: Clip(min={self.min}, max={self.min})"
+        s = f"{self.name}: Add(input0={self.input[0]}, input1={self.input[1]})"
 
         return s
