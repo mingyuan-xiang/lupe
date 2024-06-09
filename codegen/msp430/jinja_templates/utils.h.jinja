@@ -51,7 +51,7 @@ extern MSP_LEA_MAC_PARAMS* lea_mac_params;
   uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
   DMA_startTransfer(dma_config.channelSelect); \
-	__bis_SR_register(GIE + LPM0_bits); \ 
+	__bis_SR_register(GIE + LPM0_bits); \
 	__set_interrupt_state(interruptState); \
 }
 {%- endif %}

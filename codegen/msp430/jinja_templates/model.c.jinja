@@ -46,7 +46,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- endif -%}
 
   {%- if layer.name in add_buffer_list %}
-  DMA_makeTransfer((uint32_t)({{ layer.name }}_out_meta.data), (uint32_t)({{ layer.name }}_add_buffer_meta.data), MAT_GET_SIZE({{ layer.name }}_out_meta));
+  DMA_makeTransfer((uint32_t)({{ layer.name }}_out_meta.data), (uint32_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), MAT_GET_SIZE(&{{ layer.name }}_out_meta));
   {%- endif %}
 
   {%- if debug %}

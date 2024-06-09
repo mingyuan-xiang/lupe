@@ -41,8 +41,11 @@ def modelgen(code_dir, graph, debug):
     }
 
     if len(graph.add_buffer_list) > 0:
+        inverted_add_buffer_list = {
+            v : k for k, v in graph.add_buffer_list.items()
+        }
         cfile_params["has_add_buffer"] = True
-        cfile_params["add_buffer_list"] = graph.add_buffer_list
+        cfile_params["add_buffer_list"] = inverted_add_buffer_list
 
     jinja_gen(
         (cfile_template_path, cfile_params),

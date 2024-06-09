@@ -14,7 +14,7 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
 }
 {%- endif %}
 
-void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+void {{ layer_name }}(mat_t* input, mat_t* output) {
   uint16_t input_size = input->strides[0];
   uint16_t lea_line_size = LEA_SRC_SIZE;
   uint16_t lea_line_size_cnt = input_size / lea_line_size;
@@ -55,9 +55,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* Compute the rest ADD */
   {%- if lea_opt %}
-  lea_mac_params->vectorSize = MAKE_ALIGN_2(lea_line_size);
+  lea_add_params->vectorSize = MAKE_ALIGN_2(lea_line_size);
   {%- else %}
-  mac_params.length = MAKE_ALIGN_2(lea_line_size);
+  add_params.length = MAKE_ALIGN_2(lea_line_size);
   {%- endif %}
   for (uint16_t l = 0; l < lea_line_size_cnt; ++l) {
     DMA_makeTransfer(input_0_fram_addr, (uint32_t)lea_src, lea_line_size);

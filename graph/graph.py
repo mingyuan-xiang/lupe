@@ -134,7 +134,7 @@ class LupeGraph:
                 return keys[key_index - 1]
             return None
 
-        add_buffer_list = []
+        add_buffer_list = OrderedDict()
         for n in self.graph:
             if "Add" in n:
                 prev = get_previous_key(self.graph, n)
@@ -148,7 +148,7 @@ class LupeGraph:
                         buffered_input = l
                         break
 
-                add_buffer_list.append(buffered_input)
+                add_buffer_list[n] = buffered_input
 
         return add_buffer_list
 

@@ -55,6 +55,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_num = output->dims[2];
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
+  {% if stride_row > 1 %}
+  uint16_t stride_row = {{ stride_row }};
+  uint16_t input_line_strided_size_offset = input_line_size * stride_row * sizeof(int16_t);
+  {%- endif %}
+
+  {%- if stride_col > 1 %}
+  uint16_t stride_col = {{ stride_col }};
+  {%- endif %}
   {% if lea_opt %}
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(output_line_size));
@@ -84,6 +92,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if in_line_size < adaptive_gen_mem_size %}
   uint16_t input_fram_pos = 0;
   uint16_t input_channel_pos = 0;
+
+  {%- if stride_row > 1 %}
+  uint16_t input_line_strided_size = input_line_size * stride_row;
+  {%- endif %}
   {%- endif %}
   {%- endif %}
 
@@ -259,7 +271,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- else %}
           msp_fir_q15(&conv_params, lea_src, lea_tmp);
           {%- endif %}
-
+          /* stride */
+          {% if stride_col > 1 %}
+          uint16_t stride_pos = 0;
+          for (uint16_t c = 0; c < output_line_size; ++c) {
+            lea_tmp[c] = lea_tmp[stride_pos];
+            stride_pos += stride_col;
+          }
+          {% endif %}
           /* accumulate results for a 2D convolution */
           {%- if lea_opt %}
           new_add_q15(lea_dst, lea_tmp, lea_dst);
@@ -301,9 +320,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
 
         {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
+        {%- if stride_row > 1 %}
+        input_channel_pos += input_line_strided_size;
+        {%- else %}
         input_channel_pos += input_line_size;
+        {%- endif %}
+
+        {%- else %}
+        {%- if stride_row > 1 %}
+        input_channel_addr += input_line_strided_size_offset;
         {%- else %}
         input_channel_addr += input_line_size_offset; 
+        {%- endif %}
+
         {%- endif %}
       }
       {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}

@@ -156,6 +156,8 @@ class Convolution2D(LupeLayer):
             "padding" : padding_params,
             "lea_min_size" : lea_min_size,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
+            "stride_row" : self.strides[0],
+            "stride_col" : self.strides[1],
         }
 
         if opt_config["adaptive_gen_mem"]:

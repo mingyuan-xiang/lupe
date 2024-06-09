@@ -21,8 +21,12 @@ def makefilegen(code_dir, graph, has_extra_buffer, opt_config):
         "layer_list" : nodes,
         "layers_with_weights" : nodes_with_weights,
         "has_extra_buffer" : has_extra_buffer,
+        "has_add_buffer" : False,
         "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
     }
+
+    if len(graph.add_buffer_list) > 0:
+        params["has_add_buffer"] = True
 
     with open(template_path, "r", encoding="utf-8") as file:
         template = file.read()
