@@ -111,6 +111,11 @@ class Convolution2D(LupeLayer):
         else:
             padding_params = None
 
+        lea_min_size = min(
+            opt_config["lea_src_size"], opt_config["lea_dst_size"],
+            opt_config["lea_flt_size"]
+        )
+
         has_adaptive_gen_mem = False
         if opt_config["adaptive_gen_mem"]:
             has_adaptive_gen_mem = (has_adaptive_gen_mem or (
@@ -129,6 +134,11 @@ class Convolution2D(LupeLayer):
                 self.input_size[3] < opt_config["adaptive_gen_mem_size"]
             )
 
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                (get_stride(self.output_size, 1) % lea_min_size) <
+                opt_config["adaptive_gen_mem_size"]
+            )
+
         params = {
             "layer_name" : self.name,
             "lea_opt" : opt_config["lea_opt"],
@@ -144,9 +154,7 @@ class Convolution2D(LupeLayer):
             "out_line_num" : self.output_size[2],
             "qf" : qf,
             "padding" : padding_params,
-            "lea_min_size" : min(
-                opt_config["lea_src_size"], opt_config["lea_dst_size"],
-                opt_config["lea_flt_size"]),
+            "lea_min_size" : lea_min_size,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
         }
 
