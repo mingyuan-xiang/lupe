@@ -1,4 +1,4 @@
 {
-    "arch" : "LeNet_quan",
-    "qf" : 3
+    "arch" : "LeNet",
+    "qf" : 5
 }

@@ -29,7 +29,7 @@ class sync_reader:
         # Initialize serial port
         self.port = port
         self.baud = baud
-        self.ser = serial.Serial(self.port, self.baud)
+        self.ser = serial.Serial(self.port, self.baud, timeout=60)
         if not self.ser.is_open:
             self.ser.open()
         self.ack = 0

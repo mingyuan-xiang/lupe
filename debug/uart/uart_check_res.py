@@ -3,8 +3,6 @@
 import os
 import sys
 import argparse
-import importlib
-import inspect
 
 import numpy as np
 import torch
@@ -19,36 +17,32 @@ sys.path.append(model_path)
 
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 from get_input import get_input
-from DATE_LeNet import DATE_LeNet
-from DATE_LeNet_quan import DATE_LeNet_quan
 from LeNet import LeNet
+from ResNet3 import ResNet3
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
     '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
 )
 parser.add_argument('--baud', type=int, default=19200, help='UART baud rate')
+parser.add_argument('--clamp', type=bool, default=False,
+                    help='Clamp the weights and output')
+parser.add_argument('--clamp-min', type=float, default=-1,
+                    help='Clamp min')
+parser.add_argument('--clamp-max', type=float, default=1,
+                    help='Clamp max')
 
-models = {
-    "DATE_LeNet" : DATE_LeNet(),
-    "DATE_LeNet_quan" : DATE_LeNet_quan(),
-    "LeNet" : LeNet(),
-}
+parser.add_argument('--dataset', default='mnist', choices=['mnist', 'cifar10'],
+                    help='dataset (default: mnist, cifar10)')
+parser.add_argument('-a', '--arch', metavar='ARCH', default='LeNet')
 
-parser.add_argument('--dataset', default='mnist', choices=['mnist'],
-                    help='dataset (default: mnist)')
-parser.add_argument('-a', '--arch', metavar='ARCH', default='DATE_LeNet_quan',
-                    choices=models.keys(),
-                    help='model architecture: ' +
-                        ' | '.join(models.keys()) +
-                        ' (default: DATE_LeNet_quan)')
 parser.add_argument(
         "--idx", type=int, default=0,
         help="Set index of the input image(data) in the dataset for comparison"
     )
 parser.add_argument(
     '--param-loc', '-p',
-    default='./models/checkpoints/DATE_LeNet_quan/model_best.pth',
+    default='./models/checkpoints/LeNet/model_best.pth',
     help='weights location (default: ./models/checkpoints/DATE_LeNet_quan/model_best.pth)'
 )
 parser.add_argument(
@@ -60,25 +54,40 @@ parser.add_argument(
 args = parser.parse_args()
 par = sync_reader(args.port, args.baud)
 
+model = None
+if args.clamp:
+    models = {
+        "ResNet3" : ResNet3(clamp_min=args.clamp_min, clamp_max=args.clamp_max),
+    }
+else:
+    models = {
+        "LeNet" : LeNet(),
+        "ResNet3" : ResNet3(),
+    }
+
 np.set_printoptions(linewidth=np.inf, threshold=np.inf)
+
+image, label = get_input(args.dataset, args.idx)
+image = torch.from_numpy(image)
+
+model = models[args.arch]
+model.load_state_dict(torch.load(args.param_loc, map_location=torch.device('cpu'))['state_dict'])
+
+x, l_exp = model(image)
+
+print("Done inference!")
+
+names = model.names
 
 l = []
 while True:
     msg = par.get_msg()
     if isinstance(msg, np.ndarray):
         l.append(msg)
+    else:
+        print(msg)
     if isinstance(msg, str) and msg == UARTIO_END_PRINT_STR:
         break
-
-image, label = get_input(args.dataset, args.idx)
-image = torch.from_numpy(image)
-
-model = models[args.arch]
-model.load_state_dict(torch.load(args.param_loc)['state_dict'])
-
-x, l_exp = model(image)
-
-names = model.names
 
 assert(len(l) == len(l_exp) and len(names) == len(l))
 

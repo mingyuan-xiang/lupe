@@ -23,7 +23,8 @@ cifar = datasets.CIFAR10(
 # pack the image to a 1D 16-bit array
 def parse_img(img, qf):
     img = img.numpy()
-    img = img.flatten() * (2 ** (15 - qf))
+    # img = img.flatten() * (2 ** (15 - qf))
+    img = img.flatten() * (2 ** 7)
     img = img.astype(np.int16)
     return img
 
