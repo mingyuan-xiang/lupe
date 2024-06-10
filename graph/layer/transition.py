@@ -54,8 +54,8 @@ class Flatten(Transition):
             "feed the input to the output*/\n"
         )
         code += (
-            "  memcpy(output->data, input->data, " +
-            "MAT_GET_SIZE(input)*sizeof(uint16_t));"
+            "  DMA_makeTransfer((uint32_t)output->data, (uint32_t)input->data, " +
+            "MAT_GET_SIZE(input));"
         )
 
         return code

@@ -116,6 +116,11 @@ class Convolution2D(LupeLayer):
             opt_config["lea_flt_size"]
         )
 
+        if self.input_size[1] > lea_min_size:
+            raise ValueError(
+                "Input channel size has to be smaller than LEA size"
+            )
+
         has_adaptive_gen_mem = False
         if opt_config["adaptive_gen_mem"]:
             has_adaptive_gen_mem = (has_adaptive_gen_mem or (

@@ -18,14 +18,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
     for (uint16_t r = 0; r < rows; r += height) {
       out_c = 0;
       for (uint16_t c = 0; c < cols; c += width) {
-        agg = {{ agg_init }};
+        agg = LUPE_MIN;
         uint16_t h = r + height;
         uint16_t w = c + width;
         for (uint16_t i = r; i < h; ++i) {
           for (uint16_t j = c; j < w; ++j) {
             uint16_t offset = s * in_ch_stride + i * in_row_stride + j;
             int16_t in_data = *(input->data + offset);
-            {{ update_agg }};
+            agg = (agg > in_data ? agg : in_data);
           }
         }
         uint16_t offset = s * out_ch_stride + out_r * out_row_stride + out_c;
