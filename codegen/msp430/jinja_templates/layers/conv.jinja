@@ -111,7 +111,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
   }
 
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
   /* Rebuild the input for MAC */
   uint16_t ptwise_pos = 0;
@@ -125,7 +125,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       }
     }
   }
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(output));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
 
   /* add bias */
   uint16_t pos = 0;
@@ -326,9 +326,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
   }
 
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
-  memset(output->data, 0, MAT_GET_SIZE(input)*sizeof(int16_t));
+  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(int16_t));
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -667,7 +667,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
   }
 
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
   /* add bias */
   uint16_t pos = 0;
