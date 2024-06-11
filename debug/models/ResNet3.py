@@ -15,15 +15,12 @@ def _weights_init(m):
 class BasicBlock(nn.Module):
     expansion = 1
 
-    def __init__(self, in_planes, planes, stride=1, clamp_min=-1, clamp_max=1):
+    def __init__(self, in_planes, planes, stride=1):
         super(BasicBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(planes)
         self.conv2 = nn.Conv2d(planes, planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn2 = nn.BatchNorm2d(planes)
-
-        self.clamp_min = clamp_min
-        self.clamp_max = clamp_max
 
         self.stride = stride
 
@@ -41,17 +38,11 @@ class BasicBlock(nn.Module):
         l.append(x.detach().clone())
         x = F.relu(x)
         l.append(x.detach().clone())
-        x = torch.clamp(x, min=self.clamp_min, max=self.clamp_max)
-        l.append(x.detach().clone())
         x = self.bn2(self.conv2(x))
-        l.append(x.detach().clone())
-        x = torch.clamp(x, min=self.clamp_min, max=self.clamp_max)
         l.append(x.detach().clone())
         x = self.shortcut(x_in)
         if self.stride != 1:
             l.append(x.detach().clone())
-        x = torch.clamp(x, min=self.clamp_min, max=self.clamp_max)
-        l.append(x.detach().clone())
         x += x
         l.append(x.detach().clone())
         x = F.relu(x)
@@ -59,12 +50,9 @@ class BasicBlock(nn.Module):
         return x, l
 
 class ResNet(nn.Module):
-    def __init__(self, block, num_blocks, num_classes=10, clamp_min=-1, clamp_max=1):
+    def __init__(self, block, num_blocks, num_classes=10):
         super(ResNet, self).__init__()
         self.in_planes = 10
-
-        self.clamp_min = clamp_min
-        self.clamp_max = clamp_max
 
         self.conv1 = nn.Conv2d(3, self.in_planes, kernel_size=3, stride=1, padding=1, bias=False)
         self.bn1 = nn.BatchNorm2d(10)
@@ -79,7 +67,7 @@ class ResNet(nn.Module):
         strides = [stride] + [1]*(num_blocks-1)
         layers = []
         for stride in strides:
-            layers.append(block(self.in_planes, planes, stride, clamp_min=self.clamp_min, clamp_max=self.clamp_max))
+            layers.append(block(self.in_planes, planes, stride))
             self.in_planes = planes * block.expansion
 
         return nn.Sequential(*layers)
@@ -90,8 +78,6 @@ class ResNet(nn.Module):
         x = self.bn1(self.conv1(x))
         l.append(x.detach().clone())
         x = F.relu(x)
-        l.append(x.detach().clone())
-        x = torch.clamp(x, min=self.clamp_min, max=self.clamp_max)
         l.append(x.detach().clone())
         x, ll = self.layer1(x)
         l += ll
@@ -109,40 +95,30 @@ class ResNet(nn.Module):
 
 
 class ResNet3(ResNet):
-    def __init__(self, clamp_min=-1, clamp_max=1):
-        super().__init__(BasicBlock, [1, 1, 1], clamp_min=clamp_min, clamp_max=clamp_max)
+    def __init__(self):
+        super().__init__(BasicBlock, [1, 1, 1])
 
         self.names = [
             "input",
             "conv1_Conv",
-            "Relu",
             "Clip",
             "layer1_layer1_0_conv1_Conv",
-            "layer1_layer1_0_Relu",
             "layer1_layer1_0_Clip",
             "layer1_layer1_0_conv2_Conv",
-            "layer1_layer1_0_Clip_1",
-            "layer1_layer1_0_Clip_2",
             "layer1_layer1_0_Add",
-            "layer1_layer1_0_Relu_1",
+            "layer1_layer1_0_Clip_1",
             "layer2_layer2_0_conv1_Conv",
-            "layer2_layer2_0_Relu",
             "layer2_layer2_0_Clip",
             "layer2_layer2_0_conv2_Conv",
-            "layer2_layer2_0_Clip_1",
             "layer2_layer2_0_shortcut_shortcut_0_Conv",
-            "layer2_layer2_0_Clip_2",
             "layer2_layer2_0_Add",
-            "layer2_layer2_0_Relu_1",
+            "layer2_layer2_0_Clip_1",
             "layer3_layer3_0_conv1_Conv",
-            "layer3_layer3_0_Relu",
             "layer3_layer3_0_Clip",
             "layer3_layer3_0_conv2_Conv",
-            "layer3_layer3_0_Clip_1",
             "layer3_layer3_0_shortcut_shortcut_0_Conv",
-            "layer3_layer3_0_Clip_2",
             "layer3_layer3_0_Add",
-            "layer3_layer3_0_Relu_1",
+            "layer3_layer3_0_Clip_1",
             "AveragePool",
             "Flatten",
             "linear_Gemm",

@@ -25,12 +25,6 @@ parser.add_argument(
     '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
 )
 parser.add_argument('--baud', type=int, default=19200, help='UART baud rate')
-parser.add_argument('--clamp', type=bool, default=False,
-                    help='Clamp the weights and output')
-parser.add_argument('--clamp-min', type=float, default=-1,
-                    help='Clamp min')
-parser.add_argument('--clamp-max', type=float, default=1,
-                    help='Clamp max')
 
 parser.add_argument('--dataset', default='mnist', choices=['mnist', 'cifar10'],
                     help='dataset (default: mnist, cifar10)')
@@ -54,16 +48,10 @@ parser.add_argument(
 args = parser.parse_args()
 par = sync_reader(args.port, args.baud)
 
-model = None
-if args.clamp:
-    models = {
-        "ResNet3" : ResNet3(clamp_min=args.clamp_min, clamp_max=args.clamp_max),
-    }
-else:
-    models = {
-        "LeNet" : LeNet(),
-        "ResNet3" : ResNet3(),
-    }
+models = {
+    "LeNet" : LeNet(),
+    "ResNet3" : ResNet3(),
+}
 
 np.set_printoptions(linewidth=np.inf, threshold=np.inf)
 
@@ -116,6 +104,6 @@ for i, x in enumerate(l):
     print(x)
     print("\n============== Expected ==============\n")
     print(x_exp)
-    print("\n============== Expected (int64) ==============\n")
-    print(x_exp_64)
+    # print("\n============== Expected (int64) ==============\n")
+    # print(x_exp_64)
     print("\n+++++++++++++++++++++++++++++++++++\n")
