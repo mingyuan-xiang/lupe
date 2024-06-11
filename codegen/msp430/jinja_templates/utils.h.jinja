@@ -30,6 +30,8 @@ extern MSP_LEA_FIR_PARAMS* lea_fir_params;
 extern MSP_LEA_MAC_PARAMS* lea_mac_params;
 {%- endif %}
 
+#define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
+
 {% if dma_opt %}
 // DMAEN | DMAREQ
 #define DMA_EN_SIG 0x0011
