@@ -1,5 +1,5 @@
 {%- if lea_opt %}
-static inline void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
+static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
   lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
 
   /* Load source arguments to LEA. */

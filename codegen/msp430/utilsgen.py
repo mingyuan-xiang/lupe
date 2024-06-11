@@ -5,7 +5,7 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def utilsgen(code_dir, opt_config, flt_sizes):
+def utilsgen(code_dir, opt_config, flt_sizes, qf):
     """Generates common helper functions for each layer
     
     Args:
@@ -36,6 +36,7 @@ def utilsgen(code_dir, opt_config, flt_sizes):
             opt_config["lea_src_size"],
             opt_config["lea_dst_size"]
         ),
+        "qf" : qf,
     }
 
     # utils c file
@@ -43,6 +44,7 @@ def utilsgen(code_dir, opt_config, flt_sizes):
     cfile_params = {
         "dma_opt": opt_config["dma_opt"],
         "lea_opt" : opt_config["lea_opt"],
+        "qf" : qf,
     }
 
     jinja_gen(

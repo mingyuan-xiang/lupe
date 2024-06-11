@@ -1,7 +1,7 @@
 {% if flt_size == 100 %}
 {# Piecewise convolution #}
 {%- if lea_opt %}
-static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
 
@@ -13,7 +13,7 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
 
-static inline void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
+static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
   lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
 
   /* Load source arguments to LEA. */
@@ -188,7 +188,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 {% else %}
 {%- if acceleration == 'fir' %}
 {%- if lea_opt %}
-static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
 
@@ -200,7 +200,7 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
 
-static inline void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
+static inline __attribute__((always_inline)) void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
   /* Set MSP_LEA_FIR_PARAMS structure. */
   lea_fir_params->coeffs = MSP_LEA_CONVERT_ADDRESS(coeffs);
   lea_fir_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
@@ -212,6 +212,24 @@ static inline void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
   /* Invoke the LEACMD__FIR command. */
   msp_lea_invokeCommand(LEACMD__FIR);
 }
+
+{%- if qf > 0 %}
+static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
+  offset_vector[0] = offset;
+  offset_vector[1] = offset;
+}
+
+static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src, _q15* dst) {
+  lea_offset_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_offset_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+{%- endif %}
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
@@ -272,6 +290,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(output_line_size));
   fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
+  {%- if qf > 0 %}
+  offset_init(lea_remain_size_aligned);
+  {%- endif %}
   {%- else %}
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
@@ -565,33 +586,71 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   /* add bias and left shift */
   output_fram_addr = (uint32_t)(output->data);
   for (uint16_t i = 0; i < out_channels; ++i) {
+    {%- if lea_opt %}
+    set_offset(bias->data[i]);
+    {%- else %}
     offset_params.offset = bias->data[i];
+    {%- endif %}
+
     {%- if (out_len % lea_min_size) != 0 %}
+
+    {%- if lea_opt %}
+    lea_offset_params->vectorSize = lea_remain_size_aligned;
+    {%- if qf > 0 %}
+    lea_add_params->vectorSize = lea_remain_size_aligned;
+    {%- endif %}
+    {%- else %}
     offset_params.length = lea_remain_size_aligned;
     {%- if qf > 0 %}
     add_params.length = lea_remain_size_aligned;
     {%- endif %}
+    {%- endif %}
+
     DMA_makeTransfer(output_fram_addr, src_lea_addr, lea_remain_size);
     {% for i in range(qf) %}
+    {%- if lea_opt %}
+    new_add_q15(lea_src, lea_src, lea_src);
+    {%- else %}
     msp_add_q15(&add_params, lea_src, lea_src, lea_src);
+    {%- endif %}
     {%- endfor %}
+    {%- if lea_opt %}
+    new_offset_q15(lea_src, lea_dst);
+    {%- else %}
     msp_offset_q15(&offset_params, lea_src, lea_dst);
+    {%- endif %}
 
     DMA_makeTransfer(dst_lea_addr, output_fram_addr, lea_remain_size);
     output_fram_addr += output_remain_size_offset;
     {%- endif %}
     {%- if out_len >= lea_min_size %}
 
+    {%- if lea_opt %}
+    lea_offset_params->vectorSize = LEA_MIN_SIZE;
+    {%- if qf > 0 %}
+    lea_add_params->vectorSize = LEA_MIN_SIZE;
+    {%- endif %}
+    {%- else %}
     offset_params.length = LEA_MIN_SIZE;
     {%- if qf > 0 %}
     add_params.length = LEA_MIN_SIZE;
     {%- endif %}
+    {%- endif %}
+
     for (uint16_t j = lea_remain_size; j < output_len; j += LEA_MIN_SIZE) {
       DMA_makeTransfer(output_fram_addr, src_lea_addr, LEA_MIN_SIZE);
       {% for i in range(qf) %}
+      {%- if lea_opt %}
+      new_add_q15(lea_src, lea_src, lea_src);
+      {%- else %}
       msp_add_q15(&add_params, lea_src, lea_src, lea_src);
+      {%- endif %}
       {%- endfor %}
+      {%- if lea_opt %}
+      new_offset_q15(lea_src, lea_dst);
+      {%- else %}
       msp_offset_q15(&offset_params, lea_src, lea_dst);
+      {%- endif %}
 
       DMA_makeTransfer(dst_lea_addr, output_fram_addr, LEA_MIN_SIZE);
       output_fram_addr += output_lea_min_size_offset;
@@ -600,13 +659,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   {%- if lea_opt %}
+  {%- if qf > 0 %}
+  offset_clear();
+  {%- endif %}
   fir_clear();
   add_clear();
   {%- endif %}
 }
 {%- elif acceleration == 'mac' %}
 {%- if lea_opt %}
-static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
 
@@ -618,7 +680,7 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
 
-static inline void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
+static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
   lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
 
   /* Load source arguments to LEA. */

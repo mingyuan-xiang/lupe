@@ -85,7 +85,7 @@ class MSP430Gen:
         if not os.path.exists(layer_dir):
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
-        utilsgen(layer_dir, self.opt_config, flt_sizes)
+        utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf)
         layergen(layer_dir, self.graph, self.opt_config, self.qf, self.debug)
 
         # Generate the makefile

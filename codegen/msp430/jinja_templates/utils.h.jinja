@@ -28,6 +28,10 @@ extern DMA_initParam dma_config;
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
 extern MSP_LEA_FIR_PARAMS* lea_fir_params;
 extern MSP_LEA_MAC_PARAMS* lea_mac_params;
+{%- if qf > 0 %}
+extern MSP_LEA_ADDMATRIX_PARAMS* lea_offset_params;
+extern int16_t* offset_vector;
+{%- endif %}
 {%- endif %}
 
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
@@ -65,11 +69,15 @@ void fir_init(uint16_t length, uint16_t tapLength);
 
 void mac_init(uint16_t length);
 
+void offset_init(uint16_t length);
+
 void add_clear();
 
 void fir_clear();
 
 void mac_clear();
+
+void offset_clear();
 {%- endif %}
 
 void init_lupe();
