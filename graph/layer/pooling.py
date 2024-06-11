@@ -45,21 +45,15 @@ class Pooling(LupeLayer):
         return None
 
     @abstractmethod
-    def _get_init_val(self):
-        """Get the initial value for the pooling layer"""
-
-    @abstractmethod
-    def _get_update(self, var, data):
-        """Return how to update the pooling layer"""
+    def _get_template_name(self):
+        """Get the jinja template name for the pooling layer"""
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
-        path = os.path.join(jinja_dir, "pooling.jinja")
+        path = os.path.join(jinja_dir, self._get_template_name())
 
         params = {
             "layer_name" : self.name,
-            "agg_init" : self._get_init_val(),
-            "update_agg" : self._get_update("agg", "in_data"),
             "height" : self.kernel_shape[0],
             "width" : self.kernel_shape[1],
             "in_ch" : self.input_size[1],
@@ -80,21 +74,13 @@ class Pooling(LupeLayer):
 
 class AvgPooling(Pooling):
     """Average pooling layer"""
-    def _get_init_val(self):
-        """Get the initial value for the pooling layer"""
-        return "0"
-
-    def _get_update(self, var, data):
+    def _get_template_name(self):
         """Return how to update the pooling layer"""
-        return f"{var} = __saturated_add_q15({var}, {data} >> 2)"
+        return "avg_pooling.jinja"
 
 
 class MaxPooling(Pooling):
     """Max pooling layer"""
-    def _get_init_val(self):
-        """Get the initial value for the pooling layer"""
-        return "LUPE_MIN"
-
-    def _get_update(self, var, data):
-        """Return how to update the polling layer"""
-        return f"{var} = ({var} > {data} ? {var} : {data});"
+    def _get_template_name(self):
+        """Return how to update the pooling layer"""
+        return "max_pooling.jinja"

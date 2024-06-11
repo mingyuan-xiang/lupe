@@ -34,8 +34,8 @@ class Clip(LupeLayer):
 
         params = {
             "layer_name" : self.name,
-            "min" : int(self.min * (2 ** (15 - qf))),
-            "max" : int(self.max * (2 ** (15 - qf))),
+            "min" : max(int(self.min * (2 ** (15 - qf))), -2**15+1),
+            "max" : min(int(self.max * (2 ** (15 - qf))), 2**15-2),
         }
 
         with open(path, "r", encoding="utf-8") as file:

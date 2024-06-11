@@ -19,7 +19,7 @@ class Matrix:
         self.mat = mat
         self.type_converter = (
             (lambda x: "(fixed)" + str(x)) if is_int
-            else (lambda x: "_Q15(" + str(x) + ")")
+            else (lambda x: str(int(x * (2**15))))
         )
         # Set location to HIFRAM or FRAM
         if loc == "lo":
@@ -37,7 +37,7 @@ class Matrix:
         data = "\t" + self.type_converter(mat_data_list[0])
         # 5 elements per line
         for i in range(1, len(mat_data_list)):
-            if i % 4 == 0:
+            if i % 9 == 0:
                 data += ",\n\t"
             else:
                 data += ",\t"
