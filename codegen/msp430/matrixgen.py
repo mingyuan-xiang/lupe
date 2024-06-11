@@ -15,11 +15,18 @@ class Matrix:
     """Generate matrix data in C for MSP430"""
     def __init__(self, name, mat, is_int, loc="hi"):
         """Initialize the matrix object"""
+        def float2fix(x):
+            if x > 1:
+                return str(2**15 - 2)
+            elif x < -1:
+                return str(-2**15 + 1)
+            else:
+                return str(int(x * (2**15)))
+
         self.name = name
         self.mat = mat
         self.type_converter = (
-            (lambda x: "(fixed)" + str(x)) if is_int
-            else (lambda x: str(int(x * (2**15))))
+            (lambda x: "(fixed)" + str(x)) if is_int else float2fix
         )
         # Set location to HIFRAM or FRAM
         if loc == "lo":
