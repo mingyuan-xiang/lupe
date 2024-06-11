@@ -110,7 +110,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     padding_ptr_out += input_line_size;
     {%- endfor %}
   }
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
   /* Rebuild the input for MAC */
   uint16_t ptwise_pos = 0;
@@ -124,7 +124,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       }
     }
   }
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
 
   /* add bias */
   uint16_t pos = 0;
@@ -244,15 +244,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   {%- if stride_col > 1 %}
-  uint16_t stride_col = {{ stride_col }};
+  msp_deinterleave_q15_params deinterleave_params = {
+    .length = input_line_size - kernel_size + 1,
+    .channel = 0,
+    .numChannels = 2
+  };
   {%- endif %}
   {% if lea_opt %}
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(output_line_size));
-  fir_init(MAKE_ALIGN_2(output_line_size), tapLength);
+  fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
   {%- else %}
   msp_fir_q15_params conv_params = {
-    .length = MAKE_ALIGN_2(output_line_size),
+    .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
     .tapLength = MAKE_ALIGN_2(kernel_size),
     .coeffs = lea_flt,
     .enableCircularBuffer = false 
@@ -325,9 +329,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
   }
 
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
-  memset(output->data, 0, MAT_GET_SIZE(output)*sizeof(int16_t));
+  memset(output->data, 0, MAT_GET_SIZE(&out_buffer_meta)*sizeof(int16_t));
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -454,19 +458,27 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- else %}
           msp_fir_q15(&conv_params, lea_src, lea_tmp);
           {%- endif %}
-          {% if stride_col > 1 %}
-          /* stride */
-          uint16_t stride_pos = 0;
-          for (uint16_t c = 0; c < output_line_size; ++c) {
-            lea_tmp[c] = lea_tmp[stride_pos];
-            stride_pos += stride_col;
-          }
-          {% endif %}
+          {%- if stride_col > 1 %}
+          /*
+          * stride
+          * Use lea deinterleave and store it in the lea_src
+          */
+          msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_src);
+          {% if lea_opt %}
+          /* accumulate results for a 2D convolution */
+          new_add_q15(lea_dst, lea_src, lea_dst);
+          {%- else %}
+          msp_add_q15(&add_params, lea_dst, lea_src, lea_dst);
+          {%- endif %}
+
+          {%- else %}
+
           /* accumulate results for a 2D convolution */
           {%- if lea_opt %}
           new_add_q15(lea_dst, lea_tmp, lea_dst);
           {%- else %}
           msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+          {%- endif %}
           {%- endif %}
 
           {%- if lea_opt %}
@@ -666,7 +678,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endfor %}
   }
 
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(input));
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, MAT_GET_SIZE(&out_buffer_meta));
   {%- endif %} 
   /* add bias */
   uint16_t pos = 0;
