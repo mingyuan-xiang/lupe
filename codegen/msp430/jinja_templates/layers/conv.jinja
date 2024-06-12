@@ -132,8 +132,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
 
   /* add bias */
+  // for (uint16_t i = 0; i < out_channels; ++i) {
+  //   DMA_setWord(output_fram_addr, bias->data[i], output_len);
+  // }
+  uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
-    DMA_setWord(output_fram_addr, bias->data[i], output_len);
+    for (uint16_t j = 0; j < output_len; ++j) {
+      output->data[pos] = bias->data[i];
+      ++pos;
+    }
   }
 
   /* convolution */
@@ -787,8 +794,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
   {%- endif %} 
   /* add bias */
+  // for (uint16_t i = 0; i < out_channels; ++i) {
+  //   DMA_setWord(output_fram_addr, bias->data[i], output_len);
+  // }
+  uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
-    DMA_setWord(output_fram_addr, bias->data[i], output_len);
+    for (uint16_t j = 0; j < output_len; ++j) {
+      output->data[pos] = bias->data[i];
+      ++pos;
+    }
   }
 
   /* convolution */

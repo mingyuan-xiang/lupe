@@ -13,10 +13,18 @@
 #define SIZE 100
 #define REPEAT 10000
 
+
 DSPLIB_DATA(buffer, 2) _q15 buffer_lea[SIZE];
 volatile _q15 volatile_buffer_cpu[SIZE];
 _q15 buffer_cpu[SIZE];
+volatile __ro_hinv _q15 buffer_fram[SIZE];
 
+volatile __ro_hinv mat_t buffer_meta = {
+	.dims = {1, 1, 32, 32},
+	.len_dims = 4,
+	.strides = {1024, 1024, 32, 1},
+	.data = (fixed *)buffer_fram
+};
 
 DMA_initParam dma_config;
 static int DMA_is_init = 0;
@@ -41,11 +49,13 @@ void init_lupe() {
     DMA0CTL &= ~(DMADSTINCR_3);
     DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
 
+    DMA1CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE;
+
     DMA_is_init = 1;
   }
 }
 
-#define DMA_makeTransfer(src, dst, size) {\
+#define DMA_makeTransfer_opt(src, dst, size) {\
 	DMA_setTransferSize(dma_config.channelSelect, size); \
 	DMA_setSrcAddress(dma_config.channelSelect, src, DMA_DIRECTION_INCREMENT); \
   DMA_setDstAddress(dma_config.channelSelect, dst, DMA_DIRECTION_INCREMENT); \
@@ -53,20 +63,32 @@ void init_lupe() {
   uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
   DMA_startTransfer(dma_config.channelSelect); \
-	__bis_SR_register(GIE + LPM0_bits); \ 
+	__bis_SR_register(GIE + LPM0_bits); \
 	__set_interrupt_state(interruptState); \
 }
 
 // DMAEN | DMAREQ
 #define DMA_EN_SIG 0x0011
 
-#define DMA_makeTransfer_opt(src, dst, size) {\
-  __disable_interrupt(); \
-  __data16_write_addr((uintptr_t)(&DMA0SA), src); \
-  __data16_write_addr((uintptr_t)(&DMA0DA), dst); \
+#define _lupe_data16_write_addr(addr, src) ({ \
+  uintptr_t __src = src; \
+  __asm__  __volatile__ ("movx.a %1, %0\n\t" : "=m"(addr) : "r"(__src)); \
+})
+
+#define __lupe_data16_write_addr(addr, src) _lupe_data16_write_addr((addr), (src))
+
+#define DMA_makeTransfer(src, dst, size) {\
+  __lupe_data16_write_addr((DMA0SA), (src)); \
+  __lupe_data16_write_addr((DMA0DA), (dst)); \
   DMA0SZ = size; \
   DMA0CTL |= DMA_EN_SIG; \
-  __bis_SR_register(GIE + LPM0_bits); \
+}
+
+#define DMA_setWord(dst, word, size) {\
+  __lupe_data16_write_addr((DMA1SA), ((uint32_t)(&word))); \
+  __lupe_data16_write_addr((DMA1DA), (dst)); \
+  DMA1SZ = size; \
+  DMA1CTL |= DMA_EN_SIG; \
 }
 
 void init() {
@@ -87,6 +109,116 @@ void init() {
 volatile uint16_t s_start = 0;
 volatile uint16_t s_end = 0;
 volatile uint16_t pos = 0;
+volatile uint16_t output_len = 1;
+
+void fram_matcpy1() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    for (uint16_t j = 0; j < output_len; ++j) {
+      buffer_meta.data[0] = buffer_meta.data[SIZE - 1];
+      ++pos;
+    }
+  }
+}
+
+void fram_matcpy5() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    #pragma GCC unroll 1
+    for (uint16_t j = 0; j < output_len; ++j) {
+      buffer_meta.data[0] = buffer_meta.data[SIZE - 1];
+      ++pos;
+    }
+  }
+}
+
+void fram_matcpy10() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_meta.data[0] = buffer_meta.data[SIZE - 0 - 1];
+    buffer_meta.data[1] = buffer_meta.data[SIZE - 1 - 1];
+    buffer_meta.data[2] = buffer_meta.data[SIZE - 2 - 1];
+    buffer_meta.data[3] = buffer_meta.data[SIZE - 3 - 1];
+    buffer_meta.data[4] = buffer_meta.data[SIZE - 4 - 1];
+    buffer_meta.data[5] = buffer_meta.data[SIZE - 5 - 1];
+    buffer_meta.data[6] = buffer_meta.data[SIZE - 6 - 1];
+    buffer_meta.data[7] = buffer_meta.data[SIZE - 7 - 1];
+    buffer_meta.data[8] = buffer_meta.data[SIZE - 8 - 1];
+    buffer_meta.data[9] = buffer_meta.data[SIZE - 9 - 1];
+  }
+}
+
+void framcpy1() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_fram[0] = buffer_fram[SIZE - 1];
+  }
+}
+
+void framcpy5() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_fram[0] = buffer_fram[SIZE - 0 - 1];
+    buffer_fram[1] = buffer_fram[SIZE - 1 - 1];
+    buffer_fram[2] = buffer_fram[SIZE - 2 - 1];
+    buffer_fram[3] = buffer_fram[SIZE - 3 - 1];
+    buffer_fram[4] = buffer_fram[SIZE - 4 - 1];
+  }
+}
+
+void framcpy10() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_fram[0] = buffer_fram[SIZE - 0 - 1];
+    buffer_fram[1] = buffer_fram[SIZE - 1 - 1];
+    buffer_fram[2] = buffer_fram[SIZE - 2 - 1];
+    buffer_fram[3] = buffer_fram[SIZE - 3 - 1];
+    buffer_fram[4] = buffer_fram[SIZE - 4 - 1];
+    buffer_fram[5] = buffer_fram[SIZE - 5 - 1];
+    buffer_fram[6] = buffer_fram[SIZE - 6 - 1];
+    buffer_fram[7] = buffer_fram[SIZE - 7 - 1];
+    buffer_fram[8] = buffer_fram[SIZE - 8 - 1];
+    buffer_fram[9] = buffer_fram[SIZE - 9 - 1];
+  }
+}
+
+void cpy1() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_lea[0] = volatile_buffer_cpu[0];
+  }
+}
+
+void cpy5() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_lea[0] = volatile_buffer_cpu[0];
+    buffer_lea[1] = volatile_buffer_cpu[1];
+    buffer_lea[2] = volatile_buffer_cpu[2];
+    buffer_lea[3] = volatile_buffer_cpu[3];
+    buffer_lea[4] = volatile_buffer_cpu[4];
+  }
+}
+
+void cpy10() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    buffer_lea[0] = volatile_buffer_cpu[0];
+    buffer_lea[1] = volatile_buffer_cpu[1];
+    buffer_lea[2] = volatile_buffer_cpu[2];
+    buffer_lea[3] = volatile_buffer_cpu[3];
+    buffer_lea[4] = volatile_buffer_cpu[4];
+    buffer_lea[5] = volatile_buffer_cpu[5];
+    buffer_lea[6] = volatile_buffer_cpu[6];
+    buffer_lea[7] = volatile_buffer_cpu[7];
+    buffer_lea[8] = volatile_buffer_cpu[8];
+    buffer_lea[9] = volatile_buffer_cpu[9];
+  }
+}
+
+void loopcpy1() {
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    s_start = 0;
+    s_end = 0;
+    pos = 0;
+    #pragma GCC unroll 1
+    for (uint16_t j = 0; j < 1; ++j) {
+      buffer_lea[j] = volatile_buffer_cpu[j];
+      pos++;
+    }
+  }
+}
 
 void loopcpy5() {
   for (uint16_t i = 0; i < REPEAT; ++i) {
@@ -114,260 +246,12 @@ void loopcpy10() {
   }
 }
 
-void loopcpy15() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 15
-    for (uint16_t j = 0; j < 15; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
 
-void loopcpy20() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 20
-    for (uint16_t j = 0; j < 20; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy25() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 25
-    for (uint16_t j = 0; j < 25; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy30() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 30
-    for (uint16_t j = 0; j < 30; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy35() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 35
-    for (uint16_t j = 0; j < 35; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy40() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 40
-    for (uint16_t j = 0; j < 40; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy45() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 45
-    for (uint16_t j = 0; j < 45; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy50() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 50
-    for (uint16_t j = 0; j < 50; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy55() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 55
-    for (uint16_t j = 0; j < 55; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy60() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 60
-    for (uint16_t j = 0; j < 60; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy65() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 65
-    for (uint16_t j = 0; j < 65; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy70() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 70
-    for (uint16_t j = 0; j < 70; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy75() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 75
-    for (uint16_t j = 0; j < 75; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy80() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 80
-    for (uint16_t j = 0; j < 80; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy85() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 85
-    for (uint16_t j = 0; j < 85; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy90() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 90
-    for (uint16_t j = 0; j < 90; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy95() {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    #pragma GCC unroll 95
-    for (uint16_t j = 0; j < 95; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void loopcpy(uint16_t size) {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    s_start = 0;
-    s_end = 0;
-    pos = 0;
-    for (uint16_t j = 0; j < size; ++j) {
-      buffer_lea[j] = volatile_buffer_cpu[j];
-      pos++;
-    }
-  }
-}
-
-void dmacpy(uint16_t size) {
-  uint32_t src = (uint32_t)buffer_cpu;
-  uint32_t dst = (uint32_t)buffer_lea;
+void dmaset_opt(uint16_t size) {
+  uint32_t dst = (uint32_t)buffer_meta.data;
 
   for (uint16_t i = 0; i < REPEAT; ++i) {
-    DMA_makeTransfer(src, dst, size);
-  }
-}
-
-void dmacpy_opt(uint16_t size) {
-  uint32_t src = (uint32_t)buffer_cpu;
-  uint32_t dst = (uint32_t)buffer_lea;
-
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    DMA_makeTransfer_opt(src, dst, size);
-  }
-}
-
-void clibcpy(uint16_t size) {
-  for (uint16_t i = 0; i < REPEAT; ++i) {
-    memcpy(buffer_lea, buffer_cpu, size);
+    DMA_setWord(dst, buffer_meta.data[0], size);
   }
 }
 
@@ -378,7 +262,71 @@ int main() {
 
   uint32_t time = 0;
 
+  msp_send_printf("============================= Loop Copy (FRAM MAT Manually Unrolled) =======================================\n");
+  start_timer();
+  fram_matcpy1();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM MAT Manually Unrolled); size: 1, time: %n\n", REPEAT, time);
+
+  start_timer();
+  fram_matcpy5();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM MAT Manually Unrolled); size: 5, time: %n\n", REPEAT, time);
+
+  start_timer();
+  fram_matcpy10();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM MAT Manually Unrolled); size: 10, time: %n\n", REPEAT, time);
+
+  msp_send_printf("============================= Loop Copy (FRAM Manually Unrolled) =======================================\n");
+  start_timer();
+  framcpy1();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM Manually Unrolled); size: 1, time: %n\n", REPEAT, time);
+
+  start_timer();
+  framcpy5();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM Manually Unrolled); size: 5, time: %n\n", REPEAT, time);
+
+  start_timer();
+  framcpy10();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (FRAM Manually Unrolled); size: 10, time: %n\n", REPEAT, time);
+
+  msp_send_printf("============================= Loop Copy (Manually Unrolled) =======================================\n");
+  start_timer();
+  cpy1();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Manually Unrolled); size: 1, time: %n\n", REPEAT, time);
+
+  start_timer();
+  cpy5();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Manually Unrolled); size: 5, time: %n\n", REPEAT, time);
+
+  start_timer();
+  cpy10();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Manually Unrolled); size: 10, time: %n\n", REPEAT, time);
+
+  uint16_t ssizes[] = {1, 5, 10};
+  uint16_t ll = 3;
+
+  msp_send_printf("============================= DMA (Set Word) =======================================\n");
+  for (uint16_t i = 0; i < ll; ++i) {
+    start_timer();
+    dmaset_opt(ssizes[i]);
+    time = stop_timer();
+    msp_send_printf("(REPEAT=%u) copy memory with DMA (Set Word); size: %u, time: %n\n", REPEAT, ssizes[i], time);
+  }
+
   msp_send_printf("============================= Loop Copy (Unrolled) =======================================\n");
+  start_timer();
+  loopcpy1();
+  time = stop_timer();
+  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 1, time: %n\n", REPEAT, time);
+
   start_timer();
   loopcpy5();
   time = stop_timer();
@@ -388,126 +336,6 @@ int main() {
   loopcpy10();
   time = stop_timer();
   msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 10, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy15();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 15, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy20();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 20, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy25();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 25, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy30();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 30, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy35();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 35, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy40();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 40, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy45();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 45, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy50();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 50, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy55();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 55, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy60();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 60, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy65();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 65, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy70();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 70, time: %n\n", REPEAT, time);
-
-    start_timer();
-  loopcpy75();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 75, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy80();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 80, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy85();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 85, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy90();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 90, time: %n\n", REPEAT, time);
-
-  start_timer();
-  loopcpy95();
-  time = stop_timer();
-  msp_send_printf("(REPEAT=%u) copy memory with Loop Copy (Unrolled); size: 95, time: %n\n", REPEAT, time);
-
-  uint16_t sizes[] = {5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55, 60, 65, 70, 75, 80, 85, 90, 95};
-  uint16_t l = 19;
-
-  msp_send_printf("============================= Loop Copy =======================================\n");
-  for (uint16_t i = 0; i < l; ++i) {
-    start_timer();
-    loopcpy(sizes[i]);
-    time = stop_timer();
-    msp_send_printf("(REPEAT=%u) copy memory with Loop Copy; size: %u, time: %n\n", REPEAT, sizes[i], time);
-  }
-
-  msp_send_printf("============================= memcpy() =======================================\n");
-  for (uint16_t i = 0; i < l; ++i) {
-    start_timer();
-    clibcpy(sizes[i]);
-    time = stop_timer();
-    msp_send_printf("(REPEAT=%u) copy memory with memcpy(); size: %u, time: %n\n", REPEAT, sizes[i], time);
-  }
-
-  msp_send_printf("============================= DMA =======================================\n");
-  for (uint16_t i = 0; i < l; ++i) {
-    start_timer();
-    dmacpy(sizes[i]);
-    time = stop_timer();
-    msp_send_printf("(REPEAT=%u) copy memory with DMA; size: %u, time: %n\n", REPEAT, sizes[i], time);
-  }
-
-  msp_send_printf("============================= DMA (Optimized) =======================================\n");
-  for (uint16_t i = 0; i < l; ++i) {
-    start_timer();
-    dmacpy_opt(sizes[i]);
-    time = stop_timer();
-    msp_send_printf("(REPEAT=%u) copy memory with DMA (Optimized); size: %u, time: %n\n", REPEAT, sizes[i], time);
-  }
 
   exit();
 }

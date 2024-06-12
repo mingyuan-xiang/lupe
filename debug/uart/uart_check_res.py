@@ -53,7 +53,7 @@ models = {
     "ResNet3" : ResNet3(),
 }
 
-np.set_printoptions(linewidth=np.inf, threshold=np.inf)
+np.set_printoptions(linewidth=np.inf, threshold=np.inf, precision=3)
 
 image, label = get_input(args.dataset, args.idx)
 image = torch.from_numpy(image)
@@ -99,7 +99,7 @@ for i, x in enumerate(l):
     x_exp = x_exp.astype(np.int16)
     print(f"\n++++++++++++++ {names[i]} ++++++++++++++\n")
     print("\n============== Error ==============\n")
-    print(np.abs(x - x_exp))
+    print((np.abs((x - x_exp).astype('float') / x) * 100).astype(np.int16))
     print("\n============== Got ==============\n")
     print(x)
     print("\n============== Expected ==============\n")

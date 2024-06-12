@@ -10,8 +10,6 @@
 #include <buffer/include/input.h>
 #include <layers/include/utils.h>
 
-#define TIME_SHIFTER 4
-
 void init() {
   watchdog_disable();
   gpio_init_all_ports();
@@ -58,13 +56,14 @@ int main() {
     l = {{ model_name }}(&input_meta);
 {% if add_timer %}
     uint32_t t = stop_timer();
-    total_time += (t >> TIME_SHIFTER);
+    total_time += t;
 {%- endif %}
 {# Send the classification results through UART #}
     msp_send_printf("%u", l);
 {% if add_timer %}
     if (cnt == {{ print_freq - 1 }}) {
-      msp_send_printf("total cycles (32767 Hz): %n (right shift by %u)", total_time, TIME_SHIFTER);
+      msp_send_printf("total cycles (32767 Hz): %n", total_time);
+      total_time = 0;
       cnt = 0;
     } else {
       ++cnt;

@@ -1,0 +1,6 @@
+{
+    "dma_opt" : true,
+    "lea_opt" : true,
+    "adaptive_gen_lea" : true,
+    "adaptive_gen_mem" : true
+}

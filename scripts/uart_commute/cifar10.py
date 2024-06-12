@@ -23,8 +23,7 @@ cifar = datasets.CIFAR10(
 # pack the image to a 1D 16-bit array
 def parse_img(img, qf):
     img = img.numpy()
-    # img = img.flatten() * (2 ** (15 - qf))
-    img = img.flatten() * (2 ** 7)
+    img = img.flatten() * (2 ** (15 - qf))
     img = img.astype(np.int16)
     return img
 
@@ -75,6 +74,8 @@ while True:
 print("=============== Start computing ===============")
 
 cnt = 0
+
+print(f"qf={args.qf}")
 
 # Access each image as a matrix
 for idx, (image, label) in enumerate(cifar):
