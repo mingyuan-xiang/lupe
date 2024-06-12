@@ -55,8 +55,8 @@ extern int16_t* offset_vector;
 }
 
 #define DMA_setWord(dst, word, size) {\
-  __lupe_data16_write_addr((DMA0SA), ((uint32_t)(&word))); \
-  __lupe_data16_write_addr((DMA0DA), (dst)); \
+  __lupe_data16_write_addr((DMA1SA), ((uint32_t)(&word))); \
+  __lupe_data16_write_addr((DMA1DA), (dst)); \
   DMA1SZ = size; \
   DMA1CTL |= DMA_EN_SIG; \
 }
