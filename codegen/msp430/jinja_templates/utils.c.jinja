@@ -27,16 +27,22 @@ void init_lupe() {
     DMA_init(&dma_config);
     DMA_enableInterrupt(dma_config.channelSelect);
 {% if dma_opt %}
-    /* set DMA address direction */
+    /*
+     * set DMA address direction
+     * use channel 0 for array movement
+     * use channel 1 for word set
+     */
     DMA0CTL &= ~(DMASRCINCR_3);
     DMA0CTL |= DMA_DIRECTION_INCREMENT;
     DMA0CTL &= ~(DMADSTINCR_3);
     DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
+
+    DMA1CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE; 
 {%- endif %}
 {%- if lea_opt %}
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {
-      msp_lea_init();
+    msp_lea_init();
   }
 {%- endif %}
     DMA_is_init = 1;

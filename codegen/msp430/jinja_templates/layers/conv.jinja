@@ -1,4 +1,4 @@
-{% if flt_size == 100 %}
+{% if flt_size == 1 %}
 {# Piecewise convolution #}
 {%- if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
@@ -132,12 +132,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
 
   /* add bias */
-  uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
-    for (uint16_t j = 0; j < output_len; ++j) {
-      output->data[pos] = bias->data[i];
-      ++pos;
-    }
+    DMA_setWord(output_fram_addr, bias->data[i], output_len);
   }
 
   /* convolution */
@@ -791,12 +787,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
   {%- endif %} 
   /* add bias */
-  uint16_t pos = 0;
   for (uint16_t i = 0; i < out_channels; ++i) {
-    for (uint16_t j = 0; j < output_len; ++j) {
-      output->data[pos] = bias->data[i];
-      ++pos;
-    }
+    DMA_setWord(output_fram_addr, bias->data[i], output_len);
   }
 
   /* convolution */
