@@ -25,8 +25,6 @@ class LupeGraph:
         """
         self.name = name
         self.out_path = out_path
-        # For each key (node), the value is a tuple where the first element is
-        # the children and the second element is the parent
         self.graph = OrderedDict()
         self.node_list = OrderedDict()
         self.opt_config = opt_config
@@ -40,7 +38,10 @@ class LupeGraph:
         # Get the node dictionary from the ONNX model
         self._register(model)
 
+        self.no_alter_list = self._register_shortcut()
         self.add_buffer_list = self._register_add()
+
+        self.no_alter_list += self._register_flatten()
 
     def _register_weights(self, model):
         """Register tensors only in the node_list"""
@@ -73,7 +74,7 @@ class LupeGraph:
         node = model.graph.input[0]
         i = InOut(node, None, None, self.opt_config, io="input")
         self.node_list[i.name] = i
-        self.graph[i.name] = {"parents" : [], "children" : []}
+        self.graph[i.name] = {"parents" : []}
         self.input_name = i.name
 
         # Add the output node
@@ -105,12 +106,7 @@ class LupeGraph:
         layer = get_layer_constructor(lupe_type)(node, model, self.node_list, self.opt_config)
         name = layer.name
         self.node_list[name] = layer
-        self.graph[name] = {"parents" : [], "children" : []}
-
-        # Assign this node to be the child of the input nodes
-        for input_node in node.input:
-            if input_node in self.graph:
-                self.graph[input_node]["children"].append(name)
+        self.graph[name] = {"parents" : []}
 
         # Assign parents to this node
         self.graph[name]["parents"] += [name_conversion(i) for i in node.input]
@@ -120,9 +116,40 @@ class LupeGraph:
             if output_node in self.node_list:
                 self.graph[output_node] = {
                     "parents" : [name],
-                    "children" : []
                 }
-                self.graph[name]["children"].append(output_node)
+
+    def _register_shortcut(self):
+        """Register the shortcut layers"""
+        shortcut_input = {}
+        shortcuts = []
+        for n in self.graph:
+            if "shortcut" in n:
+                shortcut_input[self.node_list[n].input] = (n, self.graph[n])
+                shortcuts.append(n)
+
+
+        # Get the layer list of the same input as shortcuts
+        lst = []
+        for n in self.graph:
+            if hasattr(self.node_list[n], 'input'):
+                i = self.node_list[n].input
+                if (isinstance(i, str) and i in shortcut_input and
+                    n not in shortcuts):
+                    lst.append(n)
+
+        new_graph = OrderedDict()
+        for n in self.graph:
+            if n in shortcuts:
+                continue
+
+            new_graph[n] = self.graph[n]
+            if n in shortcut_input:
+                layer, parents = shortcut_input[n]
+                new_graph[layer] = parents
+
+        self.graph = new_graph
+
+        return lst
 
     def _register_add(self):
         """Register the layers to be stored in the extra add buffer"""
@@ -151,6 +178,14 @@ class LupeGraph:
                 add_buffer_list[n] = buffered_input
 
         return add_buffer_list
+
+    def _register_flatten(self):
+        lst = []
+        for n in self.graph:
+            if 'Flatten' in n:
+                lst.append(n)
+
+        return lst
 
     def print(self):
         """Print the graph"""

@@ -1,5 +1,8 @@
 """Helper functions"""
 
+from math import log2, ceil
+import numpy as np
+
 def get_stride(shape, idx):
     """Get the stride at the given index
 
@@ -15,3 +18,23 @@ def get_stride(shape, idx):
         stride *= shape[i]
 
     return stride
+
+def get_qf(data, per, qf_offset=1):
+    """Get the fixed-point format of the data
+
+    Ignore the outlier based on given per
+
+    Args:
+        data: numpy array
+        per: percentile to exclude the outliers
+        qf_offset: smaller qf to prevent overflow
+    """
+
+    lower = np.percentile(data, per)
+    upper = np.percentile(data, 100 - per)
+    x = max(abs(lower), abs(upper))
+
+    if x < 1:
+        return qf_offset
+
+    return ceil(log2(x + 0.0000005)) + qf_offset

@@ -47,7 +47,8 @@ class BasicBlock(nn.Module):
         l.append(x.detach().clone())
         x = F.relu(x)
         l.append(x.detach().clone())
-        return x, l
+        # return x, l
+        return x, []
 
 class ResNet(nn.Module):
     def __init__(self, block, num_blocks, num_classes=10):
@@ -78,7 +79,7 @@ class ResNet(nn.Module):
         x = self.bn1(self.conv1(x))
         l.append(x.detach().clone())
         x = F.relu(x)
-        l.append(x.detach().clone())
+        # l.append(x.detach().clone())
         x, ll = self.layer1(x)
         l += ll
         x, ll = self.layer2(x)
@@ -86,11 +87,11 @@ class ResNet(nn.Module):
         x, ll = self.layer3(x)
         l += ll
         x = F.avg_pool2d(x, int(x.size()[3]))
-        l.append(x.detach().clone())
+        # l.append(x.detach().clone())
         x = torch.flatten(x, 1)
-        l.append(x.detach().clone())
+        # l.append(x.detach().clone())
         x = self.linear(x)
-        l.append(x.detach().clone())
+        # l.append(x.detach().clone())
         return x, l
 
 
@@ -101,25 +102,25 @@ class ResNet3(ResNet):
         self.names = [
             "input",
             "conv1_Conv",
-            "Clip",
-            "layer1_layer1_0_conv1_Conv",
-            "layer1_layer1_0_Clip",
-            "layer1_layer1_0_conv2_Conv",
-            "layer1_layer1_0_Add",
-            "layer1_layer1_0_Clip_1",
-            "layer2_layer2_0_conv1_Conv",
-            "layer2_layer2_0_Clip",
-            "layer2_layer2_0_conv2_Conv",
-            "layer2_layer2_0_shortcut_shortcut_0_Conv",
-            "layer2_layer2_0_Add",
-            "layer2_layer2_0_Clip_1",
-            "layer3_layer3_0_conv1_Conv",
-            "layer3_layer3_0_Clip",
-            "layer3_layer3_0_conv2_Conv",
-            "layer3_layer3_0_shortcut_shortcut_0_Conv",
-            "layer3_layer3_0_Add",
-            "layer3_layer3_0_Clip_1",
-            "AveragePool",
-            "Flatten",
-            "linear_Gemm",
+            # "Clip",
+            # "layer1_layer1_0_conv1_Conv",
+            # "layer1_layer1_0_Clip",
+            # "layer1_layer1_0_conv2_Conv",
+            # "layer1_layer1_0_Add",
+            # "layer1_layer1_0_Clip_1",
+            # "layer2_layer2_0_conv1_Conv",
+            # "layer2_layer2_0_Clip",
+            # "layer2_layer2_0_conv2_Conv",
+            # "layer2_layer2_0_shortcut_shortcut_0_Conv",
+            # "layer2_layer2_0_Add",
+            # "layer2_layer2_0_Clip_1",
+            # "layer3_layer3_0_conv1_Conv",
+            # "layer3_layer3_0_Clip",
+            # "layer3_layer3_0_conv2_Conv",
+            # "layer3_layer3_0_shortcut_shortcut_0_Conv",
+            # "layer3_layer3_0_Add",
+            # "layer3_layer3_0_Clip_1",
+            # "AveragePool",
+            # "Flatten",
+            # "linear_Gemm",
         ]

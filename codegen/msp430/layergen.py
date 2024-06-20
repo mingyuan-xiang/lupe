@@ -24,13 +24,17 @@ def layergen(code_dir, graph, opt_config, qf, debug):
             "has_weights" : node.has_weights(),
         }
 
+        code_qf = qf
+        if node.has_weights():
+            code_qf = (qf, node.weight.qf)
+
         jinja_dir = os.path.join(JINJA_DIR, "layers")
         # c file
         cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
         cfile_params = {
             "layer_name": node.name,
             "debug" : debug,
-            "code" : node.get_code(jinja_dir, opt_config, qf),
+            "code" : node.get_code(jinja_dir, opt_config, code_qf),
             "has_extra_buffer" : node.get_buffer_size() is not None
         }
 

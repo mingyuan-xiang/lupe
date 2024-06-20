@@ -144,6 +144,8 @@ class Convolution2D(LupeLayer):
                 opt_config["adaptive_gen_mem_size"]
             )
 
+        io_qf, weight_qf = qf
+
         params = {
             "layer_name" : self.name,
             "lea_opt" : opt_config["lea_opt"],
@@ -157,7 +159,7 @@ class Convolution2D(LupeLayer):
             "out_line_size" : self.output_size[3],
             "in_line_num" : self.input_size[2],
             "out_line_num" : self.output_size[2],
-            "qf" : qf,
+            "qf" : weight_qf,
             "padding" : padding_params,
             "lea_min_size" : lea_min_size,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,

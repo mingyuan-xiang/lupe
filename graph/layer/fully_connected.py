@@ -67,11 +67,13 @@ class FullyConnected(LupeLayer):
                 self.output_size[1] < opt_config["adaptive_gen_mem_size"]
             )
 
+        io_qf, weight_qf = qf
+
         params = {
             "layer_name" : self.name,
             "input_size" : self.input_size[1],
             "output_size" : self.output_size[1],
-            "qf" : qf,
+            "qf" : weight_qf,
             "lea_opt" : opt_config["lea_opt"],
             "lea_src_size" : opt_config["lea_src_size"],
             "has_loop_cpy" : True,

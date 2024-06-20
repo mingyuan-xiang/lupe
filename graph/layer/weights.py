@@ -4,6 +4,7 @@ import onnx.numpy_helper
 
 from .layer import LupeLayer
 from .layer_utils import name_conversion
+from .helpers import get_qf
 
 class Weight(LupeLayer):
     """Tensor layer"""
@@ -11,10 +12,12 @@ class Weight(LupeLayer):
         """Register the layer"""
         self.shape = list(node.dims)
         self.data = onnx.numpy_helper.to_array(node)
+        self.qf = get_qf(self.data, 2.5, qf_offset=1)
 
     def _get_name(self, node):
         """For weights and biases, the name is the name of the tensor"""
         return name_conversion(node.name)
+
 
     def has_weights(self):
         """If the layer has weights"""

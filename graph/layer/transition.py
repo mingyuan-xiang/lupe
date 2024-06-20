@@ -50,13 +50,8 @@ class Flatten(Transition):
     """Flatten layer"""
     def _get_update(self):
         code = (
-            "  /* The data is stored in 1D array. So, we just need to " +
-            "feed the input to the output*/ \n"
-        )
-        code += (
-            "  DMA_makeTransfer((uint32_t)input->data, " +
-            "(uint32_t)output->data, " +
-            "MAT_GET_SIZE(input));"
+            "  /* The data is stored in 1D array. So, we don't need to " +
+            "do anything. */ \n"
         )
 
         return code

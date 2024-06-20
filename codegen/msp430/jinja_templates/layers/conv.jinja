@@ -1,4 +1,4 @@
-{% if flt_size == 1 %}
+{% if flt_size == 100 %}
 {# Piecewise convolution #}
 {%- if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
@@ -216,7 +216,6 @@ static inline __attribute__((always_inline)) void new_fir_q15(_q15* coeffs, cons
   msp_lea_invokeCommand(LEACMD__FIR);
 }
 
-{%- if qf > 0 %}
 static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
   offset_vector[0] = offset;
   offset_vector[1] = offset;
@@ -232,7 +231,6 @@ static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src
   /* Invoke the LEACMD__ADDMATRIX command. */
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
-{%- endif %}
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
@@ -267,7 +265,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_num = output->dims[2];
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
-  {% if qf > 0 %}
   uint16_t lea_remain_size = output_len % LEA_MIN_SIZE;
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {%- if (out_len % lea_min_size) != 0 %}
@@ -276,7 +273,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if out_len >= lea_min_size %}
   uint32_t output_lea_min_size_offset = LEA_MIN_SIZE * sizeof(int16_t);
   {%- endif %}
-  {%- endif %}
   {% if stride_row > 1 %}
   uint16_t stride_row = {{ stride_row }};
   uint16_t input_line_strided_size_offset = input_line_size * stride_row * sizeof(int16_t);
@@ -284,7 +280,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   {%- if stride_col > 1 %}
   msp_deinterleave_q15_params deinterleave_params = {
-    .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
+    .length = MAKE_ALIGN_2(output_line_size),
     .channel = 0,
     .numChannels = {{ stride_col }}
   };
@@ -293,9 +289,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(output_line_size));
   fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
-  {%- if qf > 0 %}
   offset_init(lea_remain_size_aligned);
-  {%- endif %}
   {%- else %}
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
@@ -662,9 +656,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   {%- if lea_opt %}
-  {%- if qf > 0 %}
   offset_clear();
-  {%- endif %}
   fir_clear();
   add_clear();
   {%- endif %}

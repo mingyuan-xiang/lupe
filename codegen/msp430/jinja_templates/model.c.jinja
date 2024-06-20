@@ -31,7 +31,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   DMA_makeTransfer((uint32_t)(model_in->data), (uint32_t)({{ layer_list[0].name }}_in_meta.data), GET_MAT_SIZE(model_in));
   {%- if debug %}
   msp_send_printf("\n============== Input ==============\n");
-  msp_send_mat(model_in);
+  // msp_send_mat(model_in);
   {%- endif %}
 {#- layers #}
   {%- for layer in layer_list %}
@@ -48,7 +48,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
 
   {%- if debug %}
   msp_send_printf("\n============== Output of {{ layer.name }} ==============\n");
-  msp_send_mat(&{{ layer.name }}_out_meta);
+  // msp_send_mat(&{{ layer.name }}_out_meta);
   {%- endif %}
   {%- endfor %}
 {#- classification #}

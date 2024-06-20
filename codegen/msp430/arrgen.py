@@ -136,6 +136,10 @@ def _buffergen(code_dir, graph, loc="hi"):
         # skip the input and output nodes
         if n in (graph.input_name, graph.output_name):
             continue
+
+        if n in graph.no_alter_list:
+            in_buffer_ptr, out_buffer_ptr = out_buffer_ptr, in_buffer_ptr
+
         node = graph.node_list[n]
         if _list_mul(node.input_size) > buffer_size:
             buffer_size = _list_mul(node.input_size)

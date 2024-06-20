@@ -22,7 +22,7 @@ def weightgen(code_dir, graph, qf, loc="hi"):
         node = graph.node_list[n]
         if node.has_weights():
             weight = Matrix(
-                node.weight.name, node.weight.data / (2 ** qf), False, loc=loc
+                node.weight.name, node.weight.data / (2 ** node.weight.qf), False, loc=loc
             )
             bias = Matrix(
                 node.bias.name, node.bias.data / (2 ** qf), False, loc=loc
