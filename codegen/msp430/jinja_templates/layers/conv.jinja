@@ -67,7 +67,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   {%- if has_adaptive_gen_mem %}
   uint16_t dst_pos;
-  uint16_t s_start, s_end;
+  uint16_t s;
   {%- endif %}
   {% if stride_row > 1 %}
   uint16_t stride_row = {{ stride_row }};
@@ -75,6 +75,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   {%- if stride_col > 1 %}
   uint16_t stride_col = {{ stride_col }};
+  {%- endif %}
+
+  {%- if dma_opt %}
+  uint16_t zero = 0;
   {%- endif %}
 
   /* reset LEA's RAM */
@@ -92,7 +96,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
   {%- if dma_opt %}
-  uint16_t zero = 0;
   DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
   {%- else %}
   memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
@@ -349,6 +352,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   {%- endif %}
 
+  {%- if dma_opt %}
+  uint16_t zero = 0;
+  {%- endif %}
+
   /* reset LEA's RAM */
   msp_fill_q15(&fill_params, lea_src);
 
@@ -364,7 +371,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
   {%- if dma_opt %}
-  uint16_t zero = 0;
   DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
   {%- else %}
   memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
@@ -470,7 +476,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if has_adaptive_gen_mem and flt_len < adaptive_gen_mem_size %}
       s = flt_fram_pos;
       {%- for n in range(flt_len) %}
-      lea_flt[n] = weight->data[s];
+      lea_flt[{{ loop.index0 }}] = weight->data[s];
       s++;
       {%- endfor %}
 
@@ -492,7 +498,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
         s = tmp_output_pos;
         {%- for n in range(out_line_size) %}
-        lea_dst[n] = output->data[s];
+        lea_dst[{{ loop.index0 }}] = output->data[s];
         s++;
         {%- endfor %}
 
@@ -507,7 +513,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
           s = tmp_input_pos;
           {%- for n in range(in_line_size) %}
-          lea_src[n] = input->data[s];
+          lea_src[{{ loop.index0 }}] = input->data[s];
           s++;
           {%- endfor %}
 
@@ -565,7 +571,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
         dst_pos = tmp_output_pos;
         {%- for n in range(out_line_size) %}
-        output->data[dst_pos] = lea_dst[n];
+        output->data[dst_pos] = lea_dst[{{ loop.index0 }}];
         dst_pos++;
         {%- endfor %}
 
@@ -761,11 +767,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   {%- if has_adaptive_gen_mem %}
   uint16_t dst_pos;
-  uint16_t s_start, s_end;
+  uint16_t s;
   {%- if flt_size < adaptive_gen_mem_size %}
   uint16_t input_channel_pos = 0;
   uint16_t input_fram_pos = 0;
   {%- endif %}
+  {%- endif %}
+
+  {%- if dma_opt %}
+  uint16_t zero = 0;
   {%- endif %}
 
   /* reset LEA's RAM */
@@ -783,7 +793,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
   {%- if dma_opt %}
-  uint16_t zero = 0;
   DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
   {%- else %}
   memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
@@ -923,7 +932,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if has_adaptive_gen_mem and (out_len % lea_min_size) < adaptive_gen_mem_size %}
       s = tmp_output_pos;
       {%- for n in range(out_len % lea_min_size) %}
-      lea_dst[n] = output->data[s];
+      lea_dst[{{ loop.index0 }}] = output->data[s];
       s++;
       {%- endfor %}
 
@@ -940,7 +949,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if has_adaptive_gen_mem and (out_len % lea_min_size) < adaptive_gen_mem_size %}
       dst_pos = tmp_output_pos;
       {%- for n in range(out_len % lea_min_size) %}
-      output->data[dst_pos] = lea_dst[n];
+      output->data[dst_pos] = lea_dst[{{ loop.index0 }}];
       dst_pos++;
       {%- endfor %}
 
