@@ -337,6 +337,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if padding %}
 
   /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
+  memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
   uint16_t input_line_num = input->dims[2] - {{ padding["top"] + padding["bottom"] }};
   uint16_t input_line_size_bf = input->dims[3] - {{ padding["left"] + padding["right"] }};
   _q15* padding_ptr_in = input->data;

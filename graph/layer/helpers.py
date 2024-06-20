@@ -19,7 +19,7 @@ def get_stride(shape, idx):
 
     return stride
 
-def get_qf(data, per, qf_offset=1):
+def get_qf(data, per):
     """Get the fixed-point format of the data
 
     Ignore the outlier based on given per
@@ -35,6 +35,6 @@ def get_qf(data, per, qf_offset=1):
     x = max(abs(lower), abs(upper))
 
     if x < 1:
-        return qf_offset
+        return 0
 
-    return ceil(log2(x + 0.0000005)) + qf_offset
+    return ceil(log2(x + 0.0000005))
