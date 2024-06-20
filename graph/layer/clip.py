@@ -30,8 +30,6 @@ class Clip(LupeLayer):
 
         path = os.path.join(jinja_dir, "clip.jinja")
 
-        print(f"min={self.min}, max={self.max}")
-
         params = {
             "layer_name" : self.name,
             "min" : max(int(self.min * (2 ** (15 - qf))), -2**15+1),
