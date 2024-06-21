@@ -96,6 +96,11 @@ class Convolution2D(LupeLayer):
 
             return "fir"
 
+        if self.kernel_shape[-1] == 1:
+            return "mac"
+
+        return "fir"
+
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""

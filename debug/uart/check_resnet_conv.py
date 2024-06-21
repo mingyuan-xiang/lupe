@@ -77,13 +77,14 @@ res = res + x
 res = F.relu6(res)
 weight, bias = get_weights('onnx::Conv_132', 'onnx::Conv_133')
 x = F.conv2d(res, weight, bias=bias, stride=2)
-weight, bias = get_weights('onnx::Conv_126', 'onnx::Conv_127')
-res = F.conv2d(res, weight, bias=bias, stride=2, padding=1)
-res = F.relu6(res)
-weight, bias = get_weights('onnx::Conv_129', 'onnx::Conv_130')
-res = F.conv2d(res, weight, bias=bias, padding=1)
-res = res + x
-res = F.relu6(res)
+# weight, bias = get_weights('onnx::Conv_126', 'onnx::Conv_127')
+# res = F.conv2d(res, weight, bias=bias, stride=2, padding=1)
+# res = F.relu6(res)
+# weight, bias = get_weights('onnx::Conv_129', 'onnx::Conv_130')
+# res = F.conv2d(res, weight, bias=bias, padding=1)
+# res = res + x
+# res = F.relu6(res)
+res = x
 
 x_exp = res.cpu().detach().numpy()
 x_exp = x_exp * (2 ** (15 - args.qf))
