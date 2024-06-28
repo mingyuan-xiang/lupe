@@ -1,6 +1,0 @@
-Image 0, true label: 3, predicted label: 9, accumulative accuracy: 0.0
-Image 1, true label: 8, predicted label: 0, accumulative accuracy: 0.0
-Image 2, true label: 8, predicted label: 0, accumulative accuracy: 0.0
-Image 3, true label: 0, predicted label: 0, accumulative accuracy: 0.25
-Image 4, true label: 6, predicted label: 8, accumulative accuracy: 0.2
-Image 5, true label: 6, predicted label: 1, accumulative accuracy: 0.16666666666666666

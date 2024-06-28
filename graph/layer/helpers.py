@@ -30,11 +30,13 @@ def get_qf(data, per, qf_offset=0):
         qf_offset: smaller qf to prevent overflow
     """
 
+    data = data * (2 ** qf_offset)
+
     lower = np.percentile(data, per)
     upper = np.percentile(data, 100 - per)
     x = max(abs(lower), abs(upper))
 
     if x < 1:
-        return qf_offset
+        return 0
 
-    return ceil(log2(x + 0.0000005)) + qf_offset
+    return ceil(log2(x + 0.0000005))

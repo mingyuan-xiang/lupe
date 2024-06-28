@@ -69,9 +69,17 @@ class Convolution2D(LupeLayer):
 
     def get_buffer_size(self):
         """Return the mac buffer size if needed"""
-        if self._acceleration == "mac":
-            return (1, self.input_size[2] * self.input_size[3],
+        if self._acceleration  == "mac":
+            return (
+                1,
+                round(self.input_size[2] * self.input_size[3] / (
+                    self.strides[0] * self.strides[1]
+                )),
                 self.kernel_shape[3] * self.kernel_shape[3]
+            )
+        elif self._acceleration  == "1x1_mac":
+            return (
+                1, self.output_size[2] * self.output_size[3], self.input_size[1]
             )
 
         return None
@@ -96,8 +104,11 @@ class Convolution2D(LupeLayer):
 
             return "fir"
 
-        if self.kernel_shape[-1] == 1:
+        if self.kernel_shape[-1] == 3:
             return "mac"
+
+        if self.kernel_shape[-1] == 1:
+            return "1x1_mac"
 
         return "fir"
 
@@ -107,6 +118,12 @@ class Convolution2D(LupeLayer):
         path = os.path.join(jinja_dir, "conv.jinja")
 
         if self.has_padding:
+            if self.kernel_shape[-1] == 1:
+                raise NotImplementedError(
+                    "Padding to input for 1x1 point-wise with mac is not "
+                    "implemented as we cannot change the input which "
+                    "is also used for the next layer."
+                )
             padding_params = {
                 "left" : self.padding[0],
                 "right" : self.padding[1],
@@ -179,10 +196,12 @@ class Convolution2D(LupeLayer):
             )
 
         # select correct operators
-        if opt_config["adaptive_gen_lea"]:
-            params["acceleration"]  = self._acceleration
-        else:
-            params["acceleration"] = "fir"
+        # if opt_config["adaptive_gen_lea"]:
+        #     params["acceleration"]  = self._acceleration
+        # else:
+        #     params["acceleration"] = "fir"
+
+        params["acceleration"]  = self._acceleration
 
         with open(path, "r", encoding="utf-8") as file:
             template = file.read()
