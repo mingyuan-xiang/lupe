@@ -26,7 +26,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
   uint32_t input_1_fram_addr = (uint32_t)input->data;
   uint32_t output_fram_addr = (uint32_t)output->data;
 
-  {% if adaptive_gen_mem %}
+  {% if global_mem_buffer %}
   /* assign the lea buffer pointer */
   lea_src = lea_buffer;
   lea_tmp = lea_buffer + {{ lea_src_size }};

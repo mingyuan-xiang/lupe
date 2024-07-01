@@ -95,7 +95,7 @@ class Convolution2D(LupeLayer):
         # TODO: We should do something smarter for the decider
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 5:
             if self.input_size[-1] < 14:
@@ -104,7 +104,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"
@@ -138,28 +138,32 @@ class Convolution2D(LupeLayer):
             )
 
         # Make sure all lea buffers are multiple of 2
-        if opt_config["adaptive_gen_mem"]:
+        if opt_config["global_mem_buffer"]:
             if self._acceleration == "1x1_mac":
                 lea_src_size = self.input_size[1]
                 lea_src_size += (lea_src_size % 2)
                 lea_flt_size = self.input_size[1]
                 lea_flt_size += (lea_flt_size % 2)
                 lea_tmp_size = 0 # no need for lea_tmp buffer
-                lea_tmp_size += (lea_tmp_size % 2)
                 lea_dst_size = (
                     opt_config["lea_size"] - lea_src_size - lea_flt_size
                 )
+                if lea_dst_size < 0:
+                    raise ValueError("LEA array size noy big enough")
             elif self._acceleration == "mac":
                 lea_src_size = get_stride(self.kernel_shape, 1)
                 lea_src_size += (lea_src_size % 2)
                 lea_flt_size = get_stride(self.kernel_shape, 1)
                 lea_flt_size += (lea_flt_size % 2)
-                lea_tmp_size = 0 # no need for lea_tmp buffer
-                lea_tmp_size += (lea_tmp_size % 2)
-                lea_dst_size = (
-                    opt_config["lea_size"] - lea_src_size - lea_flt_size
-                )
-            else:
+                size = math.floor(
+                    (opt_config["lea_size"] - lea_src_size - lea_flt_size) / 2
+                ) - 1
+                size += (size % 2)
+                lea_tmp_size = size
+                lea_dst_size = size
+                if size < 0:
+                    raise ValueError("LEA array size noy big enough")
+            else: # fir
                 size = math.floor(opt_config["lea_size"] / 4) - 1
                 size += (size % 2)
                 lea_src_size = size
@@ -226,7 +230,7 @@ class Convolution2D(LupeLayer):
             "qf" : weight_qf,
             "padding" : padding_params,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
-            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
+            "global_mem_buffer" : opt_config["global_mem_buffer"],
             "stride_row" : self.strides[0],
             "stride_col" : self.strides[1],
         }

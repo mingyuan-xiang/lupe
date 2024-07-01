@@ -6,7 +6,7 @@
 #include <libmatAbstract/mat.h>
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
-{% if adaptive_gen_mem %}
+{% if global_mem_buffer %}
 #define LEA_SIZE {{ lea_size }}
 {%- else %}
 #define LEA_FLT_SIZE {{ lea_size }}
@@ -20,7 +20,7 @@
 
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
 
-{% if adaptive_gen_mem %}
+{% if global_mem_buffer %}
 extern _q15* lea_flt;
 extern _q15* lea_src;
 extern _q15* lea_dst;

@@ -24,7 +24,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t weight_fram_pos = 0;
   {%- endif %}
 
-  {% if adaptive_gen_mem %}
+  {% if global_mem_buffer %}
   /* assign the lea buffer pointer */
   lea_src = lea_buffer;
   lea_tmp = lea_buffer + {{ lea_src_size }};

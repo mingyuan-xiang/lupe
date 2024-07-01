@@ -11,7 +11,7 @@ import os
 sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader
 
-PRINT_CNT = 100
+PRINT_CNT = 10
 
 cifar = datasets.CIFAR10(
     root='./data', train=False, transform=transforms.Compose([

@@ -54,7 +54,7 @@ def lupe_args():
         "--output-path", type=str, help="Output path for the code"
     )
     par.add_argument(
-        "--print-freq", type=int, default=100, help="Print frequency"
+        "--print-freq", type=int, default=10, help="Print frequency"
     )
     par.add_argument(
         "--loc", type=str, default="hi", choices=["hi", "lo"],
@@ -99,14 +99,16 @@ def parse_opt_config(opt_config):
         opt_config["lea_opt"] = False
     if "dma_opt" not in opt_config:
         opt_config["dma_opt"] = False
+    if "global_mem_buffer" not in opt_config:
+        opt_config["global_mem_buffer"] = False
     if "lea_size" not in opt_config:
-        if opt_config["adaptive_gen_mem"]:
+        if opt_config["global_mem_buffer"]:
             opt_config["lea_size"] = 1600
         else:
             opt_config["lea_size"] = 400
 
-        if opt_config["lea_size"] % 2:
-            raise ValueError("lea_size has to be multiple of 2")
+    if opt_config["lea_size"] % 2:
+        raise ValueError("lea_size has to be multiple of 2")
 
     if opt_config["adaptive_gen_mem"]:
         # The cutoff size for dma and loop copy on MSP430

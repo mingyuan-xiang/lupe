@@ -34,7 +34,7 @@ class Add(LupeLayer):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "add.jinja")
 
-        if opt_config["adaptive_gen_mem"]:
+        if opt_config["global_mem_buffer"]:
             lea_src_size = math.floor((opt_config["lea_size"] - 2) / 2)
         else:
             lea_src_size = opt_config["lea_size"]
@@ -47,7 +47,7 @@ class Add(LupeLayer):
             "lea_opt" : opt_config["lea_opt"],
             "lea_src_size" : lea_src_size,
             "input_size" : get_stride(self.input_size, 0),
-            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
+            "global_mem_buffer" : opt_config["global_mem_buffer"],
         }
 
         with open(path, "r", encoding="utf-8") as file:

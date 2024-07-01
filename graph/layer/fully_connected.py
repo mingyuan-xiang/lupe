@@ -68,7 +68,7 @@ class FullyConnected(LupeLayer):
                 self.output_size[1] < opt_config["adaptive_gen_mem_size"]
             )
 
-        if opt_config["adaptive_gen_mem"]:
+        if opt_config["global_mem_buffer"]:
             lea_src_size = math.floor((opt_config["lea_size"] - 2) / 2)
             lea_tmp_size = math.floor((opt_config["lea_size"] - 2) / 2)
         else:
@@ -91,7 +91,7 @@ class FullyConnected(LupeLayer):
             "lea_tmp_size" : lea_tmp_size,
             "has_loop_cpy" : True,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
-            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
+            "global_mem_buffer" : opt_config["global_mem_buffer"],
         }
 
         if opt_config["adaptive_gen_mem"]:
