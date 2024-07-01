@@ -73,9 +73,7 @@ class Convolution2D(LupeLayer):
         if self._acceleration  == "mac":
             return (
                 1,
-                round(self.input_size[2] * self.input_size[3] / (
-                    self.strides[0] * self.strides[1]
-                )),
+                self.output_size[2] * self.output_size[3],
                 self.kernel_shape[3] * self.kernel_shape[3]
             )
         elif self._acceleration  == "1x1_mac":
