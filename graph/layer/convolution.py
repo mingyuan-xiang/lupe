@@ -160,12 +160,17 @@ class Convolution2D(LupeLayer):
                     opt_config["lea_size"] - lea_src_size - lea_flt_size
                 )
             else:
-                size = math.floor(opt_config["lea_size"] / 4)
+                size = math.floor(opt_config["lea_size"] / 4) - 1
                 size += (size % 2)
                 lea_src_size = size
                 lea_flt_size = size
                 lea_tmp_size = size
                 lea_dst_size = size
+                if size < (self.input_size[3] + 2):
+                    raise ValueError(
+                        "LEA array size has to be greater than"
+                        "the input row size"
+                    )
         else:
             lea_src_size = opt_config["lea_size"]
             lea_flt_size = opt_config["lea_size"]

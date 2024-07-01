@@ -300,19 +300,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {% if lea_opt %}
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(output_line_size));
-  {%- if flt_size % 2 != 0 %}
-  fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 2), tapLength);
-  {%- else %}
   fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
-  {%- endif %}
   offset_init(lea_remain_size_aligned);
   {%- else %}
   msp_fir_q15_params conv_params = {
-    {%- if flt_size % 2 != 0 %}
-    .length = MAKE_ALIGN_2(input_line_size - kernel_size + 2),
-    {%- else %}
     .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
-    {%- endif %}
     .tapLength = MAKE_ALIGN_2(kernel_size),
     .coeffs = lea_flt,
     .enableCircularBuffer = false 
@@ -355,20 +347,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
   {%- endif %}
 
-  {%- if flt_size % 2 != 0 %}
-
-  {%- if (in_line_size - flt_size + 2) % 2 != 0 %}
-  lea_src[{{ in_line_size - flt_size + 1 }}] = 0;
-  lea_src[{{ in_line_size - flt_size + 2 }}] = 0;
-  {%- endif %}
-
-  {%- else %}
-
-  {%- if (in_line_size - flt_size + 1) % 2 != 0 %}
-  lea_src[{{ in_line_size - flt_size + 1 }}] = 0;
-  {%- endif %}
-
-  {%- endif %}
+  lea_src[{{ in_line_size }}] = 0;
+  lea_src[{{ in_line_size + 1 }}] = 0;
 
   {%- if padding %}
 

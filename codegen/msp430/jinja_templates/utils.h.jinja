@@ -25,14 +25,14 @@ extern _q15* lea_flt;
 extern _q15* lea_src;
 extern _q15* lea_dst;
 extern _q15* lea_tmp;
-extern _q15 lea_buffer[LEA_SIZE];
+extern _q15 lea_buffer[];
 {%- else %}
-extern _q15 lea_flt[LEA_FLT_SIZE];
-extern _q15 lea_src[LEA_SRC_SIZE];
-extern _q15 lea_tmp[LEA_DST_SIZE];
-extern _q15 lea_dst[LEA_DST_SIZE];
+extern _q15 lea_flt[];
+extern _q15 lea_src[];
+extern _q15 lea_tmp[];
+extern _q15 lea_dst[];
 {%- endif %}
-extern _iq31 lea_res[2];
+extern _iq31 lea_res[];
 
 extern DMA_initParam dma_config;
 {% if lea_opt %}
@@ -63,6 +63,7 @@ extern int16_t* offset_vector;
   __lupe_data16_write_addr((DMA0DA), (dst)); \
   DMA0SZ = size; \
   DMA0CTL |= DMA_EN_SIG; \
+  __bis_SR_register(GIE + LPM0_bits); \
 }
 
 #define DMA_setWord(dst, word, size) {\
@@ -70,6 +71,7 @@ extern int16_t* offset_vector;
   __lupe_data16_write_addr((DMA1DA), (dst)); \
   DMA1SZ = size; \
   DMA1CTL |= DMA_EN_SIG; \
+  __bis_SR_register(GIE + LPM0_bits); \
 }
 {% else %}
 #define DMA_makeTransfer(src, dst, size) {\

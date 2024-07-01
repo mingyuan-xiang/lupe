@@ -28,12 +28,12 @@ static int DMA_is_init = 0;
 void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
-    dma_config.channelSelect = 0;
     dma_config.transferModeSelect = DMA_TRANSFER_BLOCK;
     dma_config.transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD;
     DMA_init(&dma_config);
-    DMA_enableInterrupt(dma_config.channelSelect);
+    DMA_enableInterrupt(0);
 {% if dma_opt %}
+    DMA_enableInterrupt(1);
     /*
      * set DMA address direction
      * use channel 0 for array movement
