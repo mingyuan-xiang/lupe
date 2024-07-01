@@ -99,12 +99,14 @@ def parse_opt_config(opt_config):
         opt_config["lea_opt"] = False
     if "dma_opt" not in opt_config:
         opt_config["dma_opt"] = False
-    if "lea_flt_size" not in opt_config:
-        opt_config["lea_flt_size"] = 100
-    if "lea_src_size" not in opt_config:
-        opt_config["lea_src_size"] = 100
-    if "lea_dst_size" not in opt_config:
-        opt_config["lea_dst_size"] = 100
+    if "lea_size" not in opt_config:
+        if opt_config["adaptive_gen_mem"]:
+            opt_config["lea_size"] = 1600
+        else:
+            opt_config["lea_size"] = 400
+
+        if opt_config["lea_size"] % 2:
+            raise ValueError("lea_size has to be multiple of 2")
 
     if opt_config["adaptive_gen_mem"]:
         # The cutoff size for dma and loop copy on MSP430

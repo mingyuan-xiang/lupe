@@ -6,21 +6,32 @@
 #include <libmatAbstract/mat.h>
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
-
-#define LEA_FLT_SIZE {{ lea_flt_size }}
-#define LEA_SRC_SIZE {{ lea_src_size }}
-#define LEA_DST_SIZE {{ lea_dst_size }}
-#define LEA_MIN_SIZE {{ lea_min_size }}
+{% if adaptive_gen_mem %}
+#define LEA_SIZE {{ lea_size }}
+{%- else %}
+#define LEA_FLT_SIZE {{ lea_size }}
+#define LEA_SRC_SIZE {{ lea_size }}
+#define LEA_DST_SIZE {{ lea_size }}
+#define LEA_TMP_SIZE {{ lea_size }}
+{%- endif %}
 
 #define LUPE_MIN 0x8000
 #define LUPE_Q15_MAX 32766 // 2^15 - 2
 
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
 
+{% if adaptive_gen_mem %}
+extern _q15* lea_flt;
+extern _q15* lea_src;
+extern _q15* lea_dst;
+extern _q15* lea_tmp;
+extern _q15 lea_buffer[LEA_SIZE];
+{%- else %}
 extern _q15 lea_flt[LEA_FLT_SIZE];
 extern _q15 lea_src[LEA_SRC_SIZE];
 extern _q15 lea_tmp[LEA_DST_SIZE];
 extern _q15 lea_dst[LEA_DST_SIZE];
+{%- endif %}
 extern _iq31 lea_res[2];
 
 extern DMA_initParam dma_config;

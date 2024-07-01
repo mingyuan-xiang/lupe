@@ -1,6 +1,7 @@
 """Fully connected layer"""
 
 import os
+import math
 
 from jinja2 import Template
 
@@ -67,6 +68,17 @@ class FullyConnected(LupeLayer):
                 self.output_size[1] < opt_config["adaptive_gen_mem_size"]
             )
 
+        if opt_config["adaptive_gen_mem"]:
+            lea_src_size = math.floor((opt_config["lea_size"] - 2) / 2)
+            lea_tmp_size = math.floor((opt_config["lea_size"] - 2) / 2)
+        else:
+            lea_src_size = opt_config["lea_size"]
+            lea_tmp_size = opt_config["lea_size"]
+
+        # Make sure all lea buffers are multiple of 2
+        lea_src_size += (lea_src_size % 2)
+        lea_tmp_size += (lea_tmp_size % 2)
+
         io_qf, weight_qf = qf
 
         params = {
@@ -75,9 +87,11 @@ class FullyConnected(LupeLayer):
             "output_size" : self.output_size[1],
             "qf" : weight_qf,
             "lea_opt" : opt_config["lea_opt"],
-            "lea_src_size" : opt_config["lea_src_size"],
+            "lea_src_size" : lea_src_size,
+            "lea_tmp_size" : lea_tmp_size,
             "has_loop_cpy" : True,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
+            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
         }
 
         if opt_config["adaptive_gen_mem"]:

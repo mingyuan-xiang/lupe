@@ -1,6 +1,7 @@
 """Convolution layer"""
 
 import os
+import math
 
 from jinja2 import Template
 
@@ -105,7 +106,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"
@@ -133,15 +134,45 @@ class Convolution2D(LupeLayer):
         else:
             padding_params = None
 
-        lea_min_size = min(
-            opt_config["lea_src_size"], opt_config["lea_dst_size"],
-            opt_config["lea_flt_size"]
-        )
-
-        if self.input_size[1] > lea_min_size:
+        if self.input_size[1] > opt_config["lea_size"]:
             raise ValueError(
                 "Input channel size has to be smaller than LEA size"
             )
+
+        # Make sure all lea buffers are multiple of 2
+        if opt_config["adaptive_gen_mem"]:
+            if self._acceleration == "1x1_mac":
+                lea_src_size = self.input_size[1]
+                lea_src_size += (lea_src_size % 2)
+                lea_flt_size = self.input_size[1]
+                lea_flt_size += (lea_flt_size % 2)
+                lea_tmp_size = 0 # no need for lea_tmp buffer
+                lea_tmp_size += (lea_tmp_size % 2)
+                lea_dst_size = (
+                    opt_config["lea_size"] - lea_src_size - lea_flt_size
+                )
+            elif self._acceleration == "mac":
+                lea_src_size = get_stride(self.kernel_shape, 1)
+                lea_src_size += (lea_src_size % 2)
+                lea_flt_size = get_stride(self.kernel_shape, 1)
+                lea_flt_size += (lea_flt_size % 2)
+                lea_tmp_size = 0 # no need for lea_tmp buffer
+                lea_tmp_size += (lea_tmp_size % 2)
+                lea_dst_size = (
+                    opt_config["lea_size"] - lea_src_size - lea_flt_size
+                )
+            else:
+                size = math.floor(opt_config["lea_size"] / 4)
+                size += (size % 2)
+                lea_src_size = size
+                lea_flt_size = size
+                lea_tmp_size = size
+                lea_dst_size = size
+        else:
+            lea_src_size = opt_config["lea_size"]
+            lea_flt_size = opt_config["lea_size"]
+            lea_tmp_size = opt_config["lea_size"]
+            lea_dst_size = opt_config["lea_size"]
 
         has_adaptive_gen_mem = False
         if opt_config["adaptive_gen_mem"]:
@@ -162,11 +193,13 @@ class Convolution2D(LupeLayer):
             )
 
             has_adaptive_gen_mem = (has_adaptive_gen_mem or
-                (get_stride(self.output_size, 1) % lea_min_size) <
+                (get_stride(self.output_size, 1) % lea_dst_size) <
                 opt_config["adaptive_gen_mem_size"]
             )
 
         io_qf, weight_qf = qf
+
+        # TODO: not sure if LEA deinterleave works with odd number of channels
 
         params = {
             "layer_name" : self.name,
@@ -182,10 +215,15 @@ class Convolution2D(LupeLayer):
             "out_line_size" : self.output_size[3],
             "in_line_num" : self.input_size[2],
             "out_line_num" : self.output_size[2],
+            "lea_src_size" : lea_src_size,
+            "lea_flt_size" : lea_flt_size,
+            "lea_tmp_size" : lea_tmp_size,
+            "lea_dst_size" : lea_dst_size,
+            "lea_size" : opt_config["lea_size"],
             "qf" : weight_qf,
             "padding" : padding_params,
-            "lea_min_size" : lea_min_size,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
+            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
             "stride_row" : self.strides[0],
             "stride_col" : self.strides[1],
         }

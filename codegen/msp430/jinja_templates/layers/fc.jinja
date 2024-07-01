@@ -14,7 +14,7 @@ static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_size = input->dims[1];
   uint16_t output_size = output->dims[1];
-  uint16_t lea_line_size = LEA_SRC_SIZE;
+  uint16_t lea_line_size = {{ lea_src_size }};
   uint16_t lea_input_line_remain_size = input_size % lea_line_size;;
   uint32_t weight_line_offset = (weight->dims[1]) * sizeof(int16_t);
 
@@ -24,7 +24,18 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t weight_fram_pos = 0;
   {%- endif %}
 
-  msp_fill_q15_params fill_params = { .length = LEA_SRC_SIZE, .value = 0 };
+  {% if adaptive_gen_mem %}
+  /* assign the lea buffer pointer */
+  lea_src = lea_buffer;
+  lea_tmp = lea_buffer + {{ lea_src_size }};
+  {%- endif %}
+
+  {%- if input_size % 2 != 0 %}
+  /* set the aligned position to be zeros */
+  lea_src[{{ input_size % lea_line_size }}] = 0;
+  lea_flt[{{ input_size % lea_line_size }}] = 0;
+  {%- endif %}
+
   {%- if lea_opt %}
   mac_init(MAKE_ALIGN_2(lea_input_line_remain_size));
   {%- else %}
@@ -34,12 +45,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if has_adaptive_gen_mem %}
   uint16_t s;
   {%- endif %}
-
-  /* reset LEA's RAM */
-  msp_fill_q15(&fill_params, lea_src);
-
-  fill_params.length = LEA_DST_SIZE;
-  msp_fill_q15(&fill_params, lea_tmp);
 
   /* add bias first so that we don't need to set the input to 0 */
   {%- if has_adaptive_gen_mem and output_size < adaptive_gen_mem_size %}

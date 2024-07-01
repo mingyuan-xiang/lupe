@@ -1,9 +1,9 @@
 """Clip layer"""
 
 import os
+import math
 
 from jinja2 import Template
-
 
 from .layer import LupeLayer
 from .layer_utils import name_conversion
@@ -34,11 +34,20 @@ class Add(LupeLayer):
         """Get the code for the layer"""
         path = os.path.join(jinja_dir, "add.jinja")
 
+        if opt_config["adaptive_gen_mem"]:
+            lea_src_size = math.floor((opt_config["lea_size"] - 2) / 2)
+        else:
+            lea_src_size = opt_config["lea_size"]
+
+        # Make sure all lea buffers are multiple of 2
+        lea_src_size += (lea_src_size % 2)
+
         params = {
             "layer_name" : self.name,
             "lea_opt" : opt_config["lea_opt"],
-            "lea_src_size" : opt_config["lea_src_size"],
+            "lea_src_size" : lea_src_size,
             "input_size" : get_stride(self.input_size, 0),
+            "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
         }
 
         with open(path, "r", encoding="utf-8") as file:

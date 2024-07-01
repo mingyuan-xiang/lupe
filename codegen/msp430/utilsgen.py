@@ -13,12 +13,11 @@ def utilsgen(code_dir, opt_config, flt_sizes, qf):
         opt_config: The optimization configuration
     """
     # LEA size has to be multiple of 2
-    if (opt_config["lea_flt_size"] % 2 or opt_config["lea_src_size"] % 2 or
-        opt_config["lea_dst_size"] % 2):
+    if opt_config["lea_size"] % 2:
         raise ValueError('LEA size has to be multiple of 2')
 
     for s in flt_sizes:
-        if opt_config["lea_flt_size"] < s:
+        if opt_config["lea_size"] < s:
             raise ValueError(
                 'LEA filter array must be greater than the kernel matrix size'
             )
@@ -27,16 +26,10 @@ def utilsgen(code_dir, opt_config, flt_sizes, qf):
     header_template_path = os.path.join(JINJA_DIR, "utils.h.jinja")
     header_params = {
         "dma_opt": opt_config["dma_opt"],
-        "lea_flt_size" : opt_config["lea_flt_size"],
-        "lea_src_size" : opt_config["lea_src_size"],
-        "lea_dst_size" : opt_config["lea_dst_size"],
+        "lea_size" : opt_config["lea_size"],
         "lea_opt" : opt_config["lea_opt"],
-        "lea_min_size" : min(
-            opt_config["lea_flt_size"],
-            opt_config["lea_src_size"],
-            opt_config["lea_dst_size"]
-        ),
         "qf" : qf,
+        "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
     }
 
     # utils c file
@@ -45,6 +38,7 @@ def utilsgen(code_dir, opt_config, flt_sizes, qf):
         "dma_opt": opt_config["dma_opt"],
         "lea_opt" : opt_config["lea_opt"],
         "qf" : qf,
+        "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
     }
 
     jinja_gen(
