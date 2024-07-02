@@ -1,3 +1,9 @@
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_tmp (lea_buffer + {{ lea_src_size }})
+{% endif %}
+
 {%- if lea_opt %}
 static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
   lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
@@ -22,12 +28,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint32_t weight_fram_addr = (uint32_t)weight->data;
   {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
   uint16_t weight_fram_pos = 0;
-  {%- endif %}
-
-  {% if global_mem_buffer %}
-  /* assign the lea buffer pointer */
-  lea_src = lea_buffer;
-  lea_tmp = lea_buffer + {{ lea_src_size }};
   {%- endif %}
 
   {%- if input_size % 2 != 0 %}

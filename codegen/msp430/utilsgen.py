@@ -29,7 +29,7 @@ def utilsgen(code_dir, opt_config, flt_sizes, qf):
         "lea_size" : opt_config["lea_size"],
         "lea_opt" : opt_config["lea_opt"],
         "qf" : qf,
-        "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
+        "global_mem_buffer" : opt_config["global_mem_buffer"],
     }
 
     # utils c file

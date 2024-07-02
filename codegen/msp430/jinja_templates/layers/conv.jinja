@@ -1,3 +1,11 @@
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_flt (lea_buffer + {{ lea_src_size }})
+#define lea_tmp (lea_buffer + {{ lea_src_size + lea_flt_size }})
+#define lea_dst (lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }})
+{% endif %}
+
 {%- if acceleration == '1x1_mac' %}
 {# Piecewise convolution #}
 {%- if lea_opt %}
@@ -34,13 +42,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t out_channels = output->dims[1];
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
-
-  {% if global_mem_buffer %}
-  /* assign the lea buffer pointer */
-  lea_src = lea_buffer;
-  lea_flt = lea_buffer + {{ lea_src_size }};
-  lea_dst = lea_buffer + {{ lea_src_size + lea_flt_size }};
-  {%- endif %}
 
   uint32_t flt_lea_addr = (uint32_t)lea_flt;
   uint32_t flt_fram_addr = (uint32_t)(weight->data);
@@ -231,14 +232,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
-
-  {% if global_mem_buffer %}
-  /* assign the lea buffer pointer */
-  lea_src = lea_buffer;
-  lea_flt = lea_buffer + {{ lea_src_size }};
-  lea_dst = lea_buffer + {{ lea_src_size + lea_flt_size }};
-  lea_tmp = lea_buffer + {{ lea_src_size + lea_flt_size + lea_dst_size }};
-  {%- endif %}
 
   uint32_t src_lea_addr = (uint32_t)lea_src;
   uint32_t dst_lea_addr = (uint32_t)lea_dst;
@@ -597,20 +590,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* add bias and left shift */
   output_fram_addr = (uint32_t)(output->data);
-  {% if global_mem_buffer %}
-
-  _q15* lea_add = lea_buffer;
-  {%- if out_len >= lea_size %}
-  uint16_t add_size = {{ lea_size }};
-  {%- endif %}
-
-  {%- else %}
 
   _q15* lea_add = lea_dst;
   {%- if out_len >= lea_dst_size %}
   uint16_t add_size = {{ lea_dst_size }};
-  {%- endif %}
-
   {%- endif %}
   uint32_t lea_add_addr = (uint32_t)lea_add;
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -620,7 +603,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     offset_params.offset = bias->data[i];
     {%- endif %}
 
-    {%- if (global_mem_buffer and (out_len % lea_size) != 0) or ((not global_mem_buffer) and (out_len % lea_dst_size) != 0) %}
+    {%- if (global_mem_buffer and (out_len % lea_dst_size) != 0) or ((not global_mem_buffer) and (out_len % lea_dst_size) != 0) %}
 
     {%- if lea_opt %}
     lea_offset_params->vectorSize = lea_remain_size_aligned;
@@ -651,7 +634,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     DMA_makeTransfer(lea_add_addr, output_fram_addr, lea_remain_size);
     output_fram_addr += output_remain_size_offset;
     {%- endif %}
-    {%- if (global_mem_buffer and out_len >= lea_size) or ((not global_mem_buffer) and out_len >= lea_dst_size) %}
+    {%- if (global_mem_buffer and out_len >= lea_dst_size) or ((not global_mem_buffer) and out_len >= lea_dst_size) %}
 
     {%- if lea_opt %}
     lea_offset_params->vectorSize = add_size;
@@ -725,14 +708,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
-
-  {% if global_mem_buffer %}
-  /* assign the lea buffer pointer */
-  lea_src = lea_buffer;
-  lea_flt = lea_buffer + {{ lea_src_size }};
-  lea_tmp = lea_buffer + {{ lea_src_size + lea_flt_size }};
-  lea_dst = lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }};
-  {%- endif %}
 
   uint32_t flt_lea_addr = (uint32_t)lea_flt;
   uint32_t flt_fram_addr = (uint32_t)(weight->data);

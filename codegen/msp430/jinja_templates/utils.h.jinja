@@ -21,10 +21,6 @@
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
 
 {% if global_mem_buffer %}
-extern _q15* lea_flt;
-extern _q15* lea_src;
-extern _q15* lea_dst;
-extern _q15* lea_tmp;
 extern _q15 lea_buffer[];
 {%- else %}
 extern _q15 lea_flt[];

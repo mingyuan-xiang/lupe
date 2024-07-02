@@ -95,7 +95,7 @@ class Convolution2D(LupeLayer):
         # TODO: We should do something smarter for the decider
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 5:
             if self.input_size[-1] < 14:
@@ -104,7 +104,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"
@@ -114,6 +114,14 @@ class Convolution2D(LupeLayer):
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
+        def _size_converter(x):
+            """Convert the size to exponentiation of 2"""
+            if x == 0:
+                return 0
+
+            p = math.ceil(math.log2(x))
+            return 2**p
+
         path = os.path.join(jinja_dir, "conv.jinja")
 
         if self.has_padding:
@@ -145,6 +153,9 @@ class Convolution2D(LupeLayer):
                 lea_flt_size = self.input_size[1]
                 lea_flt_size += (lea_flt_size % 2)
                 lea_tmp_size = 0 # no need for lea_tmp buffer
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
                 lea_dst_size = (
                     opt_config["lea_size"] - lea_src_size - lea_flt_size
                 )
@@ -155,6 +166,9 @@ class Convolution2D(LupeLayer):
                 lea_src_size += (lea_src_size % 2)
                 lea_flt_size = get_stride(self.kernel_shape, 1)
                 lea_flt_size += (lea_flt_size % 2)
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
                 size = math.floor(
                     (opt_config["lea_size"] - lea_src_size - lea_flt_size) / 2
                 ) - 1
@@ -164,17 +178,21 @@ class Convolution2D(LupeLayer):
                 if size < 0:
                     raise ValueError("LEA array size noy big enough")
             else: # fir
-                size = math.floor(opt_config["lea_size"] / 4) - 1
-                size += (size % 2)
-                lea_src_size = size
-                lea_flt_size = size
-                lea_tmp_size = size
-                lea_dst_size = size
-                if size < (self.input_size[3] + 2):
-                    raise ValueError(
-                        "LEA array size has to be greater than"
-                        "the input row size"
-                    )
+                lea_src_size = self.input_size[3] + 2
+                lea_flt_size = self.kernel_shape[2] * (self.kernel_shape[2] + 1)
+                if self.strides[0] * self.strides[1] > 1:
+                    # we need to make it bigger for deinterleave part
+                    lea_tmp_size = self.input_size[3] + 2
+                else:
+                    lea_tmp_size = self.output_size[3] + 2
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
+                lea_tmp_size = _size_converter(lea_tmp_size)
+                lea_dst_size = lea_dst_size = (
+                    opt_config["lea_size"] - lea_src_size - lea_flt_size -
+                    lea_tmp_size
+                )
         else:
             lea_src_size = opt_config["lea_size"]
             lea_flt_size = opt_config["lea_size"]
