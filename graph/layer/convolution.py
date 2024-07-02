@@ -104,7 +104,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"
@@ -244,7 +244,6 @@ class Convolution2D(LupeLayer):
             "lea_flt_size" : lea_flt_size,
             "lea_tmp_size" : lea_tmp_size,
             "lea_dst_size" : lea_dst_size,
-            "lea_size" : opt_config["lea_size"],
             "qf" : weight_qf,
             "padding" : padding_params,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
