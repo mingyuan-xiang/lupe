@@ -80,6 +80,10 @@ class Convolution2D(LupeLayer):
             return (
                 1, self.output_size[2] * self.output_size[3], self.input_size[1]
             )
+        elif self._acceleration  == "1x1_mpy":
+            return (
+                1, self.input_size[1], self.output_size[2] * self.output_size[3]
+            )
 
         return None
 
@@ -104,25 +108,95 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 1:
-            return "1x1_mac"
+            return "1x1_mpy"
 
         return "fir"
 
+    def _get_size(self, opt_config):
+        mul = 64
+
+        def _size_converter(x):
+            """Convert the size to multiple of 64"""
+            if x <= mul:
+                return mul
+
+            return math.ceil(x / 64) * 64
+
+        # Make sure all lea buffers are multiple of 2
+        if opt_config["global_mem_buffer"]:
+            if self._acceleration == "1x1_mac":
+                lea_src_size = self.input_size[1]
+                lea_src_size += (lea_src_size % 2)
+                lea_flt_size = self.input_size[1]
+                lea_flt_size += (lea_flt_size % 2)
+                lea_tmp_size = 0 # no need for lea_tmp buffer
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
+                lea_dst_size = (
+                    opt_config["lea_size"] - lea_src_size - lea_flt_size
+                )
+                if lea_dst_size < 0:
+                    raise ValueError("LEA array size noy big enough")
+            elif self._acceleration == "1x1_mpy":
+                if opt_config["lea_size"] < 3 * mul:
+                    raise ValueError("LEA array size noy big enough")
+                # 3 * size will always be smaller than opt_config["lea_size"]
+                size = math.floor(opt_config["lea_size"] / 3) - mul
+                size = _size_converter(size)
+                lea_tmp_size = 0 # no need for lea_tmp buffer
+                lea_src_size = size
+                lea_flt_size = size
+                lea_dst_size = size
+            elif self._acceleration == "mac":
+                lea_src_size = get_stride(self.kernel_shape, 1)
+                lea_src_size += (lea_src_size % 2)
+                lea_flt_size = get_stride(self.kernel_shape, 1)
+                lea_flt_size += (lea_flt_size % 2)
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
+                size = math.floor(
+                    (opt_config["lea_size"] - lea_src_size - lea_flt_size) / 2
+                ) - mul
+                if size < 0:
+                    raise ValueError("LEA array size noy big enough")
+                size = _size_converter(size)
+                lea_tmp_size = size
+                lea_dst_size = size
+            else: # fir
+                lea_src_size = self.input_size[3] + 2
+                lea_flt_size = self.kernel_shape[2] * (self.kernel_shape[2] + 1)
+                if self.strides[0] * self.strides[1] > 1:
+                    # we need to make it bigger for deinterleave part
+                    lea_tmp_size = self.input_size[3] + 2
+                else:
+                    lea_tmp_size = self.output_size[3] + 2
+
+                lea_src_size = _size_converter(lea_src_size)
+                lea_flt_size = _size_converter(lea_flt_size)
+                lea_tmp_size = _size_converter(lea_tmp_size)
+                lea_dst_size = lea_dst_size = (
+                    opt_config["lea_size"] - lea_src_size - lea_flt_size -
+                    lea_tmp_size
+                )
+        else:
+            lea_src_size = opt_config["lea_size"]
+            lea_flt_size = opt_config["lea_size"]
+            lea_tmp_size = opt_config["lea_size"]
+            lea_dst_size = opt_config["lea_size"]
+
+        return lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
-        def _size_converter(x):
-            """Convert the size to exponentiation of 2"""
-            if x == 0:
-                return 0
-
-            p = math.ceil(math.log2(x))
-            return 2**p
-
         path = os.path.join(jinja_dir, "conv.jinja")
+
+        sizes = self._get_size(opt_config)
+        lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size = sizes
 
         if self.has_padding:
             if self.kernel_shape[-1] == 1:
@@ -145,59 +219,7 @@ class Convolution2D(LupeLayer):
                 "Input channel size has to be smaller than LEA size"
             )
 
-        # Make sure all lea buffers are multiple of 2
-        if opt_config["global_mem_buffer"]:
-            if self._acceleration == "1x1_mac":
-                lea_src_size = self.input_size[1]
-                lea_src_size += (lea_src_size % 2)
-                lea_flt_size = self.input_size[1]
-                lea_flt_size += (lea_flt_size % 2)
-                lea_tmp_size = 0 # no need for lea_tmp buffer
 
-                lea_src_size = _size_converter(lea_src_size)
-                lea_flt_size = _size_converter(lea_flt_size)
-                lea_dst_size = (
-                    opt_config["lea_size"] - lea_src_size - lea_flt_size
-                )
-                if lea_dst_size < 0:
-                    raise ValueError("LEA array size noy big enough")
-            elif self._acceleration == "mac":
-                lea_src_size = get_stride(self.kernel_shape, 1)
-                lea_src_size += (lea_src_size % 2)
-                lea_flt_size = get_stride(self.kernel_shape, 1)
-                lea_flt_size += (lea_flt_size % 2)
-
-                lea_src_size = _size_converter(lea_src_size)
-                lea_flt_size = _size_converter(lea_flt_size)
-                size = math.floor(
-                    (opt_config["lea_size"] - lea_src_size - lea_flt_size) / 2
-                ) - 1
-                size += (size % 2)
-                lea_tmp_size = size
-                lea_dst_size = size
-                if size < 0:
-                    raise ValueError("LEA array size noy big enough")
-            else: # fir
-                lea_src_size = self.input_size[3] + 2
-                lea_flt_size = self.kernel_shape[2] * (self.kernel_shape[2] + 1)
-                if self.strides[0] * self.strides[1] > 1:
-                    # we need to make it bigger for deinterleave part
-                    lea_tmp_size = self.input_size[3] + 2
-                else:
-                    lea_tmp_size = self.output_size[3] + 2
-
-                lea_src_size = _size_converter(lea_src_size)
-                lea_flt_size = _size_converter(lea_flt_size)
-                lea_tmp_size = _size_converter(lea_tmp_size)
-                lea_dst_size = lea_dst_size = (
-                    opt_config["lea_size"] - lea_src_size - lea_flt_size -
-                    lea_tmp_size
-                )
-        else:
-            lea_src_size = opt_config["lea_size"]
-            lea_flt_size = opt_config["lea_size"]
-            lea_tmp_size = opt_config["lea_size"]
-            lea_dst_size = opt_config["lea_size"]
 
         has_adaptive_gen_mem = False
         if opt_config["adaptive_gen_mem"]:

@@ -35,10 +35,12 @@ extern DMA_initParam dma_config;
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
 extern MSP_LEA_FIR_PARAMS* lea_fir_params;
 extern MSP_LEA_MAC_PARAMS* lea_mac_params;
-{%- if qf > 0 %}
+extern MSP_LEA_ADDMATRIX_PARAMS* lea_fill_params;
+extern MSP_LEA_MPYMATRIX_PARAMS* lea_mpy_params;
+extern int16_t* fill_vector;
+extern uint16_t fill_vector_addr;
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_offset_params;
 extern int16_t* offset_vector;
-{%- endif %}
 {%- endif %}
 
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
@@ -92,6 +94,10 @@ void mac_init(uint16_t length);
 
 void offset_init(uint16_t length);
 
+void fill_init(uint16_t length);
+
+void mpy_init(uint16_t length);
+
 void add_clear();
 
 void fir_clear();
@@ -99,6 +105,10 @@ void fir_clear();
 void mac_clear();
 
 void offset_clear();
+
+void fill_clear();
+
+void mpy_clear();
 {%- endif %}
 
 void init_lupe();
