@@ -97,7 +97,7 @@ def _add_buffergen(code_dir, graph, loc="hi"):
         )
 
         # Generate header file
-        h_code += gen_header_data(mat) + "\n"
+        h_code += gen_header_data(mat, gen_array=False) + "\n"
         # Generate C file
         c_code += gen_c_data_struct(mat, buffer_name)
 
@@ -154,8 +154,8 @@ def _buffergen(code_dir, graph, loc="hi"):
         )
 
         # Generate header file
-        h_code += gen_header_data(in_mat)
-        h_code += gen_header_data(out_mat) + "\n"
+        h_code += gen_header_data(in_mat, gen_array=False)
+        h_code += gen_header_data(out_mat, gen_array=False) + "\n"
         # Generate C file
         c_code += gen_c_data_struct(in_mat, in_buffer_ptr)
         c_code += gen_c_data_struct(out_mat, out_buffer_ptr)

@@ -112,10 +112,11 @@ def gen_header_includes(name):
 
     return h_code
 
-def gen_header_data(mat):
+def gen_header_data(mat, gen_array=True):
     """Generate the header file for the matrix data."""
     h_code = ""
-    h_code += "extern " + mat.loc + " _q15 " + mat.name + "[];\n"
+    if gen_array:
+        h_code += "extern " + mat.loc + " _q15 " + mat.name + "[];\n"
     h_code += "extern " + mat.loc + " mat_t " + mat.name + "_meta;\n"
 
     return h_code
