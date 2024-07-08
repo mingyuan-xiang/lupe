@@ -1,4 +1,11 @@
 #define _LEA_DST_SIZE {{ lea_dst_size }}
+#define _LEA_REMAIN_SIZE {{ out_len }} % _LEA_DST_SIZE
+{%- if padding %}
+#define _PADDING_TOP {{ padding["top"] }}
+#define _PADDING_BOTTOM {{ padding["bottom"] }}
+#define _PADDING_RIGHT {{ padding["right"] }}
+#define _PADDING_LEFT {{ padding["left"] }}
+{%- endif %}
 {% if global_mem_buffer %}
 /* assign the lea buffer pointer */
 #define lea_src (lea_buffer)
@@ -8,7 +15,15 @@
 {% endif %}
 
 {%- if acceleration == '1x1_mpy' %}
-{%- if lea_opt %}
+{% if stride_row > 1 %}
+#define _INPUT_LINE_SIZE {{ in_line_size }}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+#define _STRIDE_ROW_LINE_SIZE _STRIDE_ROW_SIZE * _INPUT_LINE_SIZE
+{%- endif %}
+{%- if stride_col > 1 %}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{%- endif %}
+{% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
@@ -69,7 +84,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uint16_t input_line_size = input->dims[3];
 
-  uint16_t lea_remain_size = {{ out_len % lea_dst_size }};
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {%- if (out_len % lea_dst_size) != 0 %}
   uint32_t remain_size_offset = lea_remain_size * sizeof(int16_t);
@@ -91,11 +106,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_mpy_q15_params mpy_params = { .length = lea_remain_size_aligned };
   {%- endif %}
   {% if stride_row > 1 %}
-  uint16_t stride_row = {{ stride_row * in_line_size }};
+  uint16_t stride_row = _STRIDE_ROW_LINE_SIZE;
   {%- endif %}
 
   {%- if stride_col > 1 %}
-  uint16_t stride_col = {{ stride_col }};
+  uint16_t stride_col = _STRIDE_COL_SIZE;
   {%- endif %}
 
   uint16_t weight_pos = 0;
@@ -245,7 +260,18 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 }
 {%- elif acceleration == '1x1_mac' %}
-{%- if lea_opt %}
+{% if stride_row > 1 %}
+#define _INPUT_LINE_SIZE {{ in_line_size }}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+#define _STRIDE_ROW_LINE_SIZE _STRIDE_ROW_SIZE * _INPUT_LINE_SIZE
+{%- endif %}
+{%- if stride_col > 1 %}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{%- endif %}
+{% if in_ch % 2 != 0 %}
+#define _INPUT_CHANNEL_SIZE {{ in_ch }}
+{%- endif %}
+{% if lea_opt %}
 static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
   offset_vector[0] = offset;
   offset_vector[1] = offset;
@@ -290,7 +316,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uint16_t input_line_size = input->dims[3];
 
-  uint16_t lea_remain_size = {{ out_len % lea_dst_size }};
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {%- if (out_len % lea_dst_size) != 0 %}
   uint32_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
@@ -303,8 +329,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint32_t lea_dst_addr = (uint32_t)lea_dst;
   {% if in_ch % 2 != 0 %}
   /* set the aligned position to be zeros */
-  lea_src[{{ in_ch }}] = 0;
-  lea_flt[{{ in_ch }}] = 0;
+  lea_src[_INPUT_CHANNEL_SIZE] = 0;
+  lea_flt[_INPUT_CHANNEL_SIZE] = 0;
   {%- endif %}
 
   {%- if lea_opt %}
@@ -319,11 +345,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t s;
   {%- endif %}
   {% if stride_row > 1 %}
-  uint16_t stride_row = {{ stride_row * in_line_size }};
+  uint16_t stride_row = _STRIDE_ROW_LINE_SIZE;
   {%- endif %}
 
   {%- if stride_col > 1 %}
-  uint16_t stride_col = {{ stride_col }};
+  uint16_t stride_col = _STRIDE_COL_SIZE;
   {%- endif %}
 
   {%- if dma_opt %}
@@ -422,7 +448,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 }
 {%- elif acceleration == 'fir' %}
-{%- if lea_opt %}
+#define _INPUT_LINE_SIZE {{ in_line_size }}
+{% if stride_row > 1 %}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+{%- endif %}
+{%- if stride_col > 1 %}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{%- endif %}
+{%- if flt_size % 2 != 0 %}
+#define _FLT_SIZE_ALIGNED {{ flt_size + 1 }}
+{%- endif %}
+{% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
@@ -497,36 +533,24 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_num = output->dims[2];
   uint16_t output_line_size_offset = output_line_size * sizeof(int16_t);
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
-  {% if global_mem_buffer %}
-  uint16_t lea_remain_size = {{ out_len % lea_dst_size }};
+
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   {%- if (out_len % lea_dst_size) != 0 %}
   uint32_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
   {%- endif %}
   {%- if out_len >= lea_dst_size %}
   uint32_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
-  {%- endif %}
-
-  {%- else %}
-  uint16_t lea_remain_size = {{ out_len % lea_dst_size }};
-  {%- if (out_len % lea_dst_size) != 0 %}
-  uint32_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
-  {%- endif %}
-  {%- if out_len >= lea_dst_size %}
-  uint32_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
-  {%- endif %}
-
   {%- endif %}
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {% if stride_row > 1 %}
-  uint16_t stride_row = {{ stride_row }};
-  uint16_t input_line_strided_size_offset = input_line_size * stride_row * sizeof(int16_t);
+  uint16_t input_line_strided_size_offset = _INPUT_LINE_SIZE * _STRIDE_ROW_SIZE * sizeof(int16_t);
   {%- endif %}
 
   {%- if stride_col > 1 %}
   msp_deinterleave_q15_params deinterleave_params = {
     .length = MAKE_ALIGN_2(output_line_size),
     .channel = 0,
-    .numChannels = {{ stride_col }}
+    .numChannels = _STRIDE_COL_SIZE
   };
   {%- endif %}
   {% if lea_opt %}
@@ -561,7 +585,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_channel_pos = 0;
 
   {%- if stride_row > 1 %}
-  uint16_t input_line_strided_size = input_line_size * stride_row;
+  uint16_t input_line_strided_size = _INPUT_LINE_SIZE * _STRIDE_ROW_SIZE;
   {%- endif %}
   {%- endif %}
   {%- endif %}
@@ -579,8 +603,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
   {%- endif %}
 
-  lea_src[{{ in_line_size }}] = 0;
-  lea_src[{{ in_line_size + 1 }}] = 0;
+  lea_src[_INPUT_LINE_SIZE] = 0;
+  lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
   {%- if padding %}
 
@@ -590,8 +614,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- else %}
   memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
   {%- endif %}
-  uint16_t input_line_num = input->dims[2] - {{ padding["top"] + padding["bottom"] }};
-  uint16_t input_line_size_bf = input->dims[3] - {{ padding["left"] + padding["right"] }};
+  uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
+  uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
   _q15* padding_ptr_in = input->data;
   _q15* padding_ptr_out = output->data;
   for (uint16_t i = 0; i < in_channels; ++i) {
@@ -599,7 +623,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     padding_ptr_out += input_line_size;
     {%- endfor %}
     for (uint16_t j = 0; j < input_line_num; ++j) {
-      padding_ptr_out += {{ padding["left"] }};
+      padding_ptr_out += _PADDING_LEFT;
       {%- if has_adaptive_gen_mem and (in_line_size - padding["left"] - padding["right"] < adaptive_gen_mem_size) %}
       {%- for n in range(in_line_size - padding["left"] - padding["right"]) %}
       *padding_ptr_out = *padding_ptr_in;
@@ -607,11 +631,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       ++padding_ptr_in;
       {%- endfor %}
 
-      padding_ptr_out += {{ padding["right"] }};
+      padding_ptr_out += _PADDING_RIGHT;
       {%- else %}
       DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
       padding_ptr_in += input_line_size_bf;
-      padding_ptr_out += ({{ padding["right"] }} + input_line_size_bf);
+      padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
       {%- endif %}
     }
     {%- for n in range(padding["bottom"]) %}
@@ -669,7 +693,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         s++;
         {%- endfor %}
 
-        flt_lea_pos += {{ flt_size + 1 }};
+        flt_lea_pos += _FLT_SIZE_ALIGNED;
         flt_fram_pos += kernel_size;
         {%- else %}
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
@@ -915,7 +939,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 }
 {%- elif acceleration == 'mac' %}
-{%- if lea_opt %}
+#define _INPUT_LINE_SIZE {{ in_line_size }}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{%- if flt_len % 2 != 0 %}
+#define _FLT_LEN {{ flt_len }}
+{%- endif %}
+{% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
   lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
@@ -963,10 +993,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_line_size = output->dims[3];
   uint16_t output_line_num = output->dims[2];
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
-  uint16_t input_line_strided_size = input_line_size * {{ stride_row }};
+  uint16_t input_line_strided_size = input_line_size * _STRIDE_ROW_SIZE;
   uint16_t input_line_size_strided_offset = input_line_strided_size * sizeof(int16_t);
 
-  uint16_t lea_remain_size = {{ out_len % lea_dst_size }};
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   {%- if (out_len % lea_dst_size) != 0 %}
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   uint32_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
@@ -979,8 +1009,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint32_t dst_lea_addr = (uint32_t)lea_dst;
   {% if flt_len % 2 != 0 %}
   /* set the aligned position to be zeros */
-  lea_src[{{ flt_len }}] = 0;
-  lea_flt[{{ flt_len }}] = 0;
+  lea_src[_FLT_LEN] = 0;
+  lea_flt[_FLT_LEN] = 0;
   {%- endif %}
 
   {%- if lea_opt %}
@@ -1011,8 +1041,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- else %}
   memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
   {%- endif %}
-  uint16_t input_line_num = input->dims[2] - {{ padding["top"] + padding["bottom"] }};
-  uint16_t input_line_size_bf = input->dims[3] - {{ padding["left"] + padding["right"] }};
+  uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
+  uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
   _q15* padding_ptr_in = input->data;
   _q15* padding_ptr_out = output->data;
   for (uint16_t i = 0; i < in_channels; ++i) {
@@ -1020,7 +1050,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     padding_ptr_out += input_line_size;
     {%- endfor %}
     for (uint16_t j = 0; j < input_line_num; ++j) {
-      padding_ptr_out += {{ padding["left"] }};
+      padding_ptr_out += _PADDING_LEFT;
       {%- if has_adaptive_gen_mem and (in_line_size - padding["left"] - padding["right"] < adaptive_gen_mem_size) %}
       {%- for n in range(in_line_size - padding["left"] - padding["right"]) %}
       *padding_ptr_out = *padding_ptr_in;
@@ -1028,11 +1058,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       ++padding_ptr_in;
       {%- endfor %}
 
-      padding_ptr_out += {{ padding["right"] }};
+      padding_ptr_out += _PADDING_RIGHT;
       {%- else %}
       DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
       padding_ptr_in += input_line_size_bf;
-      padding_ptr_out += ({{ padding["right"] }} + input_line_size_bf);
+      padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
       {%- endif %}
     }
     {%- for n in range(padding["bottom"]) %}
@@ -1041,7 +1071,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
-  {%- endif %} 
+  {%- endif %}
   {%- if dma_opt %}
   uint32_t out_bias_addr = output_fram_addr;
   {%- else %}
@@ -1067,7 +1097,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     uint32_t output_channel_addr = output_fram_addr;
     uint32_t flt_tmp_addr = flt_fram_addr;
-    uint16_t tmp_input_addr_offset = sizeof(int16_t) * {{ stride_col }};
+    uint16_t tmp_input_addr_offset = sizeof(int16_t) * _STRIDE_COL_SIZE;
 
     /* assemble input to a matrix in mac_buffer */
     {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
@@ -1109,7 +1139,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- endif %}
         }
         {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
-        tmp_input_pos += {{ stride_col }};
+        tmp_input_pos += _STRIDE_COL_SIZE;
         {%- else %}
         tmp_input_addr += tmp_input_addr_offset;
         {%- endif %}
