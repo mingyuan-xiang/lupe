@@ -108,7 +108,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"
@@ -167,6 +167,17 @@ class Convolution2D(LupeLayer):
                 size = _size_converter(size)
                 lea_tmp_size = size
                 lea_dst_size = size
+            elif self._acceleration == "enhanced_mac":
+                if opt_config["lea_size"] < 2 * mul:
+                    raise ValueError("LEA array size noy big enough")
+                # 3 * size will always be smaller than opt_config["lea_size"]
+                size = math.floor(opt_config["lea_size"] / 2) - mul
+                size = _size_converter(size)
+                lea_tmp_size = 0 # no need for lea_tmp buffer
+                lea_src_size = size
+                lea_flt_size = size
+                lea_dst_size = 0 # no need for lea_tmp buffer
+
             else: # fir
                 lea_src_size = self.input_size[3] + 2
                 lea_flt_size = self.kernel_shape[2] * (self.kernel_shape[2] + 1)
@@ -193,7 +204,8 @@ class Convolution2D(LupeLayer):
 
     def get_code(self, jinja_dir, opt_config, qf):
         """Get the code for the layer"""
-        path = os.path.join(jinja_dir, "conv.jinja")
+        path = os.path.join(jinja_dir, "conv")
+        path = os.path.join(path, self._acceleration + ".jinja")
 
         sizes = self._get_size(opt_config)
         lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size = sizes
@@ -218,8 +230,6 @@ class Convolution2D(LupeLayer):
             raise ValueError(
                 "Input channel size has to be smaller than LEA size"
             )
-
-
 
         has_adaptive_gen_mem = False
         if opt_config["adaptive_gen_mem"]:
@@ -278,12 +288,6 @@ class Convolution2D(LupeLayer):
             params["adaptive_gen_mem_size"] = (
                 opt_config["adaptive_gen_mem_size"]
             )
-
-        # select correct operators
-        # if opt_config["adaptive_gen_lea"]:
-        #     params["acceleration"]  = self._acceleration
-        # else:
-        #     params["acceleration"] = "fir"
 
         params["acceleration"]  = self._acceleration
 
