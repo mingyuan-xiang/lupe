@@ -108,7 +108,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mac"

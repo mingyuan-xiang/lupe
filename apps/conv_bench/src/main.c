@@ -7,6 +7,24 @@
 #include <include/utils.h>
 #include <include/data.h>
 #include <include/fir_conv.h>
+#include <include/mac_conv.h>
+
+#define FIR_CONV(N) fir_conv(&input_##N##_meta, &output_##N##_meta, &weight_##N##_meta, &bias_##N##_meta);
+#define MAC_CONV(N) mac_conv(&input_##N##_meta, &output_##N##_meta, &weight_##N##_meta, &bias_##N##_meta);
+#define CONV_BENCH(FUNC, N, FREQ) { \
+  total_time = 0; \
+  for (uint16_t i = 0; i < 10; ++i) { \
+    start_timer(); \
+    FUNC(N) \
+    uint32_t t = stop_timer(); \
+    total_time += t; \
+  } \
+  uint16_t flt_size = weight_##N##_meta.dims[2]; \
+  uint16_t in_ch = input_##N##_meta.dims[1]; \
+  uint16_t out_ch = output_##N##_meta.dims[1]; \
+  uint16_t in_size = input_##N##_meta.dims[2]; \
+  msp_send_printf("total cycles (32767 Hz), repeat for %u times: %n (kernel size: %u, in_channels: %u, out_channels: %u, input size: %u)", FREQ, total_time, flt_size, in_ch, out_ch, in_size); \
+}
 
 void init() {
   watchdog_disable();
@@ -31,19 +49,116 @@ void exit() {
 int main() {
   init();
 
-  uint16_t l;
-  msp_send_printf("Test ResNet3\n");
-
   uint32_t total_time = 0;
-
-  for (uint16_t i = 0; i < 10; ++i) {
-    start_timer();
-    fir_conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
-    uint32_t t = stop_timer();
-    total_time += t;
-  }
-
-  msp_send_printf("total cycles (32767 Hz): %n", total_time);
+  
+  CONV_BENCH(FIR_CONV, 0, 10);
+  CONV_BENCH(FIR_CONV, 1, 10);
+  CONV_BENCH(FIR_CONV, 2, 10);
+  CONV_BENCH(FIR_CONV, 3, 10);
+  CONV_BENCH(FIR_CONV, 4, 10);
+  CONV_BENCH(FIR_CONV, 5, 10);
+  CONV_BENCH(FIR_CONV, 6, 10);
+  CONV_BENCH(FIR_CONV, 7, 10);
+  CONV_BENCH(FIR_CONV, 8, 10);
+  CONV_BENCH(FIR_CONV, 9, 10);
+  CONV_BENCH(FIR_CONV, 10, 10);
+  CONV_BENCH(FIR_CONV, 11, 10);
+  CONV_BENCH(FIR_CONV, 12, 10);
+  CONV_BENCH(FIR_CONV, 13, 10);
+  CONV_BENCH(FIR_CONV, 14, 10);
+  CONV_BENCH(FIR_CONV, 15, 10);
+  CONV_BENCH(FIR_CONV, 16, 10);
+  CONV_BENCH(FIR_CONV, 17, 10);
+  CONV_BENCH(FIR_CONV, 18, 10);
+  CONV_BENCH(FIR_CONV, 19, 10);
+  CONV_BENCH(FIR_CONV, 20, 10);
+  CONV_BENCH(FIR_CONV, 21, 10);
+  CONV_BENCH(FIR_CONV, 22, 10);
+  CONV_BENCH(FIR_CONV, 23, 10);
+  CONV_BENCH(FIR_CONV, 24, 10);
+  CONV_BENCH(FIR_CONV, 25, 10);
+  CONV_BENCH(FIR_CONV, 26, 10);
+  CONV_BENCH(FIR_CONV, 27, 10);
+  CONV_BENCH(FIR_CONV, 28, 10);
+  CONV_BENCH(FIR_CONV, 29, 10);
+  CONV_BENCH(FIR_CONV, 30, 10);
+  CONV_BENCH(FIR_CONV, 31, 10);
+  CONV_BENCH(FIR_CONV, 32, 10);
+  CONV_BENCH(FIR_CONV, 33, 10);
+  CONV_BENCH(FIR_CONV, 34, 10);
+  CONV_BENCH(FIR_CONV, 35, 10);
+  CONV_BENCH(FIR_CONV, 36, 10);
+  CONV_BENCH(FIR_CONV, 37, 10);
+  CONV_BENCH(FIR_CONV, 38, 10);
+  CONV_BENCH(FIR_CONV, 39, 10);
+  CONV_BENCH(FIR_CONV, 40, 10);
+  CONV_BENCH(FIR_CONV, 41, 10);
+  CONV_BENCH(FIR_CONV, 42, 10);
+  CONV_BENCH(FIR_CONV, 43, 10);
+  CONV_BENCH(FIR_CONV, 44, 10);
+  CONV_BENCH(FIR_CONV, 45, 10);
+  CONV_BENCH(FIR_CONV, 46, 10);
+  CONV_BENCH(FIR_CONV, 47, 10);
+  CONV_BENCH(FIR_CONV, 48, 10);
+  CONV_BENCH(FIR_CONV, 49, 10);
+  CONV_BENCH(FIR_CONV, 50, 10);
+  CONV_BENCH(FIR_CONV, 51, 10);
+  CONV_BENCH(FIR_CONV, 52, 10);
+  CONV_BENCH(FIR_CONV, 53, 10);
+  CONV_BENCH(FIR_CONV, 54, 10);
+  CONV_BENCH(FIR_CONV, 55, 10);
+  CONV_BENCH(FIR_CONV, 56, 10);
+  CONV_BENCH(FIR_CONV, 57, 10);
+  CONV_BENCH(FIR_CONV, 58, 10);
+  CONV_BENCH(FIR_CONV, 59, 10);
+  CONV_BENCH(FIR_CONV, 60, 10);
+  CONV_BENCH(FIR_CONV, 61, 10);
+  CONV_BENCH(FIR_CONV, 62, 10);
+  CONV_BENCH(FIR_CONV, 63, 10);
+  CONV_BENCH(FIR_CONV, 64, 10);
+  CONV_BENCH(FIR_CONV, 65, 10);
+  CONV_BENCH(FIR_CONV, 66, 10);
+  CONV_BENCH(FIR_CONV, 67, 10);
+  CONV_BENCH(FIR_CONV, 68, 10);
+  CONV_BENCH(FIR_CONV, 69, 10);
+  CONV_BENCH(FIR_CONV, 70, 10);
+  CONV_BENCH(FIR_CONV, 71, 10);
+  CONV_BENCH(FIR_CONV, 72, 10);
+  CONV_BENCH(FIR_CONV, 73, 10);
+  CONV_BENCH(FIR_CONV, 74, 10);
+  CONV_BENCH(FIR_CONV, 75, 10);
+  CONV_BENCH(FIR_CONV, 76, 10);
+  CONV_BENCH(FIR_CONV, 77, 10);
+  CONV_BENCH(FIR_CONV, 78, 10);
+  CONV_BENCH(FIR_CONV, 79, 10);
+  CONV_BENCH(FIR_CONV, 80, 10);
+  CONV_BENCH(FIR_CONV, 81, 10);
+  CONV_BENCH(FIR_CONV, 82, 10);
+  CONV_BENCH(FIR_CONV, 83, 10);
+  CONV_BENCH(FIR_CONV, 84, 10);
+  CONV_BENCH(FIR_CONV, 85, 10);
+  CONV_BENCH(FIR_CONV, 86, 10);
+  CONV_BENCH(FIR_CONV, 87, 10);
+  CONV_BENCH(FIR_CONV, 88, 10);
+  CONV_BENCH(FIR_CONV, 89, 10);
+  CONV_BENCH(FIR_CONV, 90, 10);
+  CONV_BENCH(FIR_CONV, 91, 10);
+  CONV_BENCH(FIR_CONV, 92, 10);
+  CONV_BENCH(FIR_CONV, 93, 10);
+  CONV_BENCH(FIR_CONV, 94, 10);
+  CONV_BENCH(FIR_CONV, 95, 10);
+  CONV_BENCH(FIR_CONV, 96, 10);
+  CONV_BENCH(FIR_CONV, 97, 10);
+  CONV_BENCH(FIR_CONV, 98, 10);
+  CONV_BENCH(FIR_CONV, 99, 10);
+  CONV_BENCH(FIR_CONV, 100, 10);
+  CONV_BENCH(FIR_CONV, 101, 10);
+  CONV_BENCH(FIR_CONV, 102, 10);
+  CONV_BENCH(FIR_CONV, 103, 10);
+  CONV_BENCH(FIR_CONV, 104, 10);
+  CONV_BENCH(FIR_CONV, 105, 10);
+  CONV_BENCH(FIR_CONV, 106, 10);
+  CONV_BENCH(FIR_CONV, 107, 10);
 
   exit();
 }

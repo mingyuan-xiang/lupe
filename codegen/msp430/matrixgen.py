@@ -4,6 +4,8 @@ Ignore sparse matrices for now.
 Reference: https://github.com/CMUAbstract/SONIC/blob/master/scripts/gen_headers.py
 """
 
+from colorama import Fore
+
 _header_list = [
     "libfixedAbstract/fixed.h",
     "libmatAbstract/mat.h",
@@ -79,7 +81,15 @@ class Matrix:
         # the current dimension
         strides = [1]
         for i in range(len(dims)-1, 0, -1):
-            strides.append(strides[-1] * dims[i])
+            s = strides[-1] * dims[i]
+            if s > 2**15:
+                print(
+                    Fore.RED +
+                    f'Stride exceeds limit for uin16_t (got shape {dims}). ' +
+                    'Set the stride to zero. There might be a overflow problem.'
+                )
+                s = 0
+            strides.append(s)
         strides.reverse()
         mat_struct += (
             "\t.strides = " +

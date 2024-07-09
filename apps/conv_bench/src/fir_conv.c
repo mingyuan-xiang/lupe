@@ -2,11 +2,6 @@
 #include <include/fir_conv.h>
 
 #define _LEA_DST_SIZE 1408
-#define _LEA_REMAIN_SIZE 1024 % _LEA_DST_SIZE
-#define _PADDING_TOP 1
-#define _PADDING_BOTTOM 1
-#define _PADDING_RIGHT 1
-#define _PADDING_LEFT 1
 
 /* assign the lea buffer pointer */
 #define lea_src (lea_buffer)
@@ -66,6 +61,8 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
 
+  uint16_t _LEA_REMAIN_SIZE = output_len % _LEA_DST_SIZE;
+
   uint32_t src_lea_addr = (uint32_t)lea_src;
   uint32_t dst_lea_addr = (uint32_t)lea_dst;
 
@@ -114,24 +111,6 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE] = 0;
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
-  /* Pad the input for (1, 1, 1, 1) */
-  DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
-  uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
-  uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
-  _q15* padding_ptr_in = input->data;
-  _q15* padding_ptr_out = output->data;
-  for (uint16_t i = 0; i < in_channels; ++i) {
-    padding_ptr_out += input_line_size;
-    for (uint16_t j = 0; j < input_line_num; ++j) {
-      padding_ptr_out += _PADDING_LEFT;
-      DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
-      padding_ptr_in += input_line_size_bf;
-      padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
-    }
-    padding_ptr_out += input_line_size;
-  }
-
-  DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
   DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(output));
 
   /* convolution */
