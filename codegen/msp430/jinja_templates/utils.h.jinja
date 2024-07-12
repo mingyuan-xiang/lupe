@@ -59,17 +59,23 @@ extern int16_t* offset_vector;
   __lupe_data16_write_addr((DMA0SA), (src)); \
   __lupe_data16_write_addr((DMA0DA), (dst)); \
   DMA0SZ = size; \
+  uint16_t interruptState = __get_interrupt_state(); \
+  __disable_interrupt(); \
   DMA0CTL |= DMA_EN_SIG; \
   __bis_SR_register(GIE + LPM0_bits); \
+  __set_interrupt_state(interruptState); \
 }
 
 #define DMA_setWord(dst, word, size) { \
-  DMA0CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE; \
-  __lupe_data16_write_addr((DMA0SA), ((uintptr_t)(&word))); \
-  __lupe_data16_write_addr((DMA0DA), (dst)); \
-  DMA0SZ = size; \
-  DMA0CTL |= DMA_EN_SIG; \
+  DMA1CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE; \
+  __lupe_data16_write_addr((DMA1SA), ((uintptr_t)(&word))); \
+  __lupe_data16_write_addr((DMA1DA), (dst)); \
+  DMA1SZ = size; \
+  uint16_t interruptState = __get_interrupt_state(); \
+  __disable_interrupt(); \
+  DMA1CTL |= DMA_EN_SIG; \
   __bis_SR_register(GIE + LPM0_bits); \
+  __set_interrupt_state(interruptState); \
 }
 {% else %}
 #define DMA_makeTransfer(src, dst, size) {\

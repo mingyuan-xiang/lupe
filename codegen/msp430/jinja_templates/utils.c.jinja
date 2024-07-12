@@ -44,6 +44,9 @@ void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
     DMA_initialization(0);
+{%- if dma_opt %}
+    DMA_initialization(1);
+{%- endif %}
 {%- if lea_opt %}
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {
