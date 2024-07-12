@@ -7,7 +7,11 @@
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
 
-#define LEA_SIZE 1600
+
+#define LEA_FLT_SIZE 400
+#define LEA_SRC_SIZE 400
+#define LEA_DST_SIZE 400
+#define LEA_TMP_SIZE 400
 
 #define LUPE_MIN 0x8000
 #define LUPE_Q15_MAX 32766 // 2^15 - 2
@@ -15,8 +19,12 @@
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
 
 
-extern _q15 lea_buffer[];
+extern _q15 lea_flt[];
+extern _q15 lea_src[];
+extern _q15 lea_tmp[];
+extern _q15 lea_dst[];
 extern _iq31 lea_res[];
+
 
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
 extern MSP_LEA_FIR_PARAMS* lea_fir_params;
@@ -31,32 +39,17 @@ extern int16_t* offset_vector;
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
 
 
-// DMAEN | DMAREQ
-#define DMA_EN_SIG 0x0011
-
-#define _lupe_data16_write_addr(addr, src) ({ \
-  uintptr_t __src = src; \
-  __asm__  __volatile__ ("movx.a %1, %0\n\t" : "=m"(addr) : "r"(__src)); \
-})
-
-#define __lupe_data16_write_addr(addr, src) _lupe_data16_write_addr((addr), (src))
-
 #define DMA_makeTransfer(src, dst, size) {\
-  __lupe_data16_write_addr((DMA0SA), (src)); \
-  __lupe_data16_write_addr((DMA0DA), (dst)); \
-  DMA0SZ = size; \
-  DMA0CTL |= DMA_EN_SIG; \
-  __bis_SR_register(GIE + LPM0_bits); \
+	DMA_setTransferSize(DMA_CHANNEL_0, size); \
+	DMA_setSrcAddress(DMA_CHANNEL_0, src, DMA_DIRECTION_INCREMENT); \
+  DMA_setDstAddress(DMA_CHANNEL_0, dst, DMA_DIRECTION_INCREMENT); \
+	DMA_enableTransfers(DMA_CHANNEL_0); \
+  uint16_t interruptState = __get_interrupt_state(); \
+  __disable_interrupt(); \
+  DMA_startTransfer(DMA_CHANNEL_0); \
+	__bis_SR_register(GIE + LPM0_bits); \
+	__set_interrupt_state(interruptState); \
 }
-
-#define DMA_setWord(dst, word, size) {\
-  __lupe_data16_write_addr((DMA1SA), ((uintptr_t)(&word))); \
-  __lupe_data16_write_addr((DMA1DA), (dst)); \
-  DMA1SZ = size; \
-  DMA1CTL |= DMA_EN_SIG; \
-  __bis_SR_register(GIE + LPM0_bits); \
-}
-
 
 
 void add_init(uint16_t length);

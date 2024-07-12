@@ -22,8 +22,8 @@ int16_t* offset_vector;
 
 static int DMA_is_init = 0;
 
-#define DMA_initialization() { \
-  uint8_t ch = DMA_CHANNEL_0; \
+#define DMA_initialization(CHANNEL) { \
+  uint8_t ch = DMA_CHANNEL_##CHANNEL; \
   uint16_t transferModeSelect = DMA_TRANSFER_BLOCK; \
   uint8_t transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD; \
   uint8_t triggerTypeSelect = DMA_TRIGGER_RISINGEDGE; \
@@ -38,13 +38,12 @@ static int DMA_is_init = 0;
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) &= 0xFF00; \
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) |= triggerSourceSelect; \
   } \
-  DMA_enableInterrupt(ch); \
 }
 
 void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
-    DMA_initialization();
+    DMA_initialization(0);
 {%- if lea_opt %}
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {

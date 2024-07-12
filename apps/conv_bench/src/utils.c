@@ -1,7 +1,8 @@
 #include <include/utils.h>
-#include <stdint.h>
-
-DSPLIB_DATA(lea_buffer, 2) _q15 lea_buffer[LEA_SIZE];
+DSPLIB_DATA(lea_flt, 2) _q15 lea_flt[LEA_FLT_SIZE];
+DSPLIB_DATA(lea_src, 2) _q15 lea_src[LEA_SRC_SIZE];
+DSPLIB_DATA(lea_dst, 2) _q15 lea_dst[LEA_DST_SIZE];
+DSPLIB_DATA(lea_tmp, 2) _q15 lea_tmp[LEA_TMP_SIZE];
 DSPLIB_DATA(lea_res, 4) _iq31 lea_res[2];
 
 MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
@@ -16,14 +17,14 @@ int16_t* offset_vector;
 
 static int DMA_is_init = 0;
 
-#define DMA_initialization(channel) { \
-  uint8_t ch = DMA_CHANNEL_##channel; \
+#define DMA_initialization() { \
+  uint8_t ch = DMA_CHANNEL_0; \
   uint16_t transferModeSelect = DMA_TRANSFER_BLOCK; \
   uint8_t transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD; \
   uint8_t triggerTypeSelect = DMA_TRIGGER_RISINGEDGE; \
   uint8_t triggerOffset = (ch >> 4); \
   uint8_t triggerSourceSelect = DMA_TRIGGERSOURCE_0; \
-  HWREG16(DMA_BASE + ch + OFS_DMA##channel##CTL) = \
+  HWREG16(DMA_BASE + ch + OFS_DMA0CTL) = \
     transferModeSelect + transferUnitSelect + triggerTypeSelect; \
   if(triggerOffset & 0x01) { \
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) &= 0x00FF; \
@@ -38,20 +39,7 @@ static int DMA_is_init = 0;
 void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
-    DMA_initialization(0);
-
-    DMA_initialization(1);
-    /*
-     * set DMA address direction
-     * use channel 0 for array movement
-     * use channel 1 for word set
-     */
-    DMA0CTL &= ~(DMASRCINCR_3);
-    DMA0CTL |= DMA_DIRECTION_INCREMENT;
-    DMA0CTL &= ~(DMADSTINCR_3);
-    DMA0CTL |= (DMA_DIRECTION_INCREMENT << 2);
-
-    DMA1CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE;
+    DMA_initialization();
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {
     msp_lea_init();

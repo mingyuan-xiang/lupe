@@ -6,10 +6,10 @@
 
 #include <include/utils.h>
 #include <include/data.h>
-#include <include/fir_conv.h>
+// #include <include/fir_conv.h>
 #include <include/mac_conv.h>
 
-#define FIR_CONV(N) fir_conv(&input_##N##_meta, &output_##N##_meta, &weight_##N##_meta, &bias_##N##_meta);
+// #define FIR_CONV(N) fir_conv(&input_##N##_meta, &output_##N##_meta, &weight_##N##_meta, &bias_##N##_meta);
 #define MAC_CONV(N) mac_conv(&input_##N##_meta, &output_##N##_meta, &weight_##N##_meta, &bias_##N##_meta);
 #define CONV_BENCH(FUNC, N, FREQ) { \
   total_time = 0; \

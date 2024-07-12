@@ -45,8 +45,7 @@ extern int16_t* offset_vector;
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
 
 {% if dma_opt %}
-// DMAEN | DMAREQ
-#define DMA_EN_SIG 0x0011
+#define DMA_EN_SIG (DMAEN | DMAREQ)
 
 #define _lupe_data16_write_addr(addr, src) ({ \
   uintptr_t __src = src; \
