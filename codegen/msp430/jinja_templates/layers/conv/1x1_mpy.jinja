@@ -70,29 +70,29 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_len = input->strides[1];
   uint16_t input_size = input->strides[0];
 
-  uint32_t output_fram_addr = (uint32_t)(output->data);
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
   {%- if stride_row > 1 or stride_col > 1 %}
-  uint32_t input_fram_addr = (uint32_t)lupe_buffer_meta.data;
+  uintptr_t input_fram_addr = (uintptr_t)lupe_buffer_meta.data;
   {%- else %}
-  uint32_t input_fram_addr = (uint32_t)(input->data);
+  uintptr_t input_fram_addr = (uintptr_t)(input->data);
   {%- endif %}
-  uint32_t input_channel_addr = input_fram_addr;
-  uint32_t tmp_input_addr = input_channel_addr;
-  uint32_t output_addr_offset = output_len * sizeof(int16_t);
+  uintptr_t input_channel_addr = input_fram_addr;
+  uintptr_t tmp_input_addr = input_channel_addr;
+  uintptr_t output_addr_offset = output_len * sizeof(int16_t);
 
   uint16_t input_line_size = input->dims[3];
 
   uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {%- if (out_len % lea_dst_size) != 0 %}
-  uint32_t remain_size_offset = lea_remain_size * sizeof(int16_t);
+  uintptr_t remain_size_offset = lea_remain_size * sizeof(int16_t);
   {%- endif %}
   {%- if out_len >= lea_dst_size %}
-  uint32_t lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
+  uintptr_t lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
   {%- endif %}
 
-  uint32_t lea_src_addr = (uint32_t)lea_src;
-  uint32_t lea_dst_addr = (uint32_t)lea_dst;
+  uintptr_t lea_src_addr = (uintptr_t)lea_src;
+  uintptr_t lea_dst_addr = (uintptr_t)lea_dst;
 
   {%- if lea_opt %}
   add_init(lea_remain_size_aligned);
@@ -114,7 +114,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t weight_pos = 0;
   uint16_t tmp_weight_pos = 0;
   {% if dma_opt %}
-  uint32_t out_bias_addr = output_fram_addr;
+  uintptr_t out_bias_addr = output_fram_addr;
   {%- else %}
   uint16_t out_bias_pos = 0;
   {%- endif %}

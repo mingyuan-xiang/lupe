@@ -1,5 +1,6 @@
-#define _LEA_DST_SIZE {{ lea_dst_size }}
-#define _LEA_REMAIN_SIZE {{ out_len }} % _LEA_DST_SIZE
+#define _LEA_MAC_SIZE {{ lea_src_size }}
+#define _FLT_LEN {{ in_ch * flt_len }}
+#define _LEA_REMAIN_SIZE _FLT_LEN % _LEA_MAC_SIZE
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -16,22 +17,7 @@
 #define _INPUT_LINE_SIZE {{ in_line_size }}
 #define _STRIDE_ROW_SIZE {{ stride_row }}
 #define _STRIDE_COL_SIZE {{ stride_col }}
-{%- if (in_len * flt_len) % 2 != 0 %}
-#define _FLT_LEN {{ in_len * flt_len }}
-{%- endif %}
 {% if lea_opt %}
-static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
-  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
-  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
-
-  /* Load source arguments to LEA. */
-  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
-  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
-
-  /* Invoke the LEACMD__ADDMATRIX command. */
-  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
-}
-
 static inline __attribute__((always_inline)) void new_mac_q15(const _q15 *srcA, const _q15 *srcB) {
   lea_mac_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
 
@@ -52,17 +38,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
 
-  uint32_t flt_lea_addr = (uint32_t)lea_flt;
-  uint32_t flt_fram_addr = (uint32_t)(weight->data);
-  uint32_t flt_addr_offset = flt_len * sizeof(int16_t);
-  uint32_t mac_size = weight->strides[0];
-  uint32_t flt_channel_offset = mac_size * sizeof(int16_t);
-  uint32_t flt_addr_row_offset = kernel_size * sizeof(int16_t);
-  uint32_t input_fram_addr = (uint32_t)(input->data);
-  uint32_t input_channel_addr = input_fram_addr;
-  uint32_t input_channel_offset = input_len * sizeof(int16_t);
-  uint32_t output_fram_addr = (uint32_t)(output->data);
-  uint32_t output_addr_offset = output_len * sizeof(int16_t);
+  uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
+  uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  uintptr_t flt_addr_offset = flt_len * sizeof(int16_t);
+  uintptr_t mac_size = weight->strides[0];
+  uintptr_t flt_channel_offset = mac_size * sizeof(int16_t);
+  uintptr_t flt_addr_row_offset = kernel_size * sizeof(int16_t);
+  uintptr_t input_fram_addr = (uintptr_t)(input->data);
+  uintptr_t input_channel_addr = input_fram_addr;
+  uintptr_t input_channel_offset = input_len * sizeof(int16_t);
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
+  uintptr_t output_addr_offset = output_len * sizeof(int16_t);
 
   uint16_t input_line_size = input->dims[3];
   uint16_t output_line_size = output->dims[3];
@@ -71,17 +57,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_line_strided_size = input_line_size * _STRIDE_ROW_SIZE;
   uint16_t input_line_size_strided_offset = input_line_strided_size * sizeof(int16_t);
 
-  uint32_t src_lea_addr = (uint32_t)lea_src;
-  {% if (in_len * flt_len) % 2 != 0 %}
+  uintptr_t src_lea_addr = (uintptr_t)lea_src;
+  {% if (in_ch * flt_len) % 2 != 0 %}
   /* set the aligned position to be zeros */
   lea_src[_FLT_LEN] = 0;
   lea_flt[_FLT_LEN] = 0;
   {%- endif %}
 
   {%- if lea_opt %}
-  mac_init(MAKE_ALIGN_2(flt_len));
+  mac_init(MAKE_ALIGN_2(_FLT_LEN));
   {%- else %}
-  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(flt_len) };
+  msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(_FLT_LEN) };
   {%- endif %}
   {%- if has_adaptive_gen_mem %}
   uint16_t dst_pos;
@@ -123,7 +109,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       padding_ptr_out += _PADDING_RIGHT;
       {%- else %}
-      DMA_makeTransfer((uint32_t)padding_ptr_in, (uint32_t)padding_ptr_out, input_line_size_bf);
+      DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
       padding_ptr_in += input_line_size_bf;
       padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
       {%- endif %}
@@ -136,7 +122,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
   {%- endif %}
   {%- if dma_opt %}
-  uint32_t out_bias_addr = output_fram_addr;
+  uintptr_t out_bias_addr = output_fram_addr;
   {%- else %}
   uint16_t out_bias_pos = 0;
   {%- endif %}
@@ -160,7 +146,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     for (uint16_t n = 0; n < output_line_size; ++n) {
       uint16_t mac_buffer_pos = 0;
       uint16_t tmp_channel_pos = tmp_input_pos;
-      uint32_t flt_tmp_addr = flt_fram_addr;
+      uintptr_t flt_tmp_addr = flt_fram_addr;
 
       /* assemble input to a matrix in mac_buffer */
       for (uint16_t i = 0; i < in_channels; ++i) {
@@ -187,8 +173,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       uint16_t tmp_out_pos = out_pos;
       for (uint16_t j = 0; j < out_channels; ++j) {
         DMA_makeTransfer(flt_tmp_addr, flt_lea_addr, mac_size);
-
+        {% if lea_opt %}
         new_mac_q15(lea_src, lea_flt);
+        {%- else %}
+        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+        {%- endif %}
 
         int16_t mac_out = (int16_t)(lea_res[0] >> {{ 16 - qf }});
         output->data[tmp_out_pos] = __saturated_add_q15 (mac_out, output->data[tmp_out_pos]);

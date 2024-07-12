@@ -61,25 +61,25 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   uint16_t input_len = input->strides[1];
 
-  uint32_t flt_lea_addr = (uint32_t)lea_flt;
-  uint32_t flt_fram_addr = (uint32_t)(weight->data);
-  uint32_t flt_addr_offset = in_channels * sizeof(int16_t);
-  uint32_t mac_fram_offset = in_channels * sizeof(int16_t);
-  uint32_t output_fram_addr = (uint32_t)(output->data);
+  uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
+  uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  uintptr_t flt_addr_offset = in_channels * sizeof(int16_t);
+  uintptr_t mac_fram_offset = in_channels * sizeof(int16_t);
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
 
   uint16_t input_line_size = input->dims[3];
 
   uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {%- if (out_len % lea_dst_size) != 0 %}
-  uint32_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
+  uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
   {%- endif %}
   {%- if out_len >= lea_dst_size %}
-  uint32_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
+  uintptr_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
   {%- endif %}
 
-  uint32_t lea_src_addr = (uint32_t)lea_src;
-  uint32_t lea_dst_addr = (uint32_t)lea_dst;
+  uintptr_t lea_src_addr = (uintptr_t)lea_src;
+  uintptr_t lea_dst_addr = (uintptr_t)lea_dst;
   {% if in_ch % 2 != 0 %}
   /* set the aligned position to be zeros */
   lea_src[_INPUT_CHANNEL_SIZE] = 0;
@@ -105,10 +105,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t stride_col = _STRIDE_COL_SIZE;
   {%- endif %}
 
-  {%- if dma_opt %}
-  uint16_t zero = 0;
-  {%- endif %}
-
   /* Rebuild the input for MAC */
   uint16_t ptwise_pos = 0;
   for (uint16_t r = 0; r < input_len; r += stride_row) {
@@ -130,7 +126,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- else %}
     offset_params.offset = bias->data[i];
     {%- endif %}
-    uint32_t mac_input_addr = (uint32_t)lupe_buffer_meta.data;
+    uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data;
 
     DMA_makeTransfer(flt_fram_addr, flt_lea_addr, in_channels);
 

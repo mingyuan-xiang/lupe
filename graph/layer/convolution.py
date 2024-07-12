@@ -76,11 +76,11 @@ class Convolution2D(LupeLayer):
                 self.output_size[2] * self.output_size[3],
                 self.kernel_shape[3] * self.kernel_shape[3]
             )
-        elif self._acceleration  == "1x1_mac":
+        if self._acceleration  == "1x1_mac":
             return (
                 1, self.output_size[2] * self.output_size[3], self.input_size[1]
             )
-        elif self._acceleration  == "1x1_mpy":
+        if self._acceleration  == "1x1_mpy":
             return (
                 1, self.input_size[1], self.output_size[2] * self.output_size[3]
             )
@@ -97,9 +97,18 @@ class Convolution2D(LupeLayer):
     def _decide_acceleration(self):
         """Decide how which operation to use"""
         # TODO: We should do something smarter for the decider
+        if ("enhanced_acc" in self.opt_config and
+            self.opt_config["enhanced_acc"]):
+            if ("adaptive_gen_lea" not in self.opt_config or
+                not self.opt_config["adaptive_gen_lea"]):
+                return "enhanced_mac"
+
+            if self.kernel_shape[-1] == 3:
+                return "enhanced_mac"
+
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 5:
             if self.input_size[-1] < 14:
@@ -108,10 +117,10 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "fir"
+            return "mac"
 
         if self.kernel_shape[-1] == 1:
-            return "1x1_mac"
+            return "1x1_mpy"
 
         return "fir"
 

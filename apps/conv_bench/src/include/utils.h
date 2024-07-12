@@ -18,8 +18,6 @@
 extern _q15 lea_buffer[];
 extern _iq31 lea_res[];
 
-extern DMA_initParam dma_config;
-
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
 extern MSP_LEA_FIR_PARAMS* lea_fir_params;
 extern MSP_LEA_MAC_PARAMS* lea_mac_params;
@@ -52,7 +50,7 @@ extern int16_t* offset_vector;
 }
 
 #define DMA_setWord(dst, word, size) {\
-  __lupe_data16_write_addr((DMA1SA), ((uint32_t)(&word))); \
+  __lupe_data16_write_addr((DMA1SA), ((uintptr_t)(&word))); \
   __lupe_data16_write_addr((DMA1DA), (dst)); \
   DMA1SZ = size; \
   DMA1CTL |= DMA_EN_SIG; \

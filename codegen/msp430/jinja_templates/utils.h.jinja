@@ -30,7 +30,6 @@ extern _q15 lea_dst[];
 {%- endif %}
 extern _iq31 lea_res[];
 
-extern DMA_initParam dma_config;
 {% if lea_opt %}
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
 extern MSP_LEA_FIR_PARAMS* lea_fir_params;
@@ -56,7 +55,8 @@ extern int16_t* offset_vector;
 
 #define __lupe_data16_write_addr(addr, src) _lupe_data16_write_addr((addr), (src))
 
-#define DMA_makeTransfer(src, dst, size) {\
+#define DMA_makeTransfer(src, dst, size) { \
+  DMA0CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_3 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE; \
   __lupe_data16_write_addr((DMA0SA), (src)); \
   __lupe_data16_write_addr((DMA0DA), (dst)); \
   DMA0SZ = size; \
@@ -64,22 +64,23 @@ extern int16_t* offset_vector;
   __bis_SR_register(GIE + LPM0_bits); \
 }
 
-#define DMA_setWord(dst, word, size) {\
-  __lupe_data16_write_addr((DMA1SA), ((uint32_t)(&word))); \
-  __lupe_data16_write_addr((DMA1DA), (dst)); \
-  DMA1SZ = size; \
-  DMA1CTL |= DMA_EN_SIG; \
+#define DMA_setWord(dst, word, size) { \
+  DMA0CTL = DMADT_1 | DMADSTINCR_3 | DMASRCINCR_0 | DMADSTBYTE__WORD | DMASRCBYTE__WORD | DMAIE; \
+  __lupe_data16_write_addr((DMA0SA), ((uintptr_t)(&word))); \
+  __lupe_data16_write_addr((DMA0DA), (dst)); \
+  DMA0SZ = size; \
+  DMA0CTL |= DMA_EN_SIG; \
   __bis_SR_register(GIE + LPM0_bits); \
 }
 {% else %}
 #define DMA_makeTransfer(src, dst, size) {\
-	DMA_setTransferSize(dma_config.channelSelect, size); \
-	DMA_setSrcAddress(dma_config.channelSelect, src, DMA_DIRECTION_INCREMENT); \
-  DMA_setDstAddress(dma_config.channelSelect, dst, DMA_DIRECTION_INCREMENT); \
-	DMA_enableTransfers(dma_config.channelSelect); \
+	DMA_setTransferSize(DMA_CHANNEL_0, size); \
+	DMA_setSrcAddress(DMA_CHANNEL_0, src, DMA_DIRECTION_INCREMENT); \
+  DMA_setDstAddress(DMA_CHANNEL_0, dst, DMA_DIRECTION_INCREMENT); \
+	DMA_enableTransfers(DMA_CHANNEL_0); \
   uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
-  DMA_startTransfer(dma_config.channelSelect); \
+  DMA_startTransfer(DMA_CHANNEL_0); \
 	__bis_SR_register(GIE + LPM0_bits); \
 	__set_interrupt_state(interruptState); \
 }
