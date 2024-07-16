@@ -1,5 +1,9 @@
-#define _LEA_DST_SIZE {{ lea_dst_size }}
-#define _LEA_REMAIN_SIZE {{ out_len }} % _LEA_DST_SIZE
+{% if global_mem_buffer %}
+#define _LEA_ADD_SIZE {{ lea_buffer_size }}
+{%- else %}
+#define _LEA_ADD_SIZE {{ lea_src_size }}
+{% endif %}
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -100,11 +104,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
 
   uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
-  {%- if (out_len % lea_dst_size) != 0 %}
+  {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
   uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
   {%- endif %}
-  {%- if out_len >= lea_dst_size %}
-  uintptr_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
+  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
+  uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
   {%- endif %}
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
   {% if stride_row > 1 %}
@@ -419,9 +423,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   /* add bias and left shift */
   output_fram_addr = (uintptr_t)(output->data);
 
-  _q15* lea_add = lea_dst;
-  {%- if out_len >= lea_dst_size %}
-  uint16_t add_size = _LEA_DST_SIZE;
+  _q15* lea_add = lea_src;
+  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
+  uint16_t add_size = _LEA_ADD_SIZE;
   {%- endif %}
   uintptr_t lea_add_addr = (uintptr_t)lea_add;
   for (uint16_t i = 0; i < out_channels; ++i) {
@@ -431,7 +435,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     offset_params.offset = bias->data[i];
     {%- endif %}
 
-    {%- if (global_mem_buffer and (out_len % lea_dst_size) != 0) or ((not global_mem_buffer) and (out_len % lea_dst_size) != 0) %}
+    {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
 
     {%- if lea_opt %}
     lea_offset_params->vectorSize = lea_remain_size_aligned;
@@ -462,7 +466,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     DMA_makeTransfer(lea_add_addr, output_fram_addr, lea_remain_size);
     output_fram_addr += output_remain_size_offset;
     {%- endif %}
-    {%- if (global_mem_buffer and out_len >= lea_dst_size) or ((not global_mem_buffer) and out_len >= lea_dst_size) %}
+    {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
 
     {%- if lea_opt %}
     lea_offset_params->vectorSize = add_size;

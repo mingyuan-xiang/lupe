@@ -1,5 +1,5 @@
 #define _LEA_DST_SIZE {{ lea_dst_size }}
-#define _LEA_REMAIN_SIZE {{ out_len }} % _LEA_DST_SIZE
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_DST_SIZE)
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -16,7 +16,7 @@
 {% if stride_row > 1 %}
 #define _INPUT_LINE_SIZE {{ in_line_size }}
 #define _STRIDE_ROW_SIZE {{ stride_row }}
-#define _STRIDE_ROW_LINE_SIZE _STRIDE_ROW_SIZE * _INPUT_LINE_SIZE
+#define _STRIDE_ROW_LINE_SIZE (_STRIDE_ROW_SIZE * _INPUT_LINE_SIZE)
 {%- endif %}
 {%- if stride_col > 1 %}
 #define _STRIDE_COL_SIZE {{ stride_col }}

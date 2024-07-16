@@ -1,5 +1,5 @@
-#define _LEA_DST_SIZE {{ lea_dst_size }}
-#define _LEA_REMAIN_SIZE {{ out_len }} % _LEA_DST_SIZE
+#define _LEA_ADD_SIZE {{ lea_dst_size }}
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -73,7 +73,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
   {%- endif %}
   {%- if out_len >= lea_dst_size %}
-  uintptr_t output_lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
+  uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
   {%- endif %}
 
   uintptr_t src_lea_addr = (uintptr_t)lea_src;
@@ -86,10 +86,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   {%- if lea_opt %}
   mac_init(MAKE_ALIGN_2(_FLT_LEN));
-  add_init(MAKE_ALIGN_2(_LEA_DST_SIZE));
+  add_init(MAKE_ALIGN_2(_LEA_ADD_SIZE));
   {%- else %}
   msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(_FLT_LEN) };
-  msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(_LEA_DST_SIZE) };
+  msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(_LEA_ADD_SIZE) };
   {%- endif %}
   {%- if has_adaptive_gen_mem %}
   uint16_t dst_pos;
@@ -294,13 +294,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       {%- if out_len >= lea_dst_size %}
       {%- if lea_opt %}
-      lea_add_params->vectorSize = _LEA_DST_SIZE;
+      lea_add_params->vectorSize = _LEA_ADD_SIZE;
       {%- else %}
-      add_params.length = _LEA_DST_SIZE;
+      add_params.length = _LEA_ADD_SIZE;
       {%- endif %}
 
-      for (uint16_t m = lea_remain_size; m < output_len; m += _LEA_DST_SIZE) {
-        for (uint16_t l = 0; l < _LEA_DST_SIZE; ++l) {
+      for (uint16_t m = lea_remain_size; m < output_len; m += _LEA_ADD_SIZE) {
+        for (uint16_t l = 0; l < _LEA_ADD_SIZE; ++l) {
           DMA_makeTransfer(mac_input_addr, src_lea_addr, _FLT_LEN);
           {%- if lea_opt %}
           new_mac_q15(lea_src, lea_flt);
@@ -312,17 +312,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           mac_input_addr += flt_addr_offset;
         }
 
-        DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _LEA_DST_SIZE);
+        DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _LEA_ADD_SIZE);
         {%- if lea_opt %}
         new_add_q15(lea_dst, lea_tmp, lea_dst);
         {%- else %}
         msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
         {%- endif %}
-        DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _LEA_DST_SIZE);
+        DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _LEA_ADD_SIZE);
 
         tmp_output_addr += output_lea_min_size_offset;
         {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-        tmp_output_pos += _LEA_DST_SIZE;
+        tmp_output_pos += _LEA_ADD_SIZE;
         {%- endif %}
       }
       {%- endif %}

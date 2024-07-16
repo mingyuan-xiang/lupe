@@ -117,7 +117,7 @@ class Convolution2D(LupeLayer):
             return "fir"
 
         if self.kernel_shape[-1] == 3:
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 1:
             return "1x1_mpy"
@@ -179,7 +179,7 @@ class Convolution2D(LupeLayer):
             elif self._acceleration == "enhanced_mac":
                 if opt_config["lea_size"] < 2 * mul:
                     raise ValueError("LEA array size noy big enough")
-                # 3 * size will always be smaller than opt_config["lea_size"]
+                # 2 * size will always be smaller than opt_config["lea_size"]
                 size = math.floor(opt_config["lea_size"] / 2) - mul
                 size = _size_converter(size)
                 lea_tmp_size = 0 # no need for lea_tmp buffer
@@ -277,6 +277,8 @@ class Convolution2D(LupeLayer):
             "out_len" : get_stride(self.output_size, 1),
             "in_len" : get_stride(self.input_size, 1),
             "flt_size" : self.kernel_shape[2],
+            "in_ch_flt_len" : (
+                self.input_size[1] * get_stride(self.kernel_shape, 1)),
             "in_line_size" : self.input_size[3], 
             "out_line_size" : self.output_size[3],
             "in_line_num" : self.input_size[2],
@@ -285,6 +287,7 @@ class Convolution2D(LupeLayer):
             "lea_flt_size" : lea_flt_size,
             "lea_tmp_size" : lea_tmp_size,
             "lea_dst_size" : lea_dst_size,
+            "lea_buffer_size" : opt_config["lea_size"],
             "qf" : weight_qf,
             "padding" : padding_params,
             "has_adaptive_gen_mem" : has_adaptive_gen_mem,
