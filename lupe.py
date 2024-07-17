@@ -107,7 +107,7 @@ def parse_opt_config(opt_config):
         if opt_config["global_mem_buffer"]:
             opt_config["lea_size"] = 1600
         else:
-            opt_config["lea_size"] = 400
+            opt_config["lea_size"] = 100
 
     if opt_config["lea_size"] % 2:
         raise ValueError("lea_size has to be multiple of 2")

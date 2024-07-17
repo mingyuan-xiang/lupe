@@ -108,7 +108,7 @@ class Convolution2D(LupeLayer):
 
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):
-            return "mac"
+            return "fir"
 
         if self.kernel_shape[-1] == 5:
             if self.input_size[-1] < 14:

@@ -38,6 +38,7 @@ static int DMA_is_init = 0;
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) &= 0xFF00; \
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) |= triggerSourceSelect; \
   } \
+  HWREG16(DMA_BASE + ch + OFS_DMA0CTL) |= DMAIE; \
 }
 
 void init_lupe() {
