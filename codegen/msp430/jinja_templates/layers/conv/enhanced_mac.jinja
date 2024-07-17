@@ -85,7 +85,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
   uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
+  uintptr_t mac_size = _LEA_REMAIN_SIZE;
+  {%- else %}
   uintptr_t mac_size = _LEA_SRC_SIZE;
+  {%- endif %}
   {% if in_ch_flt_len >= (lea_src_size - (lea_src_size % flt_len)) %}
   {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
   uintptr_t flt_channel_remain_offset = _LEA_REMAIN_SIZE * sizeof(int16_t);
@@ -214,8 +218,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) % 2 != 0 %}
       /* set the aligned position to be zeros */
-      lea_src[lea_mac_remain_size_aligned] = 0;
-      lea_flt[lea_mac_remain_size_aligned] = 0;
+      lea_src[_LEA_REMAIN_SIZE] = 0;
+      lea_flt[_LEA_REMAIN_SIZE] = 0;
       {%- endif %}
 
       /* assemble input to a matrix in mac_buffer */
@@ -223,8 +227,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- else %}
       {%- if (lea_src_size - (lea_src_size % flt_len)) % 2 != 0 %}
       /* set the aligned position to be zeros */
-      lea_src[lea_mac_size_aligned] = 0;
-      lea_flt[lea_mac_size_aligned] = 0;
+      lea_src[_LEA_SRC_SIZE] = 0;
+      lea_flt[_LEA_SRC_SIZE] = 0;
       {%- endif %}
 
       for (uint16_t i = 0; i < _LEA_SRC_SIZE_CHANNEL_CNT; ++i) {
@@ -298,8 +302,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       flt_tmp_addr += flt_channel_remain_offset;
       {%- if (lea_src_size - (lea_src_size % flt_len)) % 2 != 0 %}
       /* set the aligned position to be zeros */
-      lea_src[lea_mac_size_aligned] = 0;
-      lea_flt[lea_mac_size_aligned] = 0;
+      lea_src[_LEA_SRC_SIZE] = 0;
+      lea_flt[_LEA_SRC_SIZE] = 0;
       {%- endif %}
 
       {%- else %}
@@ -401,6 +405,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     set_offset(bias->data[i]);
     {%- else %}
     offset_params.offset = bias->data[i];
+    {%- endif %}
+
+    {%- if out_len % 2 != 0 %}
+    /* set the aligned position to be zeros */
+    lea_add[_LEA_ADD_REMAIN_SIZE] = 0;
     {%- endif %}
 
     {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}

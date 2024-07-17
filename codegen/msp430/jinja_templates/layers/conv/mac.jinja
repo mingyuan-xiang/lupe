@@ -258,6 +258,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       add_params.length = lea_remain_size_aligned;
       {%- endif %}
 
+      {%- if out_len % 2 != 0 %}
+      /* set the aligned position to be zeros */
+      lea_add[_LEA_REMAIN_SIZE] = 0;
+      {%- endif %}
+
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
       s = tmp_output_pos;
       {%- for n in range(out_len % lea_dst_size) %}
