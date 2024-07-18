@@ -1,6 +1,9 @@
 #include <buffer/include/add_buffer.h>
 
 #define _LEA_SRC_SIZE {{ lea_src_size }}
+#define _INPUT_SIZE {{ input_size }}
+#define _LEA_REMAIN_SIZE (_INPUT_SIZE % _LEA_SRC_SIZE)
+#define _LEA_LINE_SIZE_CNT (_INPUT_SIZE / _LEA_SRC_SIZE)
 
 {% if global_mem_buffer %}
 /* assign the lea buffer pointer */
@@ -23,10 +26,8 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output) {
-  uint16_t input_size = input->strides[0];
-  uint16_t lea_line_size_cnt = input_size / _LEA_SRC_SIZE;
-  uintptr_t lea_line_size_offset = _LEA_SRC_SIZE*sizeof(int16_t);
-  uint16_t lea_input_line_remain_size = input_size % _LEA_SRC_SIZE;
+  uintptr_t lea_line_size_offset = _LEA_SRC_SIZE * sizeof(int16_t);
+  uint16_t lea_input_line_remain_size = _LEA_REMAIN_SIZE;
   uintptr_t lea_input_line_remain_size_offset = lea_input_line_remain_size*sizeof(int16_t);
 
   uintptr_t input_0_fram_addr = (uintptr_t){{ layer_name }}_add_buffer_meta.data;
@@ -70,7 +71,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
   {%- else %}
   add_params.length = MAKE_ALIGN_2(_LEA_SRC_SIZE);
   {%- endif %}
-  for (uint16_t l = 0; l < lea_line_size_cnt; ++l) {
+  for (uint16_t l = 0; l < _LEA_LINE_SIZE_CNT; ++l) {
     DMA_makeTransfer(input_0_fram_addr, (uintptr_t)lea_src, _LEA_SRC_SIZE);
     DMA_makeTransfer(input_1_fram_addr, (uintptr_t)lea_tmp, _LEA_SRC_SIZE);
     {%- if lea_opt %}

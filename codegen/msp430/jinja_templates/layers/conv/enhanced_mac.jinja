@@ -317,7 +317,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       mac_params.length = lea_mac_size_aligned;
       {%- endif %}
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
-      for (uint16_t l = 0; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
+      for (uint16_t l = _LEA_REMAIN_SIZE; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
       {%- else %}
       for (uint16_t l = _LEA_SRC_SIZE; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
       {%- endif %}
