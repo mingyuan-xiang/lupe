@@ -323,7 +323,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       conv_flt = lea_flt;
 
       {%- if lea_opt %}
-      lea_conv_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      lea_fir_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
       lea_add_params->vectorSize = _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED;
       {%- if stride_col > 1 %}
       lea_deinterleave_params->vectorSize = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED;
@@ -423,7 +423,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if (in_line_size * out_line_num) >= ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) %}
 
       {%- if lea_opt %}
-      lea_conv_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
+      lea_fir_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
       lea_add_params->vectorSize = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
       {%- if stride_col > 1 %}
       lea_deinterleave_params->vectorSize = _DEINTERLEAVE_SIZE_ALIGNED;
