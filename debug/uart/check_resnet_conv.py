@@ -67,9 +67,9 @@ def get_weights(w_name, b_name):
 
 weight, bias = get_weights('onnx::Conv_117', 'onnx::Conv_118')
 res = F.conv2d(image, weight, bias=bias, padding=1)
-# x = F.relu6(res)
-# weight, bias = get_weights('onnx::Conv_120', 'onnx::Conv_121')
-# res = F.conv2d(x, weight, bias=bias, padding=1)
+x = F.relu6(res)
+weight, bias = get_weights('onnx::Conv_120', 'onnx::Conv_121')
+res = F.conv2d(x, weight, bias=bias, padding=1)
 # res = F.relu6(res)
 # weight, bias = get_weights('onnx::Conv_123', 'onnx::Conv_124')
 # res = F.conv2d(res, weight, bias=bias, padding=1)

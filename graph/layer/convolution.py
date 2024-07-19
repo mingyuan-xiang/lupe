@@ -89,7 +89,7 @@ class Convolution2D(LupeLayer):
 
     def flip(self):
         """If the layer should flip the weights"""
-        if self._acceleration == "fir":
+        if self._acceleration in ("fir", "enhanced_fir"):
             return True
 
         return False
