@@ -1,0 +1,266 @@
+#define _LEA_ADD_SIZE 400
+
+#define _LEA_REMAIN_SIZE (1024 % _LEA_ADD_SIZE)
+#define _PADDING_TOP 1
+#define _PADDING_BOTTOM 1
+#define _PADDING_RIGHT 1
+#define _PADDING_LEFT 1
+
+#define _FLT_SIZE_ALIGNED 4
+
+#define _STRIDE_ROW_SIZE 1
+#define _STRIDE_COL_SIZE 1
+
+#define _INPUT_ROW_SIZE 34
+#define _INPUT_COL_SIZE 34
+#define _KERNEL_ROW_SIZE 3
+#define _KERNEL_COL_SIZE 3
+#define _OUTPUT_ROW_SIZE ((_INPUT_ROW_SIZE - _KERNEL_ROW_SIZE + 1) / _STRIDE_ROW_SIZE)
+#define _FIR_OUTPUT_COL_SIZE (_INPUT_COL_SIZE - _KERNEL_COL_SIZE + 1)
+#define _OUTPUT_COL_SIZE (_FIR_OUTPUT_COL_SIZE / _STRIDE_COL_SIZE)
+#define _KERNEL_SIZE_ALIGNED MAKE_ALIGN_2(_KERNEL_COL_SIZE)
+
+#define _FIR_OVERLAP_SIZE (_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1)
+
+#define __LEA_SRC_SIZE 400
+/* _LEA_SRC_SIZE will always be mutiple of 2 */
+#define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2)
+#define _FIR_TOTAL_SIZE (_OUTPUT_ROW_SIZE * _INPUT_COL_SIZE)
+#define _FIR_INPUT_SIZE (_LEA_SRC_SIZE - (_LEA_SRC_SIZE % _INPUT_COL_SIZE))
+#define _FIR_INPUT_REMAIN_SIZE (_FIR_TOTAL_SIZE % _FIR_INPUT_SIZE)
+
+#define _FIR_OUTPUT_REMAIN_SIZE (_FIR_INPUT_REMAIN_SIZE - _KERNEL_SIZE_ALIGNED + 1)
+#define _FIR_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE)
+#define _FIR_ADD_OUTPUT_REMAIN_SIZE ((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * _FIR_OUTPUT_COL_SIZE)
+#define _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_REMAIN_SIZE)
+
+#define _FIR_OUTPUT_SIZE (_FIR_INPUT_SIZE - _KERNEL_SIZE_ALIGNED + 1)
+#define _FIR_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_SIZE)
+#define _FIR_ADD_OUTPUT_SIZE ((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * _FIR_OUTPUT_COL_SIZE)
+#define _FIR_ADD_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_SIZE)
+
+void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+  uint16_t in_channels = input->dims[1];
+  uint16_t out_channels = output->dims[1];
+  uint16_t output_len = output->strides[1];
+  uint16_t input_len = input->strides[1];
+  uint16_t kernel_size = weight->dims[2];
+
+  uintptr_t src_lea_addr = (uintptr_t)lea_src;
+  uintptr_t dst_lea_addr = (uintptr_t)lea_dst;
+
+  uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
+  uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  uintptr_t flt_addr_row_offset = kernel_size * sizeof(int16_t);
+  uintptr_t flt_addr_padding_offset = (kernel_size + 1) * sizeof(int16_t);
+  uintptr_t input_lea_addr = src_lea_addr;
+  uintptr_t input_fram_addr = (uintptr_t)(input->data);
+  uintptr_t input_channel_addr = input_fram_addr;
+  uintptr_t input_channel_offset = input_len * sizeof(int16_t);
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
+  uintptr_t output_addr_offset = output_len * sizeof(int16_t);
+  uintptr_t lea_tmp_addr = (uintptr_t)lea_tmp;
+  uintptr_t lea_tmp_addr_before_offset = (_FIR_OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE) * sizeof(int16_t);
+  uintptr_t lea_tmp_addr_before_st = lea_tmp_addr + lea_tmp_addr_before_offset;
+  uintptr_t lea_tmp_addr_before = lea_tmp_addr_before_st;
+  uintptr_t lea_tmp_addr_after_offset = _FIR_OUTPUT_COL_SIZE * sizeof(int16_t);
+  uintptr_t lea_tmp_addr_after_st = lea_tmp_addr + lea_tmp_addr_after_offset;
+  uintptr_t lea_tmp_addr_after = lea_tmp_addr_after_st;
+  uintptr_t input_remain_offset = _FIR_INPUT_REMAIN_SIZE * sizeof(int16_t);
+  uintptr_t input_offset = _FIR_INPUT_SIZE * sizeof(int16_t);
+  uintptr_t output_remain_offset = _FIR_ADD_OUTPUT_REMAIN_SIZE * sizeof(int16_t);
+  uintptr_t output_offset = _FIR_ADD_OUTPUT_SIZE * sizeof(int16_t);
+
+  int16_t* conv_flt = lea_flt;
+  uint16_t input_line_size = input->dims[3];
+  uint16_t output_line_num = output->dims[2];
+  uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
+
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
+  uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
+  uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
+  uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
+
+  msp_fir_q15_params conv_params = {
+    .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
+    .tapLength = MAKE_ALIGN_2(kernel_size),
+    .coeffs = lea_flt,
+    .enableCircularBuffer = false 
+  };
+  msp_add_q15_params add_params = { .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED };
+  msp_offset_q15_params offset_params = { .length = lea_remain_size_aligned, .offset = 0 };
+
+  
+  /* set the aligned position to be zeros */
+  uint16_t lea_reset_pos = 0;
+  for (uint16_t k = 0; k < kernel_size; ++k) {
+    lea_flt[lea_reset_pos] = 0;
+    lea_reset_pos += (kernel_size + 1);
+  }
+
+  lea_src[_INPUT_ROW_SIZE] = 0;
+  lea_src[_INPUT_ROW_SIZE + 1] = 0;
+
+  /* Pad the input for (1, 1, 1, 1) */
+  memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
+  uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
+  uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
+  _q15* padding_ptr_in = input->data;
+  _q15* padding_ptr_out = output->data;
+  for (uint16_t i = 0; i < in_channels; ++i) {
+    padding_ptr_out += input_line_size;
+    for (uint16_t j = 0; j < input_line_num; ++j) {
+      padding_ptr_out += _PADDING_LEFT;
+      DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
+      padding_ptr_in += input_line_size_bf;
+      padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
+    }
+    padding_ptr_out += input_line_size;
+  }
+
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
+  memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
+
+  /* convolution */
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    input_fram_addr = (uintptr_t)(input->data);
+    for (uint16_t j = 0; j < in_channels; ++j) {
+      uintptr_t tmp_output_addr = output_fram_addr;
+      input_channel_addr = input_fram_addr;
+      uintptr_t tmp_input_addr = input_channel_addr;
+
+      /* send kernel to LEA RAM */
+      /*
+      * pad zero to the beginning of the filter if the filter's size is
+      * not aligned to 2
+      */
+      flt_lea_addr += sizeof(uint16_t);
+
+      for (uint16_t k = 0; k < kernel_size; ++k) {
+        DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
+        flt_lea_addr += flt_addr_padding_offset;
+        flt_fram_addr += flt_addr_row_offset;
+      }
+      /* restore flt_lea_addr pointer to the beginning of the array */
+      flt_lea_addr = (uintptr_t)lea_flt;
+
+       /* send output to LEA RAM */
+      DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _FIR_ADD_OUTPUT_REMAIN_SIZE);
+      conv_flt = lea_flt;
+      conv_params.length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      add_params.length = _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED;
+
+      lea_src[_FIR_INPUT_REMAIN_SIZE] = 0;
+      lea_src[_FIR_INPUT_REMAIN_SIZE + 1] = 0;
+      memset(lea_src, 0, 400);
+
+      for (uint16_t k = 0; k < kernel_size; ++k) {
+        conv_params.coeffs = conv_flt;
+        lea_tmp_addr_before = lea_tmp_addr_before_st;
+        lea_tmp_addr_after = lea_tmp_addr_after_st;
+
+        /* send input to LEA RAM */
+        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
+
+        /* convolution */
+        msp_fir_q15(&conv_params, lea_src, lea_tmp);
+
+        /* skip the barbage values between two lines */
+        for (uint16_t l = _FIR_OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_REMAIN_SIZE; l += _FIR_OUTPUT_COL_SIZE) {
+          DMA_makeTransfer(lea_tmp_addr_before, lea_tmp_addr_after, _FIR_OUTPUT_COL_SIZE);
+          lea_tmp_addr_before += lea_tmp_addr_before_offset;
+          lea_tmp_addr_after += lea_tmp_addr_after_offset;
+        }
+
+        /* accumulate results for a 2D convolution */
+        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+
+        conv_flt += conv_params.tapLength;
+        tmp_input_addr += input_line_size_offset;
+      }
+
+      /* bring back output from LEA RAM */
+      DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _FIR_ADD_OUTPUT_REMAIN_SIZE);
+      input_channel_addr += input_remain_offset;
+      tmp_input_addr = input_channel_addr;
+      tmp_output_addr += output_remain_offset;
+
+      conv_params.length = _FIR_OUTPUT_SIZE_ALIGNED;
+      add_params.length = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
+
+      lea_src[_FIR_INPUT_SIZE] = 0;
+      lea_src[_FIR_INPUT_SIZE + 1] = 0;
+      memset(lea_src, 0, 400);
+      for (uint16_t n = _FIR_INPUT_REMAIN_SIZE; n < _FIR_TOTAL_SIZE; n += _FIR_INPUT_SIZE) {
+         /* send output to LEA RAM */
+        DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _FIR_ADD_OUTPUT_SIZE);
+        conv_flt = lea_flt;
+
+        for (uint16_t k = 0; k < kernel_size; ++k) {
+          conv_params.coeffs = conv_flt;
+          lea_tmp_addr_before = lea_tmp_addr_before_st;
+          lea_tmp_addr_after = lea_tmp_addr_after_st;
+
+          /* send input to LEA RAM */
+          DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
+
+          /* convolution */
+          msp_fir_q15(&conv_params, lea_src, lea_tmp);
+
+          /* skip the barbage values between two lines */
+          for (uint16_t l = _FIR_OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_SIZE; l += _FIR_OUTPUT_COL_SIZE) {
+            DMA_makeTransfer(lea_tmp_addr_before, lea_tmp_addr_after, _FIR_OUTPUT_COL_SIZE);
+            lea_tmp_addr_before += lea_tmp_addr_before_offset;
+            lea_tmp_addr_after += lea_tmp_addr_after_offset;
+          }
+
+          /* accumulate results for a 2D convolution */
+          msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+
+          conv_flt += conv_params.tapLength;
+          tmp_input_addr += input_line_size_offset;
+        }
+
+        /* bring back output from LEA RAM */
+        DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _FIR_ADD_OUTPUT_SIZE);
+        input_channel_addr += input_offset;
+        tmp_input_addr = input_channel_addr;
+        tmp_output_addr += output_offset;
+      }
+      input_fram_addr += input_channel_offset;
+    }
+    output_fram_addr += output_addr_offset;
+  }
+
+  /* add bias and left shift */
+  output_fram_addr = (uintptr_t)(output->data);
+
+  _q15* lea_add = lea_src;
+  uint16_t add_size = _LEA_ADD_SIZE;
+  uintptr_t lea_add_addr = (uintptr_t)lea_add;
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    offset_params.offset = bias->data[i];
+    offset_params.length = lea_remain_size_aligned;
+    add_params.length = lea_remain_size_aligned;
+
+    DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_remain_size);
+    
+    msp_add_q15(&add_params, lea_add, lea_add, lea_add);
+    msp_offset_q15(&offset_params, lea_add, lea_add);
+
+    DMA_makeTransfer(lea_add_addr, output_fram_addr, lea_remain_size);
+    output_fram_addr += output_remain_size_offset;
+    offset_params.length = add_size;
+    add_params.length = add_size;
+
+    for (uint16_t j = lea_remain_size; j < output_len; j += add_size) {
+      DMA_makeTransfer(output_fram_addr, lea_add_addr, add_size);
+      
+      msp_add_q15(&add_params, lea_add, lea_add, lea_add);
+      msp_offset_q15(&offset_params, lea_add, lea_add);
+
+      DMA_makeTransfer(lea_add_addr, output_fram_addr, add_size);
+      output_fram_addr += output_lea_min_size_offset;
+    }
+  }
+}
