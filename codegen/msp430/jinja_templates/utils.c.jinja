@@ -18,6 +18,9 @@ int16_t* fill_vector;
 uint16_t fill_vector_addr;
 MSP_LEA_ADDMATRIX_PARAMS* lea_offset_params;
 int16_t* offset_vector;
+MSP_LEA_DEINTERLEAVE_PARAMS* lea_deinterleave_params;
+uint16_t deinterleave_cmdId;
+uint16_t deinterleave_channel;
 {%- endif %}
 
 static int DMA_is_init = 0;
@@ -108,6 +111,32 @@ void mpy_init(uint16_t length) {
   lea_mpy_params->outputOffset = 1;
 }
 
+void deinterleave_init(uint16_t length, uint16_t channel, uint16_t numChannels) {
+  lea_deinterleave_params = (MSP_LEA_DEINTERLEAVE_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_DEINTERLEAVE_PARAMS)/sizeof(uint32_t));
+  lea_deinterleave_params->vectorSize = length;
+  lea_deinterleave_params->interleaveDepth = numChannels;
+
+  /* Determine which LEA deinterleave command to invoke. */
+  if (channel & 1) {
+    if (numChannels & 1) {
+      /* Invoke the LEACMD__DEINTERLEAVEODDODD command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEODDODD;
+    } else {
+      /* Invoke the LEACMD__DEINTERLEAVEODDEVEN command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEODDEVEN;
+    }
+  } else {
+    if (numChannels & 1) {
+      /* Invoke the LEACMD__DEINTERLEAVEEVENODD command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEEVENODD;
+    } else {
+      /* Invoke the LEACMD__DEINTERLEAVEEVENEVEN command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEEVENEVEN;
+    }
+  }
+  deinterleave_channel = channel;
+}
+
 void add_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));
 }
@@ -132,6 +161,10 @@ void fill_clear() {
 
 void mpy_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_MPYMATRIX_PARAMS)/sizeof(uint32_t));
+}
+
+void deinterleave_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_DEINTERLEAVE_PARAMS)/sizeof(uint32_t));
 }
 {%- endif %}
 

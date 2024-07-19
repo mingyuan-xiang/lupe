@@ -68,6 +68,17 @@ static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src
   /* Invoke the LEACMD__ADDMATRIX command. */
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
+
+static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q15* src, _q15* dst) {
+  lea_deinterleave_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(&src[deinterleave_channel]);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_deinterleave_params);
+
+  /* Invoke the command. */
+  msp_lea_invokeCommand(deinterleave_cmdId);
+}
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
@@ -115,6 +126,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_line_strided_size_offset = _INPUT_LINE_SIZE * _STRIDE_ROW_SIZE * sizeof(int16_t);
   {%- endif %}
 
+  {% if lea_opt %}
+  {%- if stride_col > 1 %}
+  deinterleave_init(MAKE_ALIGN_2(output_line_size), 0, _STRIDE_COL_SIZE);
+  {%- endif %}
+  uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
+  add_init(MAKE_ALIGN_2(output_line_size));
+  fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
+  offset_init(lea_remain_size_aligned);
+  {%- else %}
   {%- if stride_col > 1 %}
   msp_deinterleave_q15_params deinterleave_params = {
     .length = MAKE_ALIGN_2(output_line_size),
@@ -122,12 +142,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     .numChannels = _STRIDE_COL_SIZE
   };
   {%- endif %}
-  {% if lea_opt %}
-  uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
-  add_init(MAKE_ALIGN_2(output_line_size));
-  fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
-  offset_init(lea_remain_size_aligned);
-  {%- else %}
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
     .tapLength = MAKE_ALIGN_2(kernel_size),
@@ -342,11 +356,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           * stride
           * Use lea deinterleave and store it in the lea_src
           */
-          msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_src);
           {% if lea_opt %}
+          new_deinterleave_q15(lea_tmp, lea_src);
+
           /* accumulate results for a 2D convolution */
           new_add_q15(lea_dst, lea_src, lea_dst);
           {%- else %}
+          msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_src);
+
+          /* accumulate results for a 2D convolution */
           msp_add_q15(&add_params, lea_dst, lea_src, lea_dst);
           {%- endif %}
 
@@ -510,5 +528,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   offset_clear();
   fir_clear();
   add_clear();
+  {%- if stride_col > 1 %}
+  deinterleave_clear();
+  {%- endif %}
   {%- endif %}
 }

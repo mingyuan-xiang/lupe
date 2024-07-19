@@ -40,6 +40,9 @@ extern int16_t* fill_vector;
 extern uint16_t fill_vector_addr;
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_offset_params;
 extern int16_t* offset_vector;
+extern MSP_LEA_DEINTERLEAVE_PARAMS* lea_deinterleave_params;
+extern uint16_t deinterleave_cmdId;
+extern uint16_t deinterleave_channel;
 {%- endif %}
 
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
@@ -104,6 +107,8 @@ void fill_init(uint16_t length);
 
 void mpy_init(uint16_t length);
 
+void deinterleave_init(uint16_t length, uint16_t channel, uint16_t numChannels);
+
 void add_clear();
 
 void fir_clear();
@@ -115,6 +120,8 @@ void offset_clear();
 void fill_clear();
 
 void mpy_clear();
+
+void deinterleave_clear();
 {%- endif %}
 
 void init_lupe();
