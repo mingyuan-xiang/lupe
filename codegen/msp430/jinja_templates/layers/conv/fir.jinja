@@ -25,7 +25,7 @@
 #define _STRIDE_COL_SIZE {{ stride_col }}
 {%- endif %}
 {%- if flt_size % 2 != 0 %}
-#define _FLT_SIZE_ALIGNED {{ flt_size + 1 }}
+#define _KERNEL_SIZE_ALIGNED {{ flt_size + 1 }}
 {%- endif %}
 {% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
@@ -262,7 +262,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         s++;
         {%- endfor %}
 
-        flt_lea_pos += _FLT_SIZE_ALIGNED;
+        flt_lea_pos += _KERNEL_SIZE_ALIGNED;
         flt_fram_pos += kernel_size;
         {%- else %}
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);

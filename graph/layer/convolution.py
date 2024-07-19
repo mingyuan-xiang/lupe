@@ -101,10 +101,10 @@ class Convolution2D(LupeLayer):
             self.opt_config["enhanced_acc"]):
             if ("adaptive_gen_lea" not in self.opt_config or
                 not self.opt_config["adaptive_gen_lea"]):
-                return "enhanced_mac"
+                return "enhanced_fir"
 
             if self.kernel_shape[-1] == 3:
-                return "enhanced_mac"
+                return "enhanced_fir"
 
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):
@@ -125,14 +125,14 @@ class Convolution2D(LupeLayer):
         return "fir"
 
     def _get_size(self, opt_config):
-        mul = 64
+        mul = 16
 
         def _size_converter(x):
             """Convert the size to multiple of 64"""
             if x <= mul:
                 return mul
 
-            return math.ceil(x / 64) * 64
+            return math.ceil(x / mul) * mul
 
         # Make sure all lea buffers are multiple of 2
         if opt_config["global_mem_buffer"]:
@@ -186,6 +186,20 @@ class Convolution2D(LupeLayer):
                 lea_src_size = size
                 lea_flt_size = size
                 lea_dst_size = 0 # no need for lea_tmp buffer
+            elif self._acceleration == "enhanced_fir":
+                s = self.kernel_shape[3]
+                if s % 2:
+                    s += 1
+                lea_flt_size = _size_converter(self.kernel_shape[2] * s)
+                lea_size = opt_config["lea_size"] - lea_flt_size
+                if lea_size < 3 * mul:
+                    raise ValueError("LEA array size noy big enough")
+                # 3 * size will always be smaller than opt_config["lea_size"]
+                size = math.floor(lea_size / 3) - mul
+                size = _size_converter(size)
+                lea_tmp_size = size
+                lea_src_size = size
+                lea_dst_size = size
 
             else: # fir
                 lea_src_size = self.input_size[3] + 2
@@ -277,6 +291,7 @@ class Convolution2D(LupeLayer):
             "out_len" : get_stride(self.output_size, 1),
             "in_len" : get_stride(self.input_size, 1),
             "flt_size" : self.kernel_shape[2],
+            "flt_col_size" : self.kernel_shape[3],
             "in_ch_flt_len" : (
                 self.input_size[1] * get_stride(self.kernel_shape, 1)),
             "in_line_size" : self.input_size[3], 

@@ -1,20 +1,33 @@
-#define _LEA_ADD_SIZE 400
+{% if global_mem_buffer %}
+#define _LEA_ADD_SIZE {{ lea_buffer_size }}
+{%- else %}
+#define _LEA_ADD_SIZE {{ lea_src_size }}
+{% endif %}
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
+{%- if padding %}
+#define _PADDING_TOP {{ padding["top"] }}
+#define _PADDING_BOTTOM {{ padding["bottom"] }}
+#define _PADDING_RIGHT {{ padding["right"] }}
+#define _PADDING_LEFT {{ padding["left"] }}
+{%- endif %}
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_flt (lea_buffer + {{ lea_src_size }})
+#define lea_tmp (lea_buffer + {{ lea_src_size + lea_flt_size }})
+#define lea_dst (lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }})
+{% endif %}
+{% if stride_row > 1 %}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+{%- endif %}
+{%- if stride_col > 1 %}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{%- endif %}
 
-#define _LEA_REMAIN_SIZE (1024 % _LEA_ADD_SIZE)
-#define _PADDING_TOP 1
-#define _PADDING_BOTTOM 1
-#define _PADDING_RIGHT 1
-#define _PADDING_LEFT 1
-
-#define _FLT_SIZE_ALIGNED 4
-
-#define _STRIDE_ROW_SIZE 1
-#define _STRIDE_COL_SIZE 1
-
-#define _INPUT_ROW_SIZE 34
-#define _INPUT_COL_SIZE 34
-#define _KERNEL_ROW_SIZE 3
-#define _KERNEL_COL_SIZE 3
+#define _INPUT_ROW_SIZE {{ in_line_num }}
+#define _INPUT_COL_SIZE {{ in_line_size }}
+#define _KERNEL_ROW_SIZE {{ flt_size }}
+#define _KERNEL_COL_SIZE {{ flt_col_size }}
 #define _OUTPUT_ROW_SIZE ((_INPUT_ROW_SIZE - _KERNEL_ROW_SIZE + 1) / _STRIDE_ROW_SIZE)
 #define _FIR_OUTPUT_COL_SIZE (_INPUT_COL_SIZE - _KERNEL_COL_SIZE + 1)
 #define _OUTPUT_COL_SIZE (_FIR_OUTPUT_COL_SIZE / _STRIDE_COL_SIZE)
@@ -22,7 +35,7 @@
 
 #define _FIR_OVERLAP_SIZE (_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1)
 
-#define __LEA_SRC_SIZE 400
+#define __LEA_SRC_SIZE {{ lea_src_size }}
 /* _LEA_SRC_SIZE will always be mutiple of 2 */
 #define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2)
 #define _FIR_TOTAL_SIZE (_OUTPUT_ROW_SIZE * _INPUT_COL_SIZE)
@@ -39,7 +52,50 @@
 #define _FIR_ADD_OUTPUT_SIZE ((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * _FIR_OUTPUT_COL_SIZE)
 #define _FIR_ADD_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_SIZE)
 
-void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+{% if lea_opt %}
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+
+static inline __attribute__((always_inline)) void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
+  /* Set MSP_LEA_FIR_PARAMS structure. */
+  lea_fir_params->coeffs = MSP_LEA_CONVERT_ADDRESS(coeffs);
+  lea_fir_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_fir_params);
+
+  /* Invoke the LEACMD__FIR command. */
+  msp_lea_invokeCommand(LEACMD__FIR);
+}
+
+static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
+  offset_vector[0] = offset;
+  offset_vector[1] = offset;
+}
+
+static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src, _q15* dst) {
+  lea_offset_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_offset_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+{%- endif %}
+
+void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
   uint16_t output_len = output->strides[1];
