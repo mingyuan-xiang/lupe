@@ -104,7 +104,7 @@ class Convolution2D(LupeLayer):
                 return "enhanced_fir"
 
             if self.kernel_shape[-1] == 3:
-                return "enhanced_fir"
+                return "enhanced_mac"
 
         if ("adaptive_gen_lea" not in self.opt_config or
             not self.opt_config["adaptive_gen_lea"]):

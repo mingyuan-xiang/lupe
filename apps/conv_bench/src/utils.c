@@ -1,8 +1,6 @@
 #include <include/utils.h>
-DSPLIB_DATA(lea_flt, 2) _q15 lea_flt[LEA_FLT_SIZE];
-DSPLIB_DATA(lea_src, 2) _q15 lea_src[LEA_SRC_SIZE];
-DSPLIB_DATA(lea_dst, 2) _q15 lea_dst[LEA_DST_SIZE];
-DSPLIB_DATA(lea_tmp, 2) _q15 lea_tmp[LEA_TMP_SIZE];
+
+DSPLIB_DATA(lea_buffer, 2) _q15 lea_buffer[LEA_SIZE];
 DSPLIB_DATA(lea_res, 4) _iq31 lea_res[2];
 
 MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
@@ -14,11 +12,14 @@ int16_t* fill_vector;
 uint16_t fill_vector_addr;
 MSP_LEA_ADDMATRIX_PARAMS* lea_offset_params;
 int16_t* offset_vector;
+MSP_LEA_DEINTERLEAVE_PARAMS* lea_deinterleave_params;
+uint16_t deinterleave_cmdId;
+uint16_t deinterleave_channel;
 
 static int DMA_is_init = 0;
 
-#define DMA_initialization() { \
-  uint8_t ch = DMA_CHANNEL_0; \
+#define DMA_initialization(CHANNEL) { \
+  uint8_t ch = DMA_CHANNEL_##CHANNEL; \
   uint16_t transferModeSelect = DMA_TRANSFER_BLOCK; \
   uint8_t transferUnitSelect = DMA_SIZE_SRCWORD_DSTWORD; \
   uint8_t triggerTypeSelect = DMA_TRIGGER_RISINGEDGE; \
@@ -33,13 +34,14 @@ static int DMA_is_init = 0;
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) &= 0xFF00; \
     HWREG16(DMA_BASE + (triggerOffset & 0x0E)) |= triggerSourceSelect; \
   } \
-  DMA_enableInterrupt(ch); \
+  HWREG16(DMA_BASE + ch + OFS_DMA0CTL) |= DMAIE; \
 }
 
 void init_lupe() {
   if (DMA_is_init == 0) {
     DMA_disableTransferDuringReadModifyWrite();
-    DMA_initialization();
+    DMA_initialization(0);
+    DMA_initialization(1);
   /* init LEA */
   if (!(LEAPMCTL & LEACMDEN)) {
     msp_lea_init();
@@ -98,6 +100,32 @@ void mpy_init(uint16_t length) {
   lea_mpy_params->outputOffset = 1;
 }
 
+void deinterleave_init(uint16_t length, uint16_t channel, uint16_t numChannels) {
+  lea_deinterleave_params = (MSP_LEA_DEINTERLEAVE_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_DEINTERLEAVE_PARAMS)/sizeof(uint32_t));
+  lea_deinterleave_params->vectorSize = length;
+  lea_deinterleave_params->interleaveDepth = numChannels;
+
+  /* Determine which LEA deinterleave command to invoke. */
+  if (channel & 1) {
+    if (numChannels & 1) {
+      /* Invoke the LEACMD__DEINTERLEAVEODDODD command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEODDODD;
+    } else {
+      /* Invoke the LEACMD__DEINTERLEAVEODDEVEN command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEODDEVEN;
+    }
+  } else {
+    if (numChannels & 1) {
+      /* Invoke the LEACMD__DEINTERLEAVEEVENODD command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEEVENODD;
+    } else {
+      /* Invoke the LEACMD__DEINTERLEAVEEVENEVEN command. */
+      deinterleave_cmdId = LEACMD__DEINTERLEAVEEVENEVEN;
+    }
+  }
+  deinterleave_channel = channel;
+}
+
 void add_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));
 }
@@ -122,6 +150,10 @@ void fill_clear() {
 
 void mpy_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_MPYMATRIX_PARAMS)/sizeof(uint32_t));
+}
+
+void deinterleave_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_DEINTERLEAVE_PARAMS)/sizeof(uint32_t));
 }
 
 /* Wake up CPU once DMA is complete */

@@ -20,9 +20,10 @@ def _list_mul(l):
         result *= i
     return result
 
-flt_sizes = [3, 5]
+# flt_sizes = [3, 5]
+flt_sizes = [3]
 channels = [1, 4, 8, 16, 32]
-in_sizes = [5, 10, 16, 20, 28, 32]
+in_sizes = [4, 10, 16, 20, 28, 32]
 
 file_name = 'data'
 buffer_name = 'data'

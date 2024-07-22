@@ -12,7 +12,6 @@
 #include <include/utils.h>
 #include <include/conv1.h>
 #include <include/input.h>
-#include <include/mac_buffer.h>
 
 void init() {
   watchdog_disable();
