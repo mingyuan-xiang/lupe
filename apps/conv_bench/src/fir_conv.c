@@ -187,24 +187,32 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       /* restore flt_lea_addr pointer to the beginning of the array */
       flt_lea_pos = 0;
 
+/*************************************************************
+* Do the reminder of FIR first
+************************************************************/
       if (_FIR_INPUT_REMAIN_SIZE != 0) {
         conv_flt = lea_flt;
         lea_fir_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
         lea_add_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
-
+      
         lea_src[_FIR_INPUT_REMAIN_SIZE] = 0;
         lea_src[_FIR_INPUT_REMAIN_SIZE + 1] = 0;
+
+        /*
+         * Do the FIR on the first row and save the results in lea_dst.
+         * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
+         */
 
         /* send input to LEA RAM */
         DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
 
         /* convolution */
         new_fir_q15(conv_flt, lea_src, lea_dst);
-
         conv_flt += tapLength;
         tmp_input_addr += input_line_size_offset;
 
         for (uint16_t k = 1; k < kernel_size; ++k) {
+
           /* send input to LEA RAM */
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
 
@@ -228,7 +236,6 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
         /* send output to LEA RAM */
         DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_REMAIN_SIZE);
-
         lea_add_params->vectorSize = _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED;
         new_add_q15(lea_dst, lea_tmp, lea_dst);
 
@@ -239,14 +246,22 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         tmp_output_addr += output_remain_offset;
       }
 
+/*************************************************************
+* Do the rest of FIR
+************************************************************/
+      
       lea_fir_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
-
+      
       lea_src[_FIR_INPUT_SIZE] = 0;
       lea_src[_FIR_INPUT_SIZE + 1] = 0;
 
       for (uint16_t n = _FIR_INPUT_REMAIN_SIZE; n < _FIR_TOTAL_SIZE; n += _FIR_INPUT_SIZE) {
         conv_flt = lea_flt;
 
+        /*
+        * Do the FIR on the first row and save the results in lea_dst.
+        * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
+        */
         lea_add_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
 
         /* send input to LEA RAM */
@@ -254,11 +269,11 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
         /* convolution */
         new_fir_q15(conv_flt, lea_src, lea_dst);
-
         conv_flt += tapLength;
         tmp_input_addr += input_line_size_offset;
 
         for (uint16_t k = 1; k < kernel_size; ++k) {
+
           /* send input to LEA RAM */
           DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
 
@@ -280,9 +295,8 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           lea_skip_addr_after += lea_skip_addr_after_offset;
         }
 
-         /* send output to LEA RAM */
+        /* send output to LEA RAM */
         DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_SIZE);
-
         lea_add_params->vectorSize = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
         new_add_q15(lea_dst, lea_tmp, lea_dst);
 

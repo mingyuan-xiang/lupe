@@ -465,6 +465,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         tmp_input_addr += input_line_size_offset;
       }
 
+      /* accumulate results with previous outputs */
       lea_skip_addr_before = lea_skip_addr_before_st;
       lea_skip_addr_after = lea_skip_addr_after_st;
       /* skip the babbage values between two lines */
@@ -649,6 +650,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           tmp_input_addr += input_line_size_offset;
         }
 
+        /* accumulate results with previous outputs */
         lea_skip_addr_before = lea_skip_addr_before_st;
         lea_skip_addr_after = lea_skip_addr_after_st;
         /* skip the barbage values between two lines */
@@ -666,7 +668,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         new_add_q15(lea_dst, lea_tmp, lea_dst);
         {%- else %}
         add_params.length = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
-        msp_add_q15(&add_params, lea_dst, lea_src, lea_dst);
+        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
         {%- endif %}
 
         /* bring back output from LEA RAM */
