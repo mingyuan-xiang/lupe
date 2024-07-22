@@ -322,6 +322,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 * Do the reminder of FIR first
 ************************************************************/
       conv_flt = lea_flt;
+      {%- if not lea_opt %}
+      conv_params.coeffs = conv_flt;
+      {%- endif %}
 
       {%- if lea_opt %}
       lea_fir_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
@@ -347,8 +350,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
 
       /*
-       * Do the fir on the first row and save the results in lea_dst.
-       * For the rest rows, save the results in lea_tmp and add them to lea_dst.
+       * Do the FIR on the first row and save the results in lea_dst.
+       * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
        */
 
       /* send input to LEA RAM */
@@ -506,10 +509,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       for (uint16_t n = _FIR_INPUT_REMAIN_SIZE; n < _FIR_TOTAL_SIZE; n += _FIR_INPUT_SIZE) {
         conv_flt = lea_flt;
+        {%- if not lea_opt %}
+        conv_params.coeffs = conv_flt;
+        {%- endif %}
+        {%- if stride_row > 1 %}
+        strided_input_addr = tmp_input_addr;
+        {%- endif %}
 
         /*
-        * Do the fir on the first row and save the results in lea_dst.
-        * For the rest rows, save the results in lea_tmp and add them to lea_dst.
+        * Do the FIR on the first row and save the results in lea_dst.
+        * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
         */
 
         {%- if lea_opt %}
@@ -640,9 +649,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           tmp_input_addr += input_line_size_offset;
         }
 
-        /* send output to LEA RAM */
-        DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_SIZE);
-
         lea_skip_addr_before = lea_skip_addr_before_st;
         lea_skip_addr_after = lea_skip_addr_after_st;
         /* skip the barbage values between two lines */
@@ -651,6 +657,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           lea_skip_addr_before += lea_skip_addr_before_offset;
           lea_skip_addr_after += lea_skip_addr_after_offset;
         }
+
+        /* send output to LEA RAM */
+        DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_SIZE);
 
         {%- if lea_opt %}
         lea_add_params->vectorSize = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
