@@ -1,6 +1,6 @@
 #include <include/utils.h>
 #include <include/fir_conv.h>
-#include <stdint.h>
+#include <libmspsyncioutils/mspsyncioutils.h>
 
 #define _LEA_ADD_SIZE 1600
 #define _LEA_REMAIN_SIZE (1024 % _LEA_ADD_SIZE)
@@ -12,14 +12,14 @@
 /* assign the lea buffer pointer */
 #define lea_src (lea_buffer)
 #define lea_flt (lea_buffer + 512)
-#define lea_tmp (lea_buffer + 528)
-#define lea_dst (lea_buffer + 1040)
+#define lea_tmp (lea_buffer + 544)
+#define lea_dst (lea_buffer + 1056)
 
 #define _STRIDE_ROW_SIZE 1
 #define _STRIDE_COL_SIZE 1
 
-#define _KERNEL_ROW_SIZE 3
-#define _KERNEL_COL_SIZE 3
+#define _KERNEL_ROW_SIZE 5
+#define _KERNEL_COL_SIZE 5
 #define _KERNEL_SIZE_ALIGNED MAKE_ALIGN_2(_KERNEL_COL_SIZE)
 
 #define _FIR_OVERLAP_SIZE ((_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1) / _STRIDE_COL_SIZE)
@@ -89,12 +89,12 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t _FIR_INPUT_SIZE = (_LEA_SRC_SIZE - (_LEA_SRC_SIZE % _INPUT_COL_SIZE));
   uint16_t _FIR_INPUT_REMAIN_SIZE = (_FIR_TOTAL_SIZE % _FIR_INPUT_SIZE);
 
-  uint16_t _FIR_OUTPUT_REMAIN_SIZE = (_FIR_INPUT_REMAIN_SIZE - _KERNEL_SIZE_ALIGNED + 1);
+  uint16_t _FIR_OUTPUT_REMAIN_SIZE = (_FIR_INPUT_REMAIN_SIZE - _KERNEL_COL_SIZE + 1);
   uint16_t _FIR_OUTPUT_REMAIN_SIZE_ALIGNED = MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE);
   uint16_t _FIR_ADD_OUTPUT_REMAIN_SIZE = ((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE);
   uint16_t _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED = MAKE_ALIGN_2(_FIR_ADD_OUTPUT_REMAIN_SIZE);
 
-  uint16_t _FIR_OUTPUT_SIZE = (_FIR_INPUT_SIZE - _KERNEL_SIZE_ALIGNED + 1);
+  uint16_t _FIR_OUTPUT_SIZE = (_FIR_INPUT_SIZE - _KERNEL_COL_SIZE + 1);
   uint16_t _FIR_OUTPUT_SIZE_ALIGNED = MAKE_ALIGN_2(_FIR_OUTPUT_SIZE);
   uint16_t _FIR_ADD_OUTPUT_SIZE = ((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE);
   uint16_t _FIR_ADD_OUTPUT_SIZE_ALIGNED = MAKE_ALIGN_2(_FIR_ADD_OUTPUT_SIZE);
@@ -142,6 +142,7 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t flt_lea_pos = 0;
   uint16_t flt_fram_pos = 0;
   uint16_t zero = 0;
+
 
   
   /* set the aligned position to be zeros */

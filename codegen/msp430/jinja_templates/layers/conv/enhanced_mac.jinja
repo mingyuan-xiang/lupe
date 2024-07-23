@@ -215,6 +215,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       uintptr_t flt_tmp_addr = flt_fram_addr;
       uintptr_t flt_mac_addr = flt_tmp_addr;
 
+/*************************************************************
+* Do the reminder of MAC first
+************************************************************/
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) % 2 != 0 %}
       /* set the aligned position to be zeros */
@@ -297,7 +300,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         flt_mac_addr += flt_channel_offset;
         tmp_out_pos += output_len;
       }
-      {% if in_ch_flt_len >= (lea_src_size - (lea_src_size % flt_len)) %}
+
+      {%- if in_ch_flt_len >= (lea_src_size - (lea_src_size % flt_len)) %}
+
+/*************************************************************
+* Do the rest of MAC
+************************************************************/
       {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
       flt_tmp_addr += flt_channel_remain_offset;
       {%- if (lea_src_size - (lea_src_size % flt_len)) % 2 != 0 %}
