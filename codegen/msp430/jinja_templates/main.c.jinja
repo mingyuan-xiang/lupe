@@ -41,7 +41,9 @@ int main() {
   msp_send_printf("Test {{ model_name }}\n");
 {%- if debug or calibration %}
   l = {{ model_name }}(&input_meta);
+  {%- if debug %}
   msp_send_printf("Got %u, Expecting: {{ label }}", l);
+  {%- endif %}
 {% else %}
 {% if add_timer %}
   uint32_t total_time = 0;

@@ -49,15 +49,19 @@ class LupeLayer(ABC):
         """If the layer has weights"""
 
     @abstractmethod
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
 
     def flip(self):
         """If the layer should flip the weights"""
         return False
 
+    def get_calibration_list(self):
+        """Get the list of acceleration method for calibration"""
+        return None
+
     @abstractmethod
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
 
     def _register(self, node):

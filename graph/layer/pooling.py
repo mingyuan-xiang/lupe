@@ -40,7 +40,7 @@ class Pooling(LupeLayer):
         """If the layer has weights"""
         return False
 
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
         return None
 
@@ -48,12 +48,15 @@ class Pooling(LupeLayer):
     def _get_template_name(self):
         """Get the jinja template name for the pooling layer"""
 
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
+        if name is None:
+            name = self.name
+
         path = os.path.join(jinja_dir, self._get_template_name())
 
         params = {
-            "layer_name" : self.name,
+            "layer_name" : name,
             "height" : self.kernel_shape[0],
             "width" : self.kernel_shape[1],
             "in_ch" : self.input_size[1],

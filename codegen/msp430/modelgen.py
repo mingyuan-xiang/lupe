@@ -9,7 +9,7 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def modelgen(code_dir, graph, debug):
+def modelgen(code_dir, graph, debug, calibration):
     """Generate the model using jinja template"""
     model_name = graph.name
 
@@ -21,6 +21,7 @@ def modelgen(code_dir, graph, debug):
     cfile_template_path = os.path.join(JINJA_DIR, "model.c.jinja")
     nodes = graph.get_hidden_layers()
     nodes_dic = []
+    calibration_list = {}
     for n in nodes:
         d = {
             "name" : n,
@@ -31,12 +32,20 @@ def modelgen(code_dir, graph, debug):
             d["weight_name"] = graph.node_list[n].weight.name
             d["bias_name"] = graph.node_list[n].bias.name
 
+        if graph.node_list[n].get_calibration_list() is not None:
+            calibration_list[n] = graph.node_list[n].get_calibration_list()
+        else:
+            calibration_list[n] = []
+
         nodes_dic.append(d)
+
     cfile_params = {
         "model_name": model_name,
         "layer_list": nodes_dic,
         "last_layer": nodes[-1],
         "debug" : debug,
+        "calibration" : calibration,
+        "calibration_list" : calibration_list,
         "has_add_buffer" : False,
     }
 

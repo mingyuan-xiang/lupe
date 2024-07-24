@@ -18,12 +18,15 @@ class Clip(LupeLayer):
         """If the layer has weights"""
         return False
 
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
         return None
 
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
+        if name is None:
+            name = self.name
+
         if not (isinstance(self.min, (int, float)) or
             isinstance(self.max, (int, float))):
             raise TypeError
@@ -31,7 +34,7 @@ class Clip(LupeLayer):
         path = os.path.join(jinja_dir, "clip.jinja")
 
         params = {
-            "layer_name" : self.name,
+            "layer_name" : name,
             "min" : max(int(self.min * (2 ** (15 - qf))), -2**15+1),
             "max" : min(int(self.max * (2 ** (15 - qf))), 2**15-2),
         }

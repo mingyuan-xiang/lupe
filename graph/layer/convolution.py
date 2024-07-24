@@ -46,7 +46,7 @@ class Convolution2D(LupeLayer):
         else:
             self.has_padding = False
 
-        self._acceleration = self._decide_acceleration()
+        self._acceleration = "fir"
 
     def __str__(self):
         s = f"{self.name}: Convolution2D("
@@ -68,19 +68,22 @@ class Convolution2D(LupeLayer):
         """If the layer has weights"""
         return True
 
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """Return the mac buffer size if needed"""
-        if self._acceleration  == "mac":
+        if acceleration is None:
+            acceleration = self._acceleration
+
+        if acceleration  == "mac":
             return (
                 1,
                 self.output_size[2] * self.output_size[3],
                 self.kernel_shape[3] * self.kernel_shape[3]
             )
-        if self._acceleration  == "1x1_mac":
+        if acceleration  == "1x1_mac":
             return (
                 1, self.output_size[2] * self.output_size[3], self.input_size[1]
             )
-        if self._acceleration  == "1x1_mpy":
+        if acceleration  == "1x1_mpy":
             return (
                 1, self.input_size[1], self.output_size[2] * self.output_size[3]
             )
@@ -93,6 +96,17 @@ class Convolution2D(LupeLayer):
             return True
 
         return False
+
+    def get_calibration_list(self):
+        """Get the list of acceleration method for calibration"""
+        if self.kernel_shape[-1] == 1:
+            return ["1x1_mpy", "1x1_mac"]
+
+        if ("enhanced_acc" in self.opt_config and
+            self.opt_config["enhanced_acc"]):
+            return ["enhanced_mac", "enhanced_fir"]
+
+        return ["mac", "fir"]
 
     def _decide_acceleration(self):
         """Decide how which operation to use"""
@@ -129,7 +143,7 @@ class Convolution2D(LupeLayer):
 
         return "fir"
 
-    def _get_size(self, opt_config):
+    def _get_size(self, opt_config, acceleration):
         mul = 16
 
         def _size_converter(x):
@@ -141,7 +155,7 @@ class Convolution2D(LupeLayer):
 
         # Make sure all lea buffers are multiple of 2
         if opt_config["global_mem_buffer"]:
-            if self._acceleration == "1x1_mac":
+            if acceleration == "1x1_mac":
                 lea_src_size = self.input_size[1]
                 lea_src_size += (lea_src_size % 2)
                 lea_flt_size = self.input_size[1]
@@ -155,7 +169,7 @@ class Convolution2D(LupeLayer):
                 )
                 if lea_dst_size < 0:
                     raise ValueError("LEA array size noy big enough")
-            elif self._acceleration == "1x1_mpy":
+            elif acceleration == "1x1_mpy":
                 if opt_config["lea_size"] < 3 * mul:
                     raise ValueError("LEA array size noy big enough")
                 # 3 * size will always be smaller than opt_config["lea_size"]
@@ -165,7 +179,7 @@ class Convolution2D(LupeLayer):
                 lea_src_size = size
                 lea_flt_size = size
                 lea_dst_size = size
-            elif self._acceleration == "mac":
+            elif acceleration == "mac":
                 lea_src_size = get_stride(self.kernel_shape, 1)
                 lea_src_size += (lea_src_size % 2)
                 lea_flt_size = get_stride(self.kernel_shape, 1)
@@ -181,7 +195,7 @@ class Convolution2D(LupeLayer):
                 size = _size_converter(size)
                 lea_tmp_size = size
                 lea_dst_size = size
-            elif self._acceleration == "enhanced_mac":
+            elif acceleration == "enhanced_mac":
                 if opt_config["lea_size"] < 2 * mul:
                     raise ValueError("LEA array size noy big enough")
                 # 2 * size will always be smaller than opt_config["lea_size"]
@@ -191,7 +205,7 @@ class Convolution2D(LupeLayer):
                 lea_src_size = size
                 lea_flt_size = size
                 lea_dst_size = 0 # no need for lea_tmp buffer
-            elif self._acceleration == "enhanced_fir":
+            elif acceleration == "enhanced_fir":
                 s = self.kernel_shape[3]
                 if s % 2:
                     s += 1
@@ -230,12 +244,18 @@ class Convolution2D(LupeLayer):
 
         return lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size
 
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
-        path = os.path.join(jinja_dir, "conv")
-        path = os.path.join(path, self._acceleration + ".jinja")
+        if acceleration is None:
+            acceleration = self._acceleration
 
-        sizes = self._get_size(opt_config)
+        if name is None:
+            name = self.name
+
+        path = os.path.join(jinja_dir, "conv")
+        path = os.path.join(path, acceleration + ".jinja")
+
+        sizes = self._get_size(opt_config, acceleration)
         lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size = sizes
 
         if self.has_padding:
@@ -287,7 +307,7 @@ class Convolution2D(LupeLayer):
         # TODO: not sure if LEA deinterleave works with odd number of channels
 
         params = {
-            "layer_name" : self.name,
+            "layer_name" : name,
             "lea_opt" : opt_config["lea_opt"],
             "dma_opt" : opt_config["dma_opt"],
             "in_ch" : self.input_size[1],
@@ -320,8 +340,6 @@ class Convolution2D(LupeLayer):
             params["adaptive_gen_mem_size"] = (
                 opt_config["adaptive_gen_mem_size"]
             )
-
-        params["acceleration"]  = self._acceleration
 
         with open(path, "r", encoding="utf-8") as file:
             template = file.read()

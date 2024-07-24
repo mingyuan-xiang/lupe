@@ -54,12 +54,15 @@ class FullyConnected(LupeLayer):
         """If the layer has weights"""
         return True
 
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
         return None
 
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
+        if name is None:
+            name = self.name
+
         path = os.path.join(jinja_dir, "fc.jinja")
 
         has_adaptive_gen_mem = False
@@ -82,7 +85,7 @@ class FullyConnected(LupeLayer):
         io_qf, weight_qf = qf
 
         params = {
-            "layer_name" : self.name,
+            "layer_name" : name,
             "input_size" : self.input_size[1],
             "output_size" : self.output_size[1],
             "qf" : weight_qf,

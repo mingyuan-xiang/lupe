@@ -10,12 +10,26 @@ from jinja2 import Template
 
 from . import JINJA_DIR
 
-def makefilegen(code_dir, graph, has_extra_buffer, opt_config):
+def makefilegen(code_dir, graph, has_extra_buffer, opt_config, calibration):
     """Generate the Makefile using jinja template"""
     template_path = os.path.join(JINJA_DIR, "makefile.jinja")
 
-    nodes = graph.get_hidden_layers()
-    nodes_with_weights = [n for n in nodes if graph.node_list[n].has_weights()]
+    nodes_with_weights = [
+        n for n in graph.get_hidden_layers() if graph.node_list[n].has_weights()
+    ]
+    nodes = []
+    for n in graph.get_hidden_layers():
+        node = graph.node_list[n]
+        if calibration:
+            acceleration = graph.node_list[n].get_calibration_list()
+            if acceleration is not None and len(acceleration) > 0:
+                for a in acceleration:
+                    layer = node.name + "_" + a
+                    nodes.append(layer)
+                continue
+
+        nodes.append(n)
+
     params = {
         "model_name" : graph.name,
         "layer_list" : nodes,

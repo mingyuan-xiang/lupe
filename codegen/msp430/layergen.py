@@ -5,7 +5,38 @@ import os
 from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def layergen(code_dir, graph, opt_config, qf, debug):
+def _gen(node, name, qf, debug, opt_config, acceleration, code_dir):
+    # header
+    header_template_path = os.path.join(JINJA_DIR, "layer.h.jinja")
+    header_params = {
+        "layer_name": name,
+        "has_weights" : node.has_weights(),
+    }
+
+    code_qf = qf
+    if node.has_weights():
+        code_qf = (qf, node.weight.qf)
+
+    jinja_dir = os.path.join(JINJA_DIR, "layers")
+    # c file
+    cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
+    cfile_params = {
+        "layer_name": name,
+        "debug" : debug,
+        "code" : node.get_code(
+            name, jinja_dir, opt_config, code_qf, acceleration
+        ),
+        "has_extra_buffer" : node.get_buffer_size(acceleration) is not None
+    }
+
+    jinja_gen(
+        (cfile_template_path, cfile_params),
+        (header_template_path, header_params),
+        name,
+        code_dir
+    )
+
+def layergen(code_dir, graph, opt_config, qf, debug, calibration):
     """Generates code for each layer of the graph
     
     Args:
@@ -17,30 +48,12 @@ def layergen(code_dir, graph, opt_config, qf, debug):
 
     for n in nodes:
         node = graph.node_list[n]
-        # header
-        header_template_path = os.path.join(JINJA_DIR, "layer.h.jinja")
-        header_params = {
-            "layer_name": node.name,
-            "has_weights" : node.has_weights(),
-        }
+        if calibration:
+            acceleration = graph.node_list[n].get_calibration_list()
+            if acceleration is not None and len(acceleration) > 0:
+                for a in acceleration:
+                    name = node.name + "_" + a
+                    _gen(node, name, qf, debug, opt_config, a, code_dir)
+                continue
 
-        code_qf = qf
-        if node.has_weights():
-            code_qf = (qf, node.weight.qf)
-
-        jinja_dir = os.path.join(JINJA_DIR, "layers")
-        # c file
-        cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
-        cfile_params = {
-            "layer_name": node.name,
-            "debug" : debug,
-            "code" : node.get_code(jinja_dir, opt_config, code_qf),
-            "has_extra_buffer" : node.get_buffer_size() is not None
-        }
-
-        jinja_gen(
-            (cfile_template_path, cfile_params),
-            (header_template_path, header_params),
-            node.name,
-            code_dir
-        )
+        _gen(node, node.name, qf, debug, opt_config, None, code_dir)

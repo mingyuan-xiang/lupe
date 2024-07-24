@@ -32,7 +32,25 @@ class MSP430Gen:
         self.calibration = calibration
         self.qf = qf
 
-    def gen(self, model_name, dataset_size, print_freq=100, loc="hi"):
+    def _get_max_shape(
+            self, node, acceleration, max_buffer_shape, max_buffer_size):
+        if node.get_buffer_size(acceleration) is not None:
+            size = node.get_buffer_size(acceleration)
+            new_size = 1
+            for s in size:
+                new_size *= s
+
+            if max_buffer_size < new_size:
+                max_buffer_size = new_size
+                max_buffer_shape = size
+
+            return True, max_buffer_shape, max_buffer_size
+
+        return False, max_buffer_shape, max_buffer_size
+
+    def gen(
+        self, model_name, dataset_size, print_freq=100, loc="hi",
+        calibration=False):
         """Generate the code"""
         # Create the include directory
         if not os.path.exists(os.path.join(self.src_dir, "include")):
@@ -47,7 +65,7 @@ class MSP430Gen:
         )
 
         # Generate the model file
-        modelgen(self.src_dir, self.graph, self.debug, )#self.calibration)
+        modelgen(self.src_dir, self.graph, self.debug, self.calibration)
 
         # Generate the weight and bias files
         params_dir = os.path.join(self.src_dir, "params")
@@ -58,21 +76,23 @@ class MSP430Gen:
 
         # check if the model needs extra buffer
         has_extra_buffer = False
-        max_buffer_size = 0
-        max_buffer_shape = None
+        max_size = 0
+        max_shape = None
         for n in self.graph.get_hidden_layers():
             node = self.graph.node_list[n]
-            if node.get_buffer_size() is not None:
-                size = node.get_buffer_size()
-                new_size = 1
-                for s in size:
-                    new_size *= s
+            acceleration = None
+            if calibration:
+                acceleration = self.graph.node_list[n].get_calibration_list()
+                if acceleration is not None and len(acceleration) > 0:
+                    for a in acceleration:
+                        flag, max_shape, max_size = self._get_max_shape(
+                            node, a, max_shape, max_size)
+                        has_extra_buffer |= flag
+                    continue
 
-                if max_buffer_size < new_size:
-                    max_buffer_size = new_size
-                    max_buffer_shape = size
-
-                has_extra_buffer = True
+            flag, max_shape, max_size = self._get_max_shape(
+                node, acceleration, max_shape, max_size)
+            has_extra_buffer |= flag
 
         # Generate the buffer files
         buffer_dir = os.path.join(self.src_dir, "buffer")
@@ -80,8 +100,8 @@ class MSP430Gen:
             os.makedirs(buffer_dir)
             os.makedirs(os.path.join(buffer_dir, "include"))
         arrgen(
-            buffer_dir, self.graph, max_buffer_shape, loc=loc,
-            debug_input=self.debug_input, #self.calibration
+            buffer_dir, self.graph, max_shape, self.qf, loc=loc,
+            debug_input=self.debug_input, calibration=self.calibration
         )
 
         # Generate the layer code
@@ -92,13 +112,13 @@ class MSP430Gen:
         utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf)
         layergen(
             layer_dir, self.graph, self.opt_config, self.qf,
-            self.debug, #self.calibration
+            self.debug, self.calibration
         )
 
         # Generate the makefile
         makefilegen(
             self.code_dir, self.graph, has_extra_buffer, self.opt_config,
-            #self.calibration
+            self.calibration
         )
 
     def print_config(self):

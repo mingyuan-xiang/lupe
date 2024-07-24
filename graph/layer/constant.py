@@ -18,13 +18,13 @@ class Constant(LupeLayer):
         """If the layer has weights"""
         return False
 
-    def get_buffer_size(self):
+    def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
         return None
 
     def __str__(self):
         return f"{self.value}"
 
-    def get_code(self, jinja_dir, opt_config, qf):
+    def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
         raise NotImplementedError("We don't need to implement constant layer.")

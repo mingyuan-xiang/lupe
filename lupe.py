@@ -195,7 +195,7 @@ def _generate(args, mode):
         generator.print_config()
 
         generator.gen(
-            dir_name, args.dataset_size, args.print_freq
+            dir_name, args.dataset_size, args.print_freq, calibration=cal
         )
 
         # Generate the outer Makefile for the maker
@@ -246,31 +246,31 @@ def main():
         _banner_print('Generate calibration code')
         _generate(args, LupeMode.CALIBRATING)
 
-        _banner_print('Start the calibration in the background')
+        # _banner_print('Start the calibration in the background')
 
-        result_queue = queue.Queue()
-        cal_thread = threading.Thread(
-            target=calibration,
-            args=(args.baud, args.port, result_queue)
-        )
-        cal_thread.daemon = True
-        cal_thread.start()
+        # result_queue = queue.Queue()
+        # cal_thread = threading.Thread(
+        #     target=calibration,
+        #     args=(args.baud, args.port, result_queue)
+        # )
+        # cal_thread.daemon = True
+        # cal_thread.start()
 
-        _banner_print('Compile and flash calibration code')
-        dir_name = args.model_name + "_calibration"
-        os.system(f"make apps/{dir_name}/bld/gcc/prog")
+        # _banner_print('Compile and flash calibration code')
+        # dir_name = args.model_name + "_calibration"
+        # os.system(f"make apps/{dir_name}/bld/gcc/prog")
 
-        _banner_print('Waiting for calibration results...')
-        while True:
-            if not result_queue.empty():
-                break
+        # _banner_print('Waiting for calibration results...')
+        # while True:
+        #     if not result_queue.empty():
+        #         break
 
-        cal_thread.join()
+        # cal_thread.join()
 
-        _banner_print('Write out the calibration configurations')
-        acc_dict = result_queue.get()
+        # _banner_print('Write out the calibration configurations')
+        # acc_dict = result_queue.get()
 
-        print(acc_dict)
+        # print(acc_dict)
 
         # create calibration directory if not existed
         # parent = pathlib.Path(__file__).parent.resolve()

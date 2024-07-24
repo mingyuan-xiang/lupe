@@ -16,7 +16,9 @@ def _list_mul(l):
     return result
 
 
-def _inputgen(code_dir, graph, loc="hi", debug_input=None):
+def _inputgen(
+    code_dir, graph, qf, loc="hi", debug_input=None,
+    calibration=False):
     """Generate the input files"""
     input_data = graph.node_list[graph.input_name]
     # force the input size to have dimension 4
@@ -26,7 +28,13 @@ def _inputgen(code_dir, graph, loc="hi", debug_input=None):
     while len(input_data.shape) < 4:
         shape.insert(0, 1)
     if debug_input is None:
-        input_data = Matrix(input_data.name, np.zeros(shape), False, loc=loc)
+        if calibration:
+            low = -1.0 / (2**qf)
+            high = 1.0 / (2**qf)
+            data = np.random.uniform(low, high, shape)
+        else:
+            data = np.zeros(shape)
+        input_data = Matrix(input_data.name, data, False, loc=loc)
     else:
         input_data = Matrix(input_data.name, debug_input, False, loc=loc)
 
@@ -184,9 +192,10 @@ def _buffergen(code_dir, graph, loc="hi"):
         os.path.join(code_dir, file_name + ".c")
     )
 
-def arrgen(code_dir, graph, size, loc="hi", debug_input=None):
+def arrgen(code_dir, graph, size, qf, loc="hi", debug_input=None,
+    calibration=False):
     """Generate the pre-allocated arrays"""
-    _inputgen(code_dir, graph, loc, debug_input)
+    _inputgen(code_dir, graph, qf, loc, debug_input, calibration)
     _buffergen(code_dir, graph, loc)
     if len(graph.add_buffer_list) > 0:
         _add_buffergen(code_dir, graph, loc)
