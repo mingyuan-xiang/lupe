@@ -11,7 +11,7 @@ from .helpers import jinja_gen
 
 def maingen(
         code_dir, model_name, dataset_size, print_freq=100,
-        add_timer=True, debug=False, label=0
+        add_timer=True, debug=False, label=0, calibration=False
     ):
     """Generate the main file using jinja template"""
     template_path = os.path.join(JINJA_DIR, "main.c.jinja")
@@ -22,6 +22,7 @@ def maingen(
         "print_freq": print_freq,
         "debug" : debug,
         "label" : label,
+        "calibration" : calibration,
     }
 
     jinja_gen((template_path, params), None, "main", code_dir)

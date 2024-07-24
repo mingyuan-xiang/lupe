@@ -4,10 +4,13 @@
 
 import argparse
 from collections import OrderedDict
+from enum import Enum, auto
 import os
 import pathlib
 import json
 import shutil
+import threading
+import queue
 
 from jinja2 import Template
 import onnx
@@ -16,6 +19,13 @@ from onnx import checker
 from graph.graph import LupeGraph
 from codegen.codegen import msp430gen
 from debug.get_input import get_input
+from calibration.calibration import calibration
+
+class LupeMode(Enum):
+    """Code generation mode"""
+    NORMAL = auto()
+    DEBUG = auto()
+    CALIBRATING = auto()
 
 def lupe_args():
     """Get the command line arguments for lupe
@@ -25,12 +35,13 @@ def lupe_args():
     """
     par = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter)
     par.add_argument("mode", type=str, choices=[
-        "code-gen", "compile", "flash", "print"],
+        "code-gen", "compile", "flash", "print", "calibrate"],
         help="""Mode of operation:
         code-gen: Generate the C code for the model.
         compile: Compile the generated code using CMU Abstract maker.
         flash: Compile and flash the model to the MSP430.
-        print: Print the the model."""
+        print: Print the the model.
+        calibrate: calibrate the acceleration selection"""
     )
     par.add_argument(
         "--model-name", type=str, default="DATE_LeNet", help="Model name"
@@ -81,6 +92,13 @@ def lupe_args():
         help=("Set the bit width of the integer part of the fixed point " +
         "representation, e.g. pass `--qf 2` will have q2.13")
     )
+    par.add_argument(
+        "--baud", type=int, default=19200, help="UART baud rate for calibration"
+    )
+    par.add_argument(
+        "--port", type=str, default="/dev/cu.usbmodem1203",
+        help="UART port for calibration"
+    )
 
     return par.parse_args()
 
@@ -118,6 +136,89 @@ def parse_opt_config(opt_config):
 
     return opt_config
 
+def _banner_print(s):
+    print('\n*****************************************************************')
+    print(s)
+    print('*****************************************************************\n')
+
+def _generate(args, mode):
+    # Load onnx model
+    if os.path.isfile(args.model_path):
+        model = onnx.load(args.model_path)
+        checker.check_model(model)
+
+        if mode == LupeMode.CALIBRATING:
+            dir_name = args.model_name + "_calibration"
+
+            parent = pathlib.Path(__file__).parent.resolve()
+            out_path = os.path.join(parent, "apps", dir_name)
+
+        if os.path.exists(out_path):
+            shutil.rmtree(out_path)
+        else:
+            parent = pathlib.Path(__file__).parent.resolve()
+            if args.output_path is None:
+                out_path = os.path.join(parent, "apps", args.model_name)
+            else:
+                out_path = args.output_path
+            print(f"Writing to {out_path}, got optimization flags:")
+            # Create the directory if it does not exist
+            if args.clean and os.path.exists(out_path):
+                shutil.rmtree(out_path)
+
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
+
+        # Read the optimization configuration
+        config = {}
+        if os.path.isfile(args.config):
+            config = load_opt_config(args.config)
+
+        parse_opt_config(config)
+
+        graph = LupeGraph(dir_name, model, out_path, config)
+
+        cal = False
+        if mode == LupeMode.CALIBRATING:
+            cal = True
+
+        generator = msp430gen()(
+            out_path, config, graph, args.qf, add_timer=args.timer,
+            calibration=cal
+        )
+
+        if mode == LupeMode.DEBUG:
+            input_arr, label = get_input(args.debug_dataset, args.debug_idx)
+            generator.setup_debug_info(input_arr / (2 ** args.qf), label)
+
+        # Print the optimization configurations
+        generator.print_config()
+
+        generator.gen(
+            dir_name, args.dataset_size, args.print_freq
+        )
+
+        # Generate the outer Makefile for the maker
+        template_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
+        )
+        with open(template_path, "r", encoding="utf-8") as file:
+            template = file.read()
+            j_template = Template(template)
+            code_str = j_template.render({"model_name" : dir_name})
+
+        file_path = os.path.join(
+            os.path.dirname(os.path.realpath(__file__)), "Makefile"
+        )
+        if os.path.isfile(file_path):
+            os.remove(file_path)
+        with open(os.path.join(file_path), "w", encoding="utf-8") as file:
+            file.write(code_str)
+    else:
+        raise FileNotFoundError(
+            f"The model file {args.model_path} does not exist"
+        )
+
 def main():
     """The main function"""
     args = lupe_args()
@@ -131,72 +232,54 @@ def main():
             graph = LupeGraph(args.model_name, model, "", {})
             graph.print()
     elif args.mode == "code-gen":
-        # Load onnx model
-        if os.path.isfile(args.model_path):
-            model = onnx.load(args.model_path)
-            checker.check_model(model)
-
-            parent = pathlib.Path(__file__).parent.resolve()
-            if args.output_path is None:
-                out_path = os.path.join(parent, "apps", args.model_name)
-            else:
-                out_path = args.output_path
-            print(f"Writing to {out_path}, got optimization flags:")
-            # Create the directory if it does not exist
-            if args.clean and os.path.exists(out_path):
-                shutil.rmtree(out_path)
-
-            if not os.path.exists(out_path):
-                os.makedirs(out_path)
-
-            # Read the optimization configuration
-            config = {}
-            if os.path.isfile(args.config):
-                config = load_opt_config(args.config)
-
-            parse_opt_config(config)
-
-            graph = LupeGraph(args.model_name, model, out_path, config)
-
-            generator = msp430gen()(
-                out_path, config, graph, args.qf, add_timer=args.timer
-            )
-
-            if args.debug:
-                input_arr, label = get_input(args.debug_dataset, args.debug_idx)
-                generator.setup_debug_info(input_arr / (2 ** args.qf), label)
-
-            # Print the optimization configurations
-            generator.print_config()
-
-            generator.gen(
-                args.model_name, args.dataset_size, args.print_freq
-            )
-
-            # Generate the outer Makefile for the maker
-            template_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
-            )
-            with open(template_path, "r", encoding="utf-8") as file:
-                template = file.read()
-                j_template = Template(template)
-                code_str = j_template.render({"model_name" : args.model_name})
-
-            file_path = os.path.join(
-                os.path.dirname(os.path.realpath(__file__)), "Makefile"
-            )
-            if os.path.isfile(file_path):
-                os.remove(file_path)
-            with open(os.path.join(file_path), "w", encoding="utf-8") as file:
-                file.write(code_str)
-        else:
-            raise FileNotFoundError(
-                f"The model file {args.model_path} does not exist"
-            )
+        mode = LupeMode.NORMAL
+        if args.debug:
+            mode = LupeMode.DEBUG
+        _generate(args, mode)
     elif args.mode == "compile":
         os.system(f"make apps/{args.model_name}/bld/gcc/all")
     elif args.mode == "flash":
         os.system(f"make apps/{args.model_name}/bld/gcc/prog")
+    elif args.mode == "calibrate":
+        _banner_print('Start the calibration for adaptive layer generation.')
+
+        _banner_print('Generate calibration code')
+        _generate(args, LupeMode.CALIBRATING)
+
+        _banner_print('Start the calibration in the background')
+
+        result_queue = queue.Queue()
+        cal_thread = threading.Thread(
+            target=calibration,
+            args=(args.baud, args.port, result_queue)
+        )
+        cal_thread.daemon = True
+        cal_thread.start()
+
+        _banner_print('Compile and flash calibration code')
+        dir_name = args.model_name + "_calibration"
+        os.system(f"make apps/{dir_name}/bld/gcc/prog")
+
+        _banner_print('Waiting for calibration results...')
+        while True:
+            if not result_queue.empty():
+                break
+
+        cal_thread.join()
+
+        _banner_print('Write out the calibration configurations')
+        acc_dict = result_queue.get()
+
+        print(acc_dict)
+
+        # create calibration directory if not existed
+        # parent = pathlib.Path(__file__).parent.resolve()
+        # cal_dir = os.path.join(parent, "calibration")
+        # if not os.path.exists(cal_dir):
+        #     os.makedirs(cal_dir)
+        # cal_file = os.path.join(cal_dir, args.model_name + ".json")
+        # with open(cal_file, "w", encoding="utf-8") as file:
+        #     json.dump(acc_dict, file)
 
 if __name__ == "__main__":
     main()

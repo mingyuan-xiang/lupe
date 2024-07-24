@@ -182,6 +182,12 @@ apps/*
 !apps/memcpy
 !apps/conv_bench
 
+# calibration folder
+calibration/*
+!calibration/calibration.py
+!calibration/__init__.py
+!calibration/uart_dump.py
+
 # maker outer Makefile
 /Makefile
 

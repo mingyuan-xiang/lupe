@@ -14,7 +14,9 @@ import pprint
 
 class MSP430Gen:
     """The codegen class"""
-    def __init__(self, code_dir, opt_config, graph, qf, add_timer=True):
+    def __init__(
+            self, code_dir, opt_config, graph, qf, add_timer=True,
+            calibration=False):
         """Initialize the codegen class"""
         self.opt_config = opt_config
         self.code_dir = code_dir
@@ -27,6 +29,7 @@ class MSP430Gen:
         self.debug = False
         self.debug_input = None
         self.debug_input_label = None
+        self.calibration = calibration
         self.qf = qf
 
     def gen(self, model_name, dataset_size, print_freq=100, loc="hi"):
@@ -39,11 +42,12 @@ class MSP430Gen:
         maingen(
             self.src_dir, model_name, dataset_size,
             print_freq=print_freq, add_timer=self.add_timer,
-            debug=self.debug, label=self.debug_input_label
+            debug=self.debug, label=self.debug_input_label,
+            calibration=self.calibration
         )
 
         # Generate the model file
-        modelgen(self.src_dir, self.graph, self.debug)
+        modelgen(self.src_dir, self.graph, self.debug, )#self.calibration)
 
         # Generate the weight and bias files
         params_dir = os.path.join(self.src_dir, "params")
@@ -77,7 +81,7 @@ class MSP430Gen:
             os.makedirs(os.path.join(buffer_dir, "include"))
         arrgen(
             buffer_dir, self.graph, max_buffer_shape, loc=loc,
-            debug_input=self.debug_input
+            debug_input=self.debug_input, #self.calibration
         )
 
         # Generate the layer code
@@ -86,11 +90,15 @@ class MSP430Gen:
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
         utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf)
-        layergen(layer_dir, self.graph, self.opt_config, self.qf, self.debug)
+        layergen(
+            layer_dir, self.graph, self.opt_config, self.qf,
+            self.debug, #self.calibration
+        )
 
         # Generate the makefile
         makefilegen(
-            self.code_dir, self.graph, has_extra_buffer, self.opt_config
+            self.code_dir, self.graph, has_extra_buffer, self.opt_config,
+            #self.calibration
         )
 
     def print_config(self):

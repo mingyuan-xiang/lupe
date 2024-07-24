@@ -39,7 +39,7 @@ int main() {
 
   uint16_t l;
   msp_send_printf("Test {{ model_name }}\n");
-{%- if debug %}
+{%- if debug or calibration %}
   l = {{ model_name }}(&input_meta);
   msp_send_printf("Got %u, Expecting: {{ label }}", l);
 {% else %}

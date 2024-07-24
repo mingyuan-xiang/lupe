@@ -18,16 +18,7 @@
 #define _STRIDE_ROW_SIZE 1
 #define _STRIDE_COL_SIZE 1
 
-#define _KERNEL_ROW_SIZE 5
-#define _KERNEL_COL_SIZE 5
-#define _KERNEL_SIZE_ALIGNED MAKE_ALIGN_2(_KERNEL_COL_SIZE)
-
-#define _FIR_OVERLAP_SIZE ((_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1) / _STRIDE_COL_SIZE)
-
 #define __LEA_SRC_SIZE 512
-/* _LEA_SRC_SIZE will always be mutiple of 2 */
-#define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2)
-
 
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
@@ -78,6 +69,12 @@ void fir_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
   uint16_t input_line_size = input->dims[3];
+
+  uint16_t _KERNEL_ROW_SIZE = kernel_size;
+  uint16_t _KERNEL_COL_SIZE = kernel_size;
+  uint16_t _KERNEL_SIZE_ALIGNED = MAKE_ALIGN_2(_KERNEL_COL_SIZE);
+  uint16_t _FIR_OVERLAP_SIZE = ((_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1) / _STRIDE_COL_SIZE);
+  uint16_t _LEA_SRC_SIZE = (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2);
 
   uint16_t _INPUT_ROW_SIZE = input_line_size;
   uint16_t _INPUT_COL_SIZE = input_line_size;
