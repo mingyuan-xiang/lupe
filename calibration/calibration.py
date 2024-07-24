@@ -1,4 +1,5 @@
 """UART receiver for calibrating adaptive layer generation."""
+import re
 
 import numpy as np
 
@@ -24,8 +25,27 @@ def calibration(baud, port, result_queue):
             break
     par.close()
 
+    pattern = r'(?P<layer_name>\w+(?:_\w+)*) \((?P<acceleration>\w+(?:_\w+)?)\) takes (?P<cycles>\d+) cycles to execute \(REPEAT: (?P<repeat>\d+)\)'
+
     config = {}
     for d in data:
-        config[d] = 0
+        match = re.search(pattern, d)
+        if match:
+            layer = match.group('layer_name')
+            acc = match.group('acceleration')
+            cycles = int(match.group('cycles'))
+            repeat = int(match.group('repeat'))
+
+            if layer in config:
+                if cycles < config[layer]['cycles']:
+                    config[layer]['acceleration'] = acc
+                    config[layer]['cycles'] = cycles
+                    config[layer]['repeat'] = repeat
+            else:
+                config[layer] = {
+                    'acceleration' : acc,
+                    'cycles' : cycles,
+                    'repeat' : repeat,
+                }
 
     result_queue.put(config)

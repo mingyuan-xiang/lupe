@@ -64,7 +64,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
     uint32_t t = stop_timer();
     total_time += t;
   }
-  msp_send_printf("{{ layer.name }}_{{ acc }} takes %n cycles to execute (REPEAT: %u)", total_time, REPEAT);
+  msp_send_printf("{{ layer.name }} ({{ acc }}) takes %n cycles to execute (REPEAT: %u)", total_time, REPEAT);
   {%- endfor %}
 
   {%- else %}
