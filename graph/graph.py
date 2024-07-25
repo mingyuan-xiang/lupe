@@ -202,6 +202,14 @@ class LupeGraph:
         """Get the names of hidden layers"""
         return list(self.graph.keys())[1:-1]
 
+    def set_acceleration(self, acc_config):
+        """Set acceleration method"""
+        for n in self.node_list:
+            if n in acc_config:
+                self.node_list[n].set_acceleration(
+                    acc_config[n]["acceleration"]
+                )
+
 if __name__ == "__main__":
     import onnx
     from onnx import checker

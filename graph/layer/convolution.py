@@ -108,40 +108,9 @@ class Convolution2D(LupeLayer):
 
         return ["mac", "fir"]
 
-    def _decide_acceleration(self):
-        """Decide how which operation to use"""
-        # TODO: We should do something smarter for the decider
-        if ("enhanced_acc" in self.opt_config and
-            self.opt_config["enhanced_acc"]):
-            if ("adaptive_gen_lea" not in self.opt_config or
-                not self.opt_config["adaptive_gen_lea"]):
-                return "enhanced_fir"
-
-            if self.kernel_shape[-1] == 3:
-                    return "enhanced_mac"
-
-            if self.kernel_shape[-1] == 5:
-                    return "enhanced_mac"
-
-            return "enhanced_fir"
-
-        if ("adaptive_gen_lea" not in self.opt_config or
-            not self.opt_config["adaptive_gen_lea"]):
-            return "fir"
-
-        if self.kernel_shape[-1] == 5:
-            if self.input_size[-1] < 14:
-                return "mac"
-
-            return "fir"
-
-        if self.kernel_shape[-1] == 3:
-            return "fir"
-
-        if self.kernel_shape[-1] == 1:
-            return "1x1_mpy"
-
-        return "fir"
+    def set_acceleration(self, acceleration):
+        """Set which operation to use"""
+        self._acceleration = acceleration
 
     def _get_size(self, opt_config, acceleration):
         mul = 16

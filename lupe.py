@@ -153,18 +153,21 @@ def _generate(args, mode):
             parent = pathlib.Path(__file__).parent.resolve()
             out_path = os.path.join(parent, "apps", dir_name)
 
-        if os.path.exists(out_path):
-            shutil.rmtree(out_path)
+            if os.path.exists(out_path):
+                shutil.rmtree(out_path)
         else:
+            dir_name = args.model_name
+
             parent = pathlib.Path(__file__).parent.resolve()
             if args.output_path is None:
                 out_path = os.path.join(parent, "apps", args.model_name)
             else:
                 out_path = args.output_path
-            print(f"Writing to {out_path}, got optimization flags:")
-            # Create the directory if it does not exist
+
             if args.clean and os.path.exists(out_path):
                 shutil.rmtree(out_path)
+
+        print(f"Writing to {out_path}, got optimization flags:")
 
         if not os.path.exists(out_path):
             os.makedirs(out_path)
@@ -176,9 +179,30 @@ def _generate(args, mode):
 
         parse_opt_config(config)
 
-
-
         graph = LupeGraph(dir_name, model, out_path, config)
+
+        # Read the acceleration configuration
+        acc_config = None
+        if (config["adaptive_gen_lea"] and
+            mode in (LupeMode.NORMAL, LupeMode.DEBUG)):
+            cal_path = os.path.join(
+                parent, "calibration", args.model_name + ".json")
+            if os.path.isfile(cal_path):
+                acc_config = load_opt_config(cal_path)
+
+            if 'opt_config' not in acc_config:
+                raise ValueError(
+                    "Optimization flags cannot be found in calibration"
+                    " configuration!"
+                )
+            if acc_config['opt_config'] != args.config:
+                raise ValueError(
+                    "Optimization flags for calibration and code generation"
+                    " don't match!"
+                )
+
+            # Set acceleration method
+            graph.set_acceleration(acc_config)
 
         cal = False
         if mode == LupeMode.CALIBRATING:
@@ -271,6 +295,8 @@ def main():
 
         _banner_print('Write out the calibration configurations')
         acc_dict = result_queue.get()
+
+        acc_dict['opt_config'] = args.config
 
         # create calibration directory if not existed
         parent = pathlib.Path(__file__).parent.resolve()
