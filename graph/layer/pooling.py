@@ -81,6 +81,11 @@ class AvgPooling(Pooling):
         """Return how to update the pooling layer"""
         return "avg_pooling.jinja"
 
+class GlobalAvgPooling(AvgPooling):
+    """Global Average pooling layer"""
+    def _register(self, node):
+        """Set kernel sizes for the Global Average pooling layer"""
+        self.kernel_shape = (self.input_size[2], self.input_size[3])
 
 class MaxPooling(Pooling):
     """Max pooling layer"""

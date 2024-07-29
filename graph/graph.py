@@ -227,5 +227,5 @@ if __name__ == "__main__":
 
     checker.check_model(onnx_model)
 
-    graph = LupeGraph("LeNet", onnx_model, "")
+    graph = LupeGraph("LeNet", onnx_model, "", {})
     graph.print()

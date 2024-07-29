@@ -3,7 +3,7 @@
 from enum import Enum, auto
 from .convolution import Convolution2D
 from .in_out import InOut
-from .pooling import AvgPooling, MaxPooling
+from .pooling import AvgPooling, GlobalAvgPooling, MaxPooling
 from .activation import Relu, Tanh
 from .transition import Flatten
 from .fully_connected import FullyConnected
@@ -19,6 +19,7 @@ class LupeType(Enum):
     CONV2D = auto()
     FC = auto()
     FLATTEN = auto()
+    Global_Avg_Pool = auto()
     INPUT = auto()
     MAX_POOL = auto()
     OUTPUT = auto()
@@ -60,6 +61,8 @@ def get_lupe_type(onnx_type):
         ty = LupeType.CLIP
     elif onnx_type == "Add":
         ty = LupeType.ADD
+    elif onnx_type == "GlobalAveragePool":
+        ty = LupeType.Global_Avg_Pool
     else:
         raise ValueError(f"Unsupported ONNX operation type: {onnx_type}")
 
@@ -76,12 +79,18 @@ def lupe_type_to_string(lupe_type):
     """
     string = ""
 
-    if lupe_type == LupeType.CONSTANT:
+    if lupe_type == LupeType.AVG_POOL:
+        string = "Average Pool"
+    elif lupe_type == LupeType.CONSTANT:
         string = "Constant"
     elif lupe_type == LupeType.CONV2D:
         string = "Conv2D"
     elif lupe_type == LupeType.FC:
         string = "Fully Connected"
+    elif lupe_type == LupeType.FLATTEN:
+        string = "Flatten"
+    elif lupe_type == LupeType.Global_Avg_Pool:
+        string = "Global Average Pool"
     elif lupe_type == LupeType.INPUT:
         string = "Input"
     elif lupe_type == LupeType.MAX_POOL:
@@ -115,6 +124,8 @@ def get_layer_constructor(lupe_type):
         layer = AvgPooling
     elif lupe_type == LupeType.MAX_POOL:
         layer = MaxPooling
+    elif lupe_type == LupeType.Global_Avg_Pool:
+        layer = GlobalAvgPooling
     elif lupe_type == LupeType.RELU:
         layer = Relu
     elif lupe_type == LupeType.TANH:
