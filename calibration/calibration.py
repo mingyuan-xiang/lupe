@@ -21,6 +21,7 @@ def calibration(baud, port, result_queue):
         if msg is None:
             continue
         data.append(msg)
+        print(msg)
         if isinstance(msg, str) and msg == UARTIO_END_PRINT_STR:
             break
     par.close()
