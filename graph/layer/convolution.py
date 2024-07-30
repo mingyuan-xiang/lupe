@@ -46,7 +46,8 @@ class Convolution2D(LupeLayer):
         else:
             self.has_padding = False
 
-        self._acceleration = "fir"
+        self._acceleration = None
+        self._calibration_list_idx = 0
 
     def __str__(self):
         s = f"{self.name}: Convolution2D("
@@ -68,10 +69,16 @@ class Convolution2D(LupeLayer):
         """If the layer has weights"""
         return True
 
+    def _get_acceleration(self):
+        if self._acceleration is None:
+            return "fir"
+        else:
+            return self._acceleration
+
     def get_buffer_size(self, acceleration):
         """Return the mac buffer size if needed"""
         if acceleration is None:
-            acceleration = self._acceleration
+            acceleration = self._get_acceleration()
 
         if acceleration  == "mac":
             return (
@@ -92,25 +99,34 @@ class Convolution2D(LupeLayer):
 
     def flip(self):
         """If the layer should flip the weights"""
-        if self._acceleration in ("fir", "enhanced_fir"):
+        if self._get_acceleration() in ("fir", "enhanced_fir"):
             return True
 
         return False
 
-    def get_calibration_list(self):
+    def get_calibration(self):
         """Get the list of acceleration method for calibration"""
-        if self.kernel_shape[-1] == 1:
-            return ["1x1_mpy", "1x1_mac"]
+        calibration_list = ["mac", "fir"]
 
         if ("enhanced_acc" in self.opt_config and
             self.opt_config["enhanced_acc"]):
             if self.group == 1:
-                return ["enhanced_mac", "enhanced_fir"]
+                calibration_list = ["enhanced_mac", "enhanced_fir"]
             else:
                 # No need to do enhanced mac for depth-wise convolution.
-                return ["mac", "enhanced_fir"]
+                calibration_list = ["mac", "enhanced_fir"]
 
-        return ["mac", "fir"]
+        if self.kernel_shape[-1] == 1:
+            calibration_list = ["1x1_mpy", "1x1_mac"]
+
+        if self._calibration_list_idx >= len(calibration_list):
+            return None
+        else:
+            return calibration_list[self._calibration_list_idx]
+
+    def next_calibration_list_idx(self):
+        """Increment _calibration_list_idx"""
+        self._calibration_list_idx += 1
 
     def set_acceleration(self, acceleration):
         """Set which operation to use"""
@@ -220,7 +236,7 @@ class Convolution2D(LupeLayer):
     def get_code(self, name, jinja_dir, opt_config, qf, acceleration):
         """Get the code for the layer"""
         if acceleration is None:
-            acceleration = self._acceleration
+            acceleration = self._get_acceleration()
 
         if name is None:
             name = self.name

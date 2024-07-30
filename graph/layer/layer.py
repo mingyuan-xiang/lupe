@@ -58,7 +58,7 @@ class LupeLayer(ABC):
         """If the layer should flip the weights"""
         return False
 
-    def get_calibration_list(self):
+    def get_calibration(self):
         """Get the list of acceleration method for calibration"""
         return None
 

@@ -21,11 +21,10 @@ def makefilegen(code_dir, graph, has_extra_buffer, opt_config, calibration):
     for n in graph.get_hidden_layers():
         node = graph.node_list[n]
         if calibration:
-            acceleration = graph.node_list[n].get_calibration_list()
-            if acceleration is not None and len(acceleration) > 0:
-                for a in acceleration:
-                    layer = node.name + "_" + a
-                    nodes.append(layer)
+            acceleration = graph.node_list[n].get_calibration()
+            if acceleration is not None:
+                layer = node.name + "_" + acceleration
+                nodes.append(layer)
                 continue
 
         nodes.append(n)

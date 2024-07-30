@@ -213,6 +213,20 @@ class LupeGraph:
                     acc_config[n]["acceleration"]
                 )
 
+    def need_calibration(self):
+        """Check if we need calibration"""
+        for n in self.node_list:
+            if self.node_list[n].get_calibration() is not None:
+                return True
+
+        return False
+
+    def update_calibration_idx(self):
+        """Update calibration index"""
+        for n in self.node_list:
+            if self.node_list[n].get_calibration() is not None:
+                self.node_list[n].next_calibration_list_idx()
+
 if __name__ == "__main__":
     import onnx
     from onnx import checker

@@ -82,12 +82,11 @@ class MSP430Gen:
             node = self.graph.node_list[n]
             acceleration = None
             if calibration:
-                acceleration = self.graph.node_list[n].get_calibration_list()
-                if acceleration is not None and len(acceleration) > 0:
-                    for a in acceleration:
-                        flag, max_shape, max_size = self._get_max_shape(
-                            node, a, max_shape, max_size)
-                        has_extra_buffer |= flag
+                acceleration = self.graph.node_list[n].get_calibration()
+                if acceleration is not None:
+                    flag, max_shape, max_size = self._get_max_shape(
+                        node, acceleration, max_shape, max_size)
+                    has_extra_buffer |= flag
                     continue
 
             flag, max_shape, max_size = self._get_max_shape(

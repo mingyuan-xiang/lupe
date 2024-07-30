@@ -32,8 +32,8 @@ def modelgen(code_dir, graph, debug, calibration):
             d["weight_name"] = graph.node_list[n].weight.name
             d["bias_name"] = graph.node_list[n].bias.name
 
-        if graph.node_list[n].get_calibration_list() is not None:
-            calibration_list[n] = graph.node_list[n].get_calibration_list()
+        if graph.node_list[n].get_calibration() is not None:
+            calibration_list[n] = [graph.node_list[n].get_calibration()]
         else:
             calibration_list[n] = []
 

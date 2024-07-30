@@ -49,11 +49,10 @@ def layergen(code_dir, graph, opt_config, qf, debug, calibration):
     for n in nodes:
         node = graph.node_list[n]
         if calibration:
-            acceleration = graph.node_list[n].get_calibration_list()
-            if acceleration is not None and len(acceleration) > 0:
-                for a in acceleration:
-                    name = node.name + "_" + a
-                    _gen(node, name, qf, debug, opt_config, a, code_dir)
+            acceleration = graph.node_list[n].get_calibration()
+            if acceleration is not None:
+                name = node.name + "_" + acceleration
+                _gen(node, name, qf, debug, opt_config, acceleration, code_dir)
                 continue
 
         _gen(node, node.name, qf, debug, opt_config, None, code_dir)

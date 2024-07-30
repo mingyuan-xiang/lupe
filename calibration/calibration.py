@@ -50,3 +50,21 @@ def calibration(baud, port, result_queue):
                 }
 
     result_queue.put(config)
+
+def update_calibration_config(old_config, new_config):
+    """Update the old configuration based on new configuration"""
+    config = old_config
+    for layer in new_config:
+        d = {
+            'acceleration' : new_config[layer]['acceleration'],
+            'cycles' : new_config[layer]['cycles'],
+            'repeat' : new_config[layer]['repeat'],
+        }
+        if layer in config:
+            new_time = d['cycles'] / d['repeat']
+            old_time = config[layer]['cycles'] / config[layer]['repeat']
+            if new_time < old_time:
+                config[layer] = d
+        else:
+            config[layer] = d
+    return config

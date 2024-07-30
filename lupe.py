@@ -20,7 +20,7 @@ from onnx import checker
 from graph.graph import LupeGraph
 from codegen.codegen import msp430gen
 from debug.get_input import get_input
-from calibration.calibration import calibration
+from calibration.calibration import calibration, update_calibration_config
 
 class LupeMode(Enum):
     """Code generation mode"""
@@ -149,110 +149,119 @@ def _banner_print(s):
         '\n*******************************************************************'
         + Fore.WHITE + Style.RESET_ALL)
 
-def _generate(args, mode):
+parent = pathlib.Path(__file__).parent.resolve()
+
+def _get_configs(args):
+    # Read the optimization configuration
+    config = {}
+    if os.path.isfile(args.config):
+        config = load_opt_config(args.config)
+
+    parse_opt_config(config)
+
+    return config
+
+def _get_paths(args, mode):
+    if mode == LupeMode.CALIBRATING:
+        dir_name = args.model_name + "_calibration"
+
+        out_path = os.path.join(parent, "apps", dir_name)
+
+        if os.path.exists(out_path):
+            shutil.rmtree(out_path)
+    else:
+        dir_name = args.model_name
+
+        if args.output_path is None:
+            out_path = os.path.join(parent, "apps", args.model_name)
+        else:
+            out_path = args.output_path
+
+        if args.clean and os.path.exists(out_path):
+            shutil.rmtree(out_path)
+
+    print(f"Writing to {out_path}, got optimization flags:")
+
+    if not os.path.exists(out_path):
+        os.makedirs(out_path)
+
+    return out_path, dir_name
+
+def _get_lupe_graph(args, config, out_path, dir_name):
     # Load onnx model
     if os.path.isfile(args.model_path):
         model = onnx.load(args.model_path)
         checker.check_model(model)
 
-        if mode == LupeMode.CALIBRATING:
-            dir_name = args.model_name + "_calibration"
-
-            parent = pathlib.Path(__file__).parent.resolve()
-            out_path = os.path.join(parent, "apps", dir_name)
-
-            if os.path.exists(out_path):
-                shutil.rmtree(out_path)
-        else:
-            dir_name = args.model_name
-
-            parent = pathlib.Path(__file__).parent.resolve()
-            if args.output_path is None:
-                out_path = os.path.join(parent, "apps", args.model_name)
-            else:
-                out_path = args.output_path
-
-            if args.clean and os.path.exists(out_path):
-                shutil.rmtree(out_path)
-
-        print(f"Writing to {out_path}, got optimization flags:")
-
-        if not os.path.exists(out_path):
-            os.makedirs(out_path)
-
-        # Read the optimization configuration
-        config = {}
-        if os.path.isfile(args.config):
-            config = load_opt_config(args.config)
-
-        parse_opt_config(config)
-
         graph = LupeGraph(
             dir_name, model, out_path, config, qf_offset=args.qf_offset)
-
-        # Read the acceleration configuration
-        acc_config = None
-        if (config["adaptive_gen_lea"] and
-            mode in (LupeMode.NORMAL, LupeMode.DEBUG)):
-            cal_path = os.path.join(
-                parent, "calibration", args.model_name + ".json")
-            if os.path.isfile(cal_path):
-                acc_config = load_opt_config(cal_path)
-
-            if acc_config is None or 'opt_config' not in acc_config:
-                raise ValueError(
-                    "Optimization flags cannot be found in calibration"
-                    " configuration!"
-                )
-            if acc_config['opt_config'] != args.config:
-                raise ValueError(
-                    "Optimization flags for calibration and code generation"
-                    " don't match!"
-                )
-
-            # Set acceleration method
-            graph.set_acceleration(acc_config)
-
-        cal = False
-        if mode == LupeMode.CALIBRATING:
-            cal = True
-
-        generator = msp430gen()(
-            out_path, config, graph, args.qf, add_timer=args.timer,
-            calibration=cal
-        )
-
-        if mode == LupeMode.DEBUG:
-            input_arr, label = get_input(args.debug_dataset, args.debug_idx)
-            generator.setup_debug_info(input_arr / (2 ** args.qf), label)
-
-        # Print the optimization configurations
-        generator.print_config()
-
-        generator.gen(
-            dir_name, args.dataset_size, args.print_freq, calibration=cal
-        )
-
-        # Generate the outer Makefile for the maker
-        template_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
-        )
-        with open(template_path, "r", encoding="utf-8") as file:
-            template = file.read()
-            j_template = Template(template)
-            code_str = j_template.render({"model_name" : dir_name})
-
-        file_path = os.path.join(
-            os.path.dirname(os.path.realpath(__file__)), "Makefile"
-        )
-        if os.path.isfile(file_path):
-            os.remove(file_path)
-        with open(os.path.join(file_path), "w", encoding="utf-8") as file:
-            file.write(code_str)
     else:
         raise FileNotFoundError(
             f"The model file {args.model_path} does not exist"
         )
+
+    return graph
+
+def _generate(args, mode, graph, config, out_path, dir_name):
+    # Read the acceleration configuration
+    acc_config = None
+    if (config["adaptive_gen_lea"] and
+        mode in (LupeMode.NORMAL, LupeMode.DEBUG)):
+        cal_path = os.path.join(
+            parent, "calibration", args.model_name + ".json")
+        if os.path.isfile(cal_path):
+            acc_config = load_opt_config(cal_path)
+
+        if acc_config is None or 'opt_config' not in acc_config:
+            raise ValueError(
+                "Optimization flags cannot be found in calibration"
+                " configuration!"
+            )
+        if acc_config['opt_config'] != args.config:
+            raise ValueError(
+                "Optimization flags for calibration and code generation"
+                " don't match!"
+            )
+
+        # Set acceleration method
+        graph.set_acceleration(acc_config)
+
+    cal = False
+    if mode == LupeMode.CALIBRATING:
+        cal = True
+
+    generator = msp430gen()(
+        out_path, config, graph, args.qf, add_timer=args.timer,
+        calibration=cal
+    )
+
+    if mode == LupeMode.DEBUG:
+        input_arr, label = get_input(args.debug_dataset, args.debug_idx)
+        generator.setup_debug_info(input_arr / (2 ** args.qf), label)
+
+    # Print the optimization configurations
+    generator.print_config()
+
+    generator.gen(
+        dir_name, args.dataset_size, args.print_freq, calibration=cal
+    )
+
+    # Generate the outer Makefile for the maker
+    template_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "makefile.jinja"
+    )
+    with open(template_path, "r", encoding="utf-8") as file:
+        template = file.read()
+        j_template = Template(template)
+        code_str = j_template.render({"model_name" : dir_name})
+
+    file_path = os.path.join(
+        os.path.dirname(os.path.realpath(__file__)), "Makefile"
+    )
+    if os.path.isfile(file_path):
+        os.remove(file_path)
+    with open(os.path.join(file_path), "w", encoding="utf-8") as file:
+        file.write(code_str)
 
 def main():
     """The main function"""
@@ -270,7 +279,10 @@ def main():
         mode = LupeMode.NORMAL
         if args.debug:
             mode = LupeMode.DEBUG
-        _generate(args, mode)
+        config = _get_configs(args)
+        out_path, dir_name = _get_paths(args, mode)
+        graph = _get_lupe_graph(args, config, out_path, dir_name)
+        _generate(args, mode, graph, config, out_path, dir_name)
     elif args.mode == "compile":
         os.system(f"make apps/{args.model_name}/bld/gcc/all")
     elif args.mode == "flash":
@@ -279,32 +291,44 @@ def main():
         _banner_print('Start the calibration for adaptive layer generation.')
 
         _banner_print('Generate calibration code')
-        _generate(args, LupeMode.CALIBRATING)
+        mode = LupeMode.CALIBRATING
+        config = _get_configs(args)
+        out_path, dir_name = _get_paths(args, mode)
+        graph = _get_lupe_graph(args, config, out_path, dir_name)
+
+        acc_dict = {}
 
         _banner_print('Start the calibration in the background')
 
-        result_queue = queue.Queue()
-        cal_thread = threading.Thread(
-            target=calibration,
-            args=(args.baud, args.port, result_queue)
-        )
-        cal_thread.daemon = True
-        cal_thread.start()
+        while graph.need_calibration():
+            _generate(args, mode, graph, config, out_path, dir_name)
 
-        _banner_print('Compile and flash calibration code')
-        dir_name = args.model_name + "_calibration"
-        os.system(f"make apps/{dir_name}/bld/gcc/prog")
+            result_queue = queue.Queue()
+            cal_thread = threading.Thread(
+                target=calibration,
+                args=(args.baud, args.port, result_queue)
+            )
+            cal_thread.daemon = True
+            cal_thread.start()
 
-        _banner_print('Waiting for calibration results...')
-        while True:
-            if not result_queue.empty():
-                break
+            _banner_print('Compile and flash calibration code')
+            dir_name = args.model_name + "_calibration"
+            os.system(f"make apps/{dir_name}/bld/gcc/prog")
 
-        cal_thread.join()
+            _banner_print('Waiting for calibration results...')
+            while True:
+                if not result_queue.empty():
+                    break
+
+            cal_thread.join()
+
+            d = result_queue.get()
+
+            update_calibration_config(acc_dict, d)
+
+            graph.update_calibration_idx()
 
         _banner_print('Write out the calibration configurations')
-        acc_dict = result_queue.get()
-
         acc_dict['opt_config'] = args.config
 
         # create calibration directory if not existed
