@@ -82,7 +82,7 @@ class Matrix:
         strides = [1]
         for i in range(len(dims)-1, 0, -1):
             s = strides[-1] * dims[i]
-            if s > 2**15:
+            if s > (2**16 - 1):
                 print(
                     Fore.RED +
                     f'Stride exceeds limit for uin16_t (got shape {dims}). ' +

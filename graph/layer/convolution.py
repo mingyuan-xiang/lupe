@@ -104,7 +104,11 @@ class Convolution2D(LupeLayer):
 
         if ("enhanced_acc" in self.opt_config and
             self.opt_config["enhanced_acc"]):
-            return ["enhanced_mac", "enhanced_fir"]
+            if self.group == 1:
+                return ["enhanced_mac", "enhanced_fir"]
+            else:
+                # No need to do enhanced mac for depth-wise convolution.
+                return ["mac", "enhanced_fir"]
 
         return ["mac", "fir"]
 
@@ -274,7 +278,6 @@ class Convolution2D(LupeLayer):
         io_qf, weight_qf = qf
 
         # TODO: not sure if LEA deinterleave works with odd number of channels
-
         params = {
             "layer_name" : name,
             "lea_opt" : opt_config["lea_opt"],
@@ -303,6 +306,7 @@ class Convolution2D(LupeLayer):
             "global_mem_buffer" : opt_config["global_mem_buffer"],
             "stride_row" : self.strides[0],
             "stride_col" : self.strides[1],
+            "group" : self.group,
         }
 
         if opt_config["adaptive_gen_mem"]:

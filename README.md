@@ -106,13 +106,19 @@ make apps/<app name>/bld/gcc/depclean
 
 + Clip(-32, 32) only in training
 + q5.10 for activation and bias, `qf_offset=1` for weights
-+ test accuracy in PyTorch (98.92%)
++ test accuracy in PyTorch (??%)
 
 ## ResNet3
 
-+ Clip(-8, 8) for activation and Clip(-1, 1) for weights (only in training)
++ Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
 + q4.11 for activation and bias, `qf_offset=1` for weights
-+ test accuracy in PyTorch (80.72%)
++ test accuracy in PyTorch (??%)
+
+## MobileNetV2
+
++ Clip(-32, 32) for activation and Clip(-1, 1) for weights (only in training)
++ q4.11 for activation and bias, `qf_offset=1` for weights
++ test accuracy in PyTorch (??%)
 
 ```
 ./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 3

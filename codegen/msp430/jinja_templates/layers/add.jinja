@@ -26,7 +26,9 @@ static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output) {
+  {%- if input_size >= lea_src_size %}
   uintptr_t lea_line_size_offset = _LEA_SRC_SIZE * sizeof(int16_t);
+  {%- endif %}
   uint16_t lea_input_line_remain_size = _LEA_REMAIN_SIZE;
   uintptr_t lea_input_line_remain_size_offset = lea_input_line_remain_size*sizeof(int16_t);
 

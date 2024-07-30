@@ -24,26 +24,38 @@
 #define _INPUT_COL_SIZE {{ in_line_size }}
 #define _KERNEL_ROW_SIZE {{ flt_size }}
 #define _KERNEL_COL_SIZE {{ flt_col_size }}
-#define _OUTPUT_ROW_SIZE ((_INPUT_ROW_SIZE - _KERNEL_ROW_SIZE + 1) / _STRIDE_ROW_SIZE)
-#define _FIR_OUTPUT_COL_SIZE (_INPUT_COL_SIZE - _KERNEL_COL_SIZE + 1)
-#define _OUTPUT_COL_SIZE (_FIR_OUTPUT_COL_SIZE / _STRIDE_COL_SIZE)
+#define _OUTPUT_ROW_SIZE (((_INPUT_ROW_SIZE - _KERNEL_ROW_SIZE) / _STRIDE_ROW_SIZE) + 1)
+#define _OUTPUT_COL_SIZE (((_INPUT_COL_SIZE - _KERNEL_COL_SIZE) / _STRIDE_COL_SIZE) + 1)
 #define _KERNEL_SIZE_ALIGNED MAKE_ALIGN_2(_KERNEL_COL_SIZE)
 
 #define _FIR_OVERLAP_SIZE ((_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1) / _STRIDE_COL_SIZE)
 
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+#define ___LEA_SRC_SIZE {{ lea_src_size }}
+#define __LEA_SRC_SIZE (___LEA_SRC_SIZE - ((___LEA_SRC_SIZE / _INPUT_COL_SIZE) - _KERNEL_COL_SIZE))
+{%- else %}
 #define __LEA_SRC_SIZE {{ lea_src_size }}
+{%- endif %}
 /* _LEA_SRC_SIZE will always be mutiple of 2 */
 #define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2)
 #define _FIR_TOTAL_SIZE (_OUTPUT_ROW_SIZE * _INPUT_COL_SIZE)
 #define _FIR_INPUT_SIZE (_LEA_SRC_SIZE - (_LEA_SRC_SIZE % _INPUT_COL_SIZE))
 #define _FIR_INPUT_REMAIN_SIZE (_FIR_TOTAL_SIZE % _FIR_INPUT_SIZE)
-
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+/* Make sure deinterleave works with odd _INPUT_COL_SIZE */
+#define _FIR_OUTPUT_REMAIN_SIZE (((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * (_INPUT_COL_SIZE + 1) - 1) - _KERNEL_COL_SIZE + 1)
+{%- else %}
 #define _FIR_OUTPUT_REMAIN_SIZE (_FIR_INPUT_REMAIN_SIZE - _KERNEL_COL_SIZE + 1)
+{%- endif %}
 #define _FIR_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE)
 #define _FIR_ADD_OUTPUT_REMAIN_SIZE ((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE)
 #define _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_REMAIN_SIZE)
-
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+/* Make sure deinterleave works with odd _INPUT_COL_SIZE */
+#define _FIR_OUTPUT_SIZE (((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * (_INPUT_COL_SIZE + 1) - 1) - _KERNEL_COL_SIZE + 1)
+{%- else %}
 #define _FIR_OUTPUT_SIZE (_FIR_INPUT_SIZE - _KERNEL_COL_SIZE + 1)
+{%- endif %}
 #define _FIR_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_SIZE)
 #define _FIR_ADD_OUTPUT_SIZE ((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE)
 #define _FIR_ADD_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_SIZE)
@@ -111,7 +123,9 @@ static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q1
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
+{%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) or (group == 1) %}
   uint16_t output_len = output->strides[1];
+{%- endif %}
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
 
@@ -128,7 +142,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t output_fram_addr = (uintptr_t)(output->data);
   uintptr_t input_channel_addr = input_fram_addr;
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
+{%- if group == 1 %}
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
+{%- endif %}
   uintptr_t lea_skip_addr = dst_lea_addr;
   uintptr_t lea_skip_addr_before_offset = (_OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE) * sizeof(int16_t);
   uintptr_t lea_skip_addr_before_st = lea_skip_addr + lea_skip_addr_before_offset;
@@ -148,6 +164,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   int16_t* conv_flt = lea_flt;
   uint16_t input_line_size = input->dims[3];
   uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
+  {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+  uint16_t input_line_size_pad_offset = input_line_size_offset + sizeof(int16_t);
+  {%- endif %}
 
   uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
@@ -167,7 +186,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
   add_init(MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED));
-  fir_init(MAKE_ALIGN_2(input_line_size - kernel_size + 1), tapLength);
+  fir_init(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED, tapLength);
   offset_init(lea_remain_size_aligned);
   {%- else %}
   {% if stride_col > 1 %}
@@ -178,7 +197,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   };
   {%- endif %}
   msp_fir_q15_params conv_params = {
-    .length = MAKE_ALIGN_2(input_line_size - kernel_size + 1),
+    .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED,
     .tapLength = MAKE_ALIGN_2(kernel_size),
     .coeffs = lea_flt,
     .enableCircularBuffer = false 
@@ -252,10 +271,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   /* convolution */
+{%- if group == 1 %}
   for (uint16_t i = 0; i < out_channels; ++i) {
     input_fram_addr = (uintptr_t)(input->data);
+{%- else %}
+  uintptr_t tmp_output_addr = output_fram_addr;
+{%- endif %}
     for (uint16_t j = 0; j < in_channels; ++j) {
+      {%- if group == 1 %}
       uintptr_t tmp_output_addr = output_fram_addr;
+      {%- endif %}
       input_channel_addr = input_fram_addr;
       uintptr_t tmp_input_addr = input_channel_addr;
       {%- if stride_row > 1 %}
@@ -355,15 +380,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
        */
 
       /* send input to LEA RAM */
-      {%- if stride_row == 1 %}
-      DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
-      {%- else %}
+      {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
       input_lea_addr = src_lea_addr;
       for (uint16_t r = 0; r < _FIR_INPUT_REMAIN_SIZE; r += _INPUT_COL_SIZE) {
         DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+        {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+        input_lea_addr += input_line_size_pad_offset;
+        {%- else %}
         input_lea_addr += input_line_size_offset;
+        {%- endif %}
         strided_input_addr += input_line_strided_size_offset;
       }
+      {%- else %}
+      DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
       {%- endif %}
 
       /* convolution */
@@ -411,15 +440,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
 
         /* send input to LEA RAM */
-        {%- if stride_row == 1 %}
-        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
-        {%- else %}
+        {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
         input_lea_addr = src_lea_addr;
         for (uint16_t r = 0; r < _FIR_INPUT_REMAIN_SIZE; r += _INPUT_COL_SIZE) {
           DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+          {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+          input_lea_addr += input_line_size_pad_offset;
+          {%- else %}
           input_lea_addr += input_line_size_offset;
+          {%- endif %}
           strided_input_addr += input_line_strided_size_offset;
         }
+        {%- else %}
+        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
         {%- endif %}
 
         /* convolution */
@@ -540,15 +573,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
 
         /* send input to LEA RAM */
-        {%- if stride_row == 1 %}
-        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
-        {%- else %}
+        {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
         input_lea_addr = src_lea_addr;
         for (uint16_t r = 0; r < _FIR_INPUT_SIZE; r += _INPUT_COL_SIZE) {
           DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+          {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+          input_lea_addr += input_line_size_pad_offset;
+          {%- else %}
           input_lea_addr += input_line_size_offset;
+          {%- endif %}
           strided_input_addr += input_line_strided_size_offset;
         }
+        {%- else %}
+        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
         {%- endif %}
 
         /* convolution */
@@ -596,15 +633,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- endif %}
 
           /* send input to LEA RAM */
-          {%- if stride_row == 1 %}
-          DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
-          {%- else %}
+          {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
           input_lea_addr = src_lea_addr;
           for (uint16_t r = 0; r < _FIR_INPUT_SIZE; r += _INPUT_COL_SIZE) {
             DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+            {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+            input_lea_addr += input_line_size_pad_offset;
+            {%- else %}
             input_lea_addr += input_line_size_offset;
+            {%- endif %}
             strided_input_addr += input_line_strided_size_offset;
           }
+          {%- else %}
+          DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
           {%- endif %}
 
           /* convolution */
@@ -680,8 +721,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
       input_fram_addr += input_channel_offset;
     }
+{%- if group == 1 %}
     output_fram_addr += output_addr_offset;
   }
+{%- endif %}
 
   /* add bias and left shift */
   output_fram_addr = (uintptr_t)(output->data);

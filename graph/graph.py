@@ -14,7 +14,7 @@ from .layer.layer_utils import name_conversion
 
 class LupeGraph:
     """The graph for the DNN model"""
-    def __init__(self, name, model, out_path, opt_config):
+    def __init__(self, name, model, out_path, opt_config, qf_offset=0):
         """Initialize the graph for the DNN model
 
         The graph is just a dictionary of nodes and their connections.
@@ -28,6 +28,7 @@ class LupeGraph:
         self.graph = OrderedDict()
         self.node_list = OrderedDict()
         self.opt_config = opt_config
+        self.qf_offset = qf_offset
 
         # Infer the shapes of the model
         model = shape_inference.infer_shapes(model)
@@ -48,7 +49,9 @@ class LupeGraph:
         weights = model.graph.initializer
 
         for w in weights:
-            wei = get_layer_constructor(LupeType.WEIGHT)(w, None, None, self.opt_config)
+            wei = get_layer_constructor(LupeType.WEIGHT)(
+                w, None, None, self.opt_config, qf_offset=self.qf_offset
+            )
             self.node_list[wei.name] = wei
 
         for node in model.graph.node:

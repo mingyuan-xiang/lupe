@@ -37,14 +37,18 @@ void exit() {
 int main() {
   init();
 
+{%- if not calibration %}
   uint16_t l;
+{%- endif %}
+
   msp_send_printf("Test {{ model_name }}\n");
-{%- if debug or calibration %}
+
+{%- if calibration %}
+  {{ model_name }}(&input_meta);
+{%- elif debug %}
   l = {{ model_name }}(&input_meta);
-  {%- if debug %}
   msp_send_printf("Got %u, Expecting: {{ label }}", l);
-  {%- endif %}
-{% else %}
+{%- else %}
 {% if add_timer %}
   uint32_t total_time = 0;
   uint32_t cnt = 0;

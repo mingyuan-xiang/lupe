@@ -4,6 +4,7 @@
 
 import argparse
 from collections import OrderedDict
+from colorama import Fore, Style
 from enum import Enum, auto
 import os
 import pathlib
@@ -80,7 +81,7 @@ def lupe_args():
         help="Insert printing for input/output into the model"
     )
     par.add_argument(
-        "--debug-dataset", choices=["MNIST", "CIFAR10"], default="MNIST",
+        "--debug-dataset", choices=["MNIST", "CIFAR10", "vww"], default="MNIST",
         help="Set the input buffer to be the first image(data) in the dataset"
     )
     par.add_argument(
@@ -91,6 +92,10 @@ def lupe_args():
         "--qf", type=int, default=2,
         help=("Set the bit width of the integer part of the fixed point " +
         "representation, e.g. pass `--qf 2` will have q2.13")
+    )
+    par.add_argument(
+        "--qf-offset", type=int, default=1,
+        help=("Set the fixed point format offset for weights")
     )
     par.add_argument(
         "--baud", type=int, default=19200, help="UART baud rate for calibration"
@@ -137,9 +142,12 @@ def parse_opt_config(opt_config):
     return opt_config
 
 def _banner_print(s):
-    print('\n*****************************************************************')
-    print(s)
-    print('*****************************************************************\n')
+    print(Fore.GREEN +
+        '\n*******************************************************************')
+    print(Fore.GREEN + s)
+    print(Fore.GREEN +
+        '\n*******************************************************************'
+        + Fore.WHITE + Style.RESET_ALL)
 
 def _generate(args, mode):
     # Load onnx model
@@ -179,7 +187,8 @@ def _generate(args, mode):
 
         parse_opt_config(config)
 
-        graph = LupeGraph(dir_name, model, out_path, config)
+        graph = LupeGraph(
+            dir_name, model, out_path, config, qf_offset=args.qf_offset)
 
         # Read the acceleration configuration
         acc_config = None
@@ -190,7 +199,7 @@ def _generate(args, mode):
             if os.path.isfile(cal_path):
                 acc_config = load_opt_config(cal_path)
 
-            if 'opt_config' not in acc_config:
+            if acc_config is None or 'opt_config' not in acc_config:
                 raise ValueError(
                     "Optimization flags cannot be found in calibration"
                     " configuration!"

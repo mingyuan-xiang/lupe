@@ -7,7 +7,8 @@ class LupeLayer(ABC):
     """
     The basic layer node in the graph
     """
-    def __init__(self, node, model, node_list, opt_config, io=None):
+    def __init__(
+        self, node, model, node_list, opt_config, io=None, qf_offset=0):
         """Initialize the layer
         
         Args:
@@ -19,6 +20,7 @@ class LupeLayer(ABC):
         """
         self.name = self._get_name(node)
         self.opt_config = opt_config
+        self.qf_offset = qf_offset
 
         if io is None:
             self.input_size = self._get_input_size(node, model)

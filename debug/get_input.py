@@ -2,6 +2,7 @@
 
 from torchvision import datasets
 from torchvision import transforms
+import pyvww
 
 def get_input(dataset, idx):
     """Return the {idx} input image(data) in a numpy array"""
@@ -18,6 +19,17 @@ def get_input(dataset, idx):
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
             std=[0.229, 0.224, 0.225])
         ]), download=True)
+    elif dataset.lower() == "vww":
+        normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+            std=[0.229, 0.224, 0.225])
+        d = pyvww.pytorch.VisualWakeWordsClassification(
+            root='models/data/vww/all2017/',
+            annFile='models/data/vww/annotations/instances_val.json',
+            transform=transforms.Compose([
+                transforms.Resize((80, 80)),
+                transforms.ToTensor(),
+                normalize,
+            ]))
     else:
         raise NotImplementedError(f"{dataset} is not supported")
 

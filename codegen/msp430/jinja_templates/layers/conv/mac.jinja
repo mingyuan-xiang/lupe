@@ -162,11 +162,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   /* convolution */
+{%- if group != 1 %}
+  {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+  uint16_t output_channel_pos = 0;
+  {%- endif %}
+  uintptr_t output_channel_addr = output_fram_addr;
+{%- endif %}
   for (uint16_t i = 0; i < in_channels; ++i) {
+{%- if group == 1 %}
     {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
     uint16_t output_channel_pos = 0;
     {%- endif %}
     uintptr_t output_channel_addr = output_fram_addr;
+{%- endif %}
     uintptr_t flt_tmp_addr = flt_fram_addr;
     uint16_t tmp_input_addr_offset = sizeof(int16_t) * _STRIDE_COL_SIZE;
 
@@ -221,8 +229,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_channel_addr += input_line_size_strided_offset;
       {%- endif %}
     }
-
+{% if group == 1 %}
     for (uint16_t j = 0; j < out_channels; ++j) {
+{%- endif %}
       uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data;
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
       uint16_t tmp_output_pos = output_channel_pos;
@@ -256,11 +265,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       lea_add_params->vectorSize = lea_remain_size_aligned;
       {%- else %}
       add_params.length = lea_remain_size_aligned;
-      {%- endif %}
-
-      {%- if out_len % 2 != 0 %}
-      /* set the aligned position to be zeros */
-      lea_add[_LEA_REMAIN_SIZE] = 0;
       {%- endif %}
 
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
@@ -337,7 +341,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
       output_channel_pos += output_len;
       {%- endif %}
+{%- if group == 1 %}
     }
+{%- endif %}
     {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
     input_fram_pos += input_len;
     {%- else %}

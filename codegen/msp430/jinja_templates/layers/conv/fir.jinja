@@ -84,7 +84,9 @@ static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q1
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
+  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) or (group == 1) %}
   uint16_t output_len = output->strides[1];
+  {%- endif %}
   uint16_t input_len = input->strides[1];
   uint16_t kernel_size = weight->dims[2];
 
@@ -105,7 +107,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
   uintptr_t output_lea_addr = dst_lea_addr;
   uintptr_t output_fram_addr = (uintptr_t)(output->data);
+  {%- if group == 1 %}
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
+  {%- endif %}
 
   int16_t* conv_flt = lea_flt;
   uint16_t input_line_size = input->dims[3];
@@ -235,17 +239,27 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   /* convolution */
+{%- if group == 1 %}
   for (uint16_t i = 0; i < out_channels; ++i) {
     {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
     input_fram_pos = 0;
     {%- else %}
     input_fram_addr = (uintptr_t)(input->data);
     {%- endif %}
+{%- else %}
+  {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
+  uint16_t tmp_output_pos = output_fram_pos;
+  {%- else %}
+  uintptr_t tmp_output_addr = output_fram_addr;
+  {%- endif %}
+{%- endif %}
     for (uint16_t j = 0; j < in_channels; ++j) {
+      {%- if group == 1 %}
       {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
       uint16_t tmp_output_pos = output_fram_pos;
       {%- else %}
       uintptr_t tmp_output_addr = output_fram_addr;
+      {%- endif %}
       {%- endif %}
 
       {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}
@@ -431,12 +445,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_fram_addr += input_channel_offset;
       {%- endif %}
     }
+{%- if group == 1 %}
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
     output_fram_pos += output_len;
     {%- else %}
     output_fram_addr += output_addr_offset;
     {%- endif %}
   }
+{%- endif %}
 
   /* add bias and left shift */
   output_fram_addr = (uintptr_t)(output->data);
