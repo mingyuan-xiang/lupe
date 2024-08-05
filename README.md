@@ -104,26 +104,30 @@ make apps/<app name>/bld/gcc/depclean
 
 ## LeNet
 
++ mnist size: 
 + Clip(-32, 32) only in training
 + q5.10 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (??%)
 
 ## ResNet3
 
++ cifar10 size: 
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
 + q4.11 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (??%)
 
 ## MobileNetV2
 
++ vww size: 
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
 + q4.11 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (80.69%)
 
 ## DS-CNN
 
++ speech_commands size: 
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
-+ q4.11 for activation and bias, `qf_offset=1` for weights
++ q5.11 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (96.38%)
 
 ```

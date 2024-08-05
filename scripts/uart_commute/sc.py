@@ -20,6 +20,9 @@ sc = SpeechCommands('./models/data/SpeechCommands', 'testing')
 # pack the image to a 1D 16-bit array
 def parse_img(img, qf):
     img = img.numpy()
+    int16_min = np.iinfo(np.int16).min / (2 ** (15 - qf))
+    int16_max = np.iinfo(np.int16).max / (2 ** (15 - qf))
+    img = np.clip(img, int16_min, int16_max)
     img = img.flatten() * (2 ** (15 - qf))
     img = img.astype(np.int16)
     return img

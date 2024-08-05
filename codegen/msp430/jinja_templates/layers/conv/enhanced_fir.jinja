@@ -168,6 +168,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
   uint16_t input_line_size_pad_offset = input_line_size_offset + sizeof(int16_t);
   {%- endif %}
+  {%- if flt_size % 2 == 0 %}
+  uint16_t flt_len = kernel_row_size * kernel_col_size;
+  {%- if (not has_adaptive_gen_mem) or (flt_len >= adaptive_gen_mem_size) %}
+  uintptr_t flt_addr_offset = flt_len * sizeof(int16_t);
+  {%- endif %}
+  {%- endif %}
 
   uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
   {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
@@ -334,10 +340,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       s++;
       {%- endfor %}
 
-      flt_fram_pos += kernel_col_size;
+      flt_fram_pos += flt_len;
       {%- else %}
-      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
-      flt_fram_addr += flt_addr_col_offset;
+      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
+      flt_fram_addr += flt_addr_offset;
       {%- endif %}
 
       {%- endif %}

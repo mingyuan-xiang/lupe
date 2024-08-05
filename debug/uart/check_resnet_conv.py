@@ -47,6 +47,9 @@ np.set_printoptions(linewidth=np.inf, threshold=np.inf, precision=3)
 
 image, label = get_input('cifar10', args.idx)
 image = torch.from_numpy(image)
+int16_min = np.iinfo(np.int16).min / (2 ** (15 - args.qf))
+int16_max = np.iinfo(np.int16).max / (2 ** (15 - args.qf))
+image = np.clip(image, int16_min, int16_max)
 
 model = onnx.load(args.param_loc)
 weights = model.graph.initializer

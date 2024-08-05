@@ -47,6 +47,9 @@ np.set_printoptions(linewidth=np.inf, threshold=np.inf, precision=3)
 
 image, label = get_input('sc', args.idx)
 image = torch.from_numpy(image)
+int16_min = np.iinfo(np.int16).min / (2 ** (15 - args.qf))
+int16_max = np.iinfo(np.int16).max / (2 ** (15 - args.qf))
+image = np.clip(image, int16_min, int16_max)
 
 model = onnx.load(args.param_loc)
 weights = model.graph.initializer
@@ -65,14 +68,15 @@ def get_weights(w_name, b_name):
 
     return weight, bias
 
-weight, bias = get_weights('onnx::Conv_115', 'onnx::Conv_116')
-res = F.conv2d(image, weight, bias=bias, padding=1, stride=2)
-res = F.relu6(res)
-weight, bias = get_weights('onnx::Conv_118', 'onnx::Conv_119')
-res = F.conv2d(res, weight, bias=bias, padding=1, groups=64)
-res = F.relu6(res)
-weight, bias = get_weights('onnx::Conv_121', 'onnx::Conv_122')
-res = F.conv2d(res, weight, bias=bias)
+res = image
+# weight, bias = get_weights('onnx::Conv_115', 'onnx::Conv_116')
+# res = F.conv2d(image, weight, bias=bias, padding=1, stride=2)
+# res = F.relu6(res)
+# weight, bias = get_weights('onnx::Conv_118', 'onnx::Conv_119')
+# res = F.conv2d(res, weight, bias=bias, padding=1, groups=64)
+# res = F.relu6(res)
+# weight, bias = get_weights('onnx::Conv_121', 'onnx::Conv_122')
+# res = F.conv2d(res, weight, bias=bias)
 # res = F.relu6(res)
 
 x_exp = res.cpu().detach().numpy()
