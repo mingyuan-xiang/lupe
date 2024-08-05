@@ -1,0 +1,31 @@
+Image 0, true label: 0, predicted label: 1, accumulative accuracy: 0.0
+Image 1, true label: 0, predicted label: 0, accumulative accuracy: 0.5
+Image 2, true label: 0, predicted label: 0, accumulative accuracy: 0.6666666666666666
+Image 3, true label: 1, predicted label: 1, accumulative accuracy: 0.75
+Image 4, true label: 0, predicted label: 0, accumulative accuracy: 0.8
+Image 5, true label: 0, predicted label: 0, accumulative accuracy: 0.8333333333333334
+Image 6, true label: 0, predicted label: 0, accumulative accuracy: 0.8571428571428571
+Image 7, true label: 1, predicted label: 1, accumulative accuracy: 0.875
+Image 8, true label: 0, predicted label: 0, accumulative accuracy: 0.8888888888888888
+Image 9, true label: 0, predicted label: 0, accumulative accuracy: 0.9
+total cycles (32767 Hz): 3062906
+Image 10, true label: 1, predicted label: 0, accumulative accuracy: 0.8181818181818182
+Image 11, true label: 0, predicted label: 0, accumulative accuracy: 0.8333333333333334
+Image 12, true label: 0, predicted label: 0, accumulative accuracy: 0.8461538461538461
+Image 13, true label: 1, predicted label: 1, accumulative accuracy: 0.8571428571428571
+Image 14, true label: 0, predicted label: 0, accumulative accuracy: 0.8666666666666667
+Image 15, true label: 1, predicted label: 0, accumulative accuracy: 0.8125
+Image 16, true label: 0, predicted label: 0, accumulative accuracy: 0.8235294117647058
+Image 17, true label: 0, predicted label: 0, accumulative accuracy: 0.8333333333333334
+Image 18, true label: 1, predicted label: 1, accumulative accuracy: 0.8421052631578947
+Image 19, true label: 1, predicted label: 0, accumulative accuracy: 0.8
+total cycles (32767 Hz): 3063134
+Image 20, true label: 0, predicted label: 0, accumulative accuracy: 0.8095238095238095
+Image 21, true label: 0, predicted label: 0, accumulative accuracy: 0.8181818181818182
+Image 22, true label: 1, predicted label: 1, accumulative accuracy: 0.8260869565217391
+Image 23, true label: 0, predicted label: 0, accumulative accuracy: 0.8333333333333334
+Image 24, true label: 1, predicted label: 1, accumulative accuracy: 0.84
+Image 25, true label: 0, predicted label: 0, accumulative accuracy: 0.8461538461538461
+Image 26, true label: 0, predicted label: 0, accumulative accuracy: 0.8518518518518519
+Image 27, true label: 0, predicted label: 0, accumulative accuracy: 0.8571428571428571
+Image 28, true label: 1, predicted label: 0, accumulative accuracy: 0.8275862068965517

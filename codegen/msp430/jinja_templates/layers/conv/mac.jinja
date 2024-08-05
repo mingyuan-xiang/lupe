@@ -16,7 +16,9 @@
 #define _INPUT_LINE_SIZE {{ in_line_size }}
 #define _STRIDE_ROW_SIZE {{ stride_row }}
 #define _STRIDE_COL_SIZE {{ stride_col }}
-#define _FLT_LEN {{ flt_len }}
+#define _KERNEL_ROW_SIZE {{ flt_size }}
+#define _KERNEL_COL_SIZE {{ flt_col_size }}
+#define _FLT_LEN _KERNEL_ROW_SIZE * _KERNEL_COL_SIZE
 {% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
@@ -47,13 +49,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t out_channels = output->dims[1];
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
-  uint16_t kernel_size = weight->dims[2];
+  uint16_t kernel_row_size = _KERNEL_ROW_SIZE;
+  uint16_t kernel_col_size = _KERNEL_COL_SIZE;
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
   uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
   uintptr_t flt_addr_offset = _FLT_LEN * sizeof(int16_t);
   uintptr_t flt_channel_offset = weight->strides[0] * sizeof(int16_t);
-  uintptr_t flt_addr_row_offset = kernel_size * sizeof(int16_t);
+  uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
   uintptr_t input_fram_addr = (uintptr_t)(input->data);
   uintptr_t input_channel_addr = input_fram_addr;
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
@@ -198,7 +201,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- else %}
         uintptr_t tmp_input_row_addr = tmp_input_addr;
         {%- endif %}
-        for (uint16_t k = 0; k < kernel_size; ++k) {
+        for (uint16_t k = 0; k < kernel_row_size; ++k) {
           {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
           s = tmp_input_row_pos;
           dst_pos = mac_buffer_pos;
@@ -209,12 +212,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- endfor %}
 
           tmp_input_row_pos += input_line_size;
-          mac_buffer_pos += kernel_size;
+          mac_buffer_pos += kernel_col_size;
           {%- else %}
-          DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_size);
+          DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
 
           tmp_input_row_addr += input_line_size_offset;
-          mac_buffer_addr += flt_addr_row_offset;
+          mac_buffer_addr += flt_addr_col_offset;
           {%- endif %}
         }
         {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}

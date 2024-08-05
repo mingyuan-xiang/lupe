@@ -26,7 +26,7 @@ class Convolution2D(LupeLayer):
         ) if kernel_shape else None
         # pads
         pads = get_onnx_attr(node, "pads")
-        self.padding = tuple(pads.ints) if pads else None
+        self.padding = tuple(pads.ints) if pads else (0, 0, 0, 0)
         # strides
         strides = get_onnx_attr(node, "strides")
         self.strides = tuple(strides.ints) if strides else None

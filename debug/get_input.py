@@ -1,8 +1,12 @@
 """Get the first input image(data) of a given dataset"""
+import sys
 
 from torchvision import datasets
 from torchvision import transforms
 import pyvww
+
+sys.path.append("models/dataset")
+from speech_commands import SpeechCommands
 
 def get_input(dataset, idx):
     """Return the {idx} input image(data) in a numpy array"""
@@ -30,6 +34,8 @@ def get_input(dataset, idx):
                 transforms.ToTensor(),
                 normalize,
             ]))
+    elif dataset.lower() == "sc":
+        d = SpeechCommands('./models/data/SpeechCommands', 'testing')
     else:
         raise NotImplementedError(f"{dataset} is not supported")
 

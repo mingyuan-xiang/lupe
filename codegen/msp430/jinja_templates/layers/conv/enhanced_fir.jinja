@@ -127,7 +127,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_len = output->strides[1];
 {%- endif %}
   uint16_t input_len = input->strides[1];
-  uint16_t kernel_size = weight->dims[2];
+  uint16_t kernel_row_size = _KERNEL_ROW_SIZE;
+  uint16_t kernel_col_size = _KERNEL_COL_SIZE;
 
   uintptr_t src_lea_addr = (uintptr_t)lea_src;
   uintptr_t dst_lea_addr = (uintptr_t)lea_dst;
@@ -135,8 +136,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
   uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
-  uintptr_t flt_addr_row_offset = kernel_size * sizeof(int16_t);
-  uintptr_t flt_addr_padding_offset = (kernel_size + 1) * sizeof(int16_t);
+  uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
+  uintptr_t flt_addr_padding_offset = (kernel_col_size + 1) * sizeof(int16_t);
   uintptr_t input_lea_addr = src_lea_addr;
   uintptr_t input_fram_addr = (uintptr_t)(input->data);
   uintptr_t output_fram_addr = (uintptr_t)(output->data);
@@ -184,7 +185,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {% if stride_col > 1 %}
   deinterleave_init(_DEINTERLEAVE_REMAIN_SIZE_ALIGNED, 0, _STRIDE_COL_SIZE);
   {%- endif %}
-  uint16_t tapLength = MAKE_ALIGN_2(kernel_size);
+  uint16_t tapLength = MAKE_ALIGN_2(kernel_col_size);
   add_init(MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED));
   fir_init(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED, tapLength);
   offset_init(lea_remain_size_aligned);
@@ -198,7 +199,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   msp_fir_q15_params conv_params = {
     .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED,
-    .tapLength = MAKE_ALIGN_2(kernel_size),
+    .tapLength = MAKE_ALIGN_2(kernel_col_size),
     .coeffs = lea_flt,
     .enableCircularBuffer = false 
   };
@@ -219,9 +220,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {% if flt_size % 2 != 0 %}
   /* set the aligned position to be zeros */
   uint16_t lea_reset_pos = 0;
-  for (uint16_t k = 0; k < kernel_size; ++k) {
+  for (uint16_t k = 0; k < kernel_row_size; ++k) {
     lea_flt[lea_reset_pos] = 0;
-    lea_reset_pos += (kernel_size + 1);
+    lea_reset_pos += (kernel_col_size + 1);
   }
   {%- endif %}
 
@@ -299,7 +300,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       flt_lea_addr += sizeof(uint16_t);
       {%- endif %}
 
-      for (uint16_t k = 0; k < kernel_size; ++k) {
+      for (uint16_t k = 0; k < kernel_row_size; ++k) {
         {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
         s = flt_fram_pos;
         dst_pos = flt_lea_pos;
@@ -310,11 +311,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endfor %}
 
         flt_lea_pos += _KERNEL_SIZE_ALIGNED;
-        flt_fram_pos += kernel_size;
+        flt_fram_pos += kernel_col_size;
         {%- else %}
-        DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_size);
+        DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
         flt_lea_addr += flt_addr_padding_offset;
-        flt_fram_addr += flt_addr_row_offset;
+        flt_fram_addr += flt_addr_col_offset;
         {%- endif %}
       }
       /* restore flt_lea_addr pointer to the beginning of the array */
@@ -333,10 +334,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       s++;
       {%- endfor %}
 
-      flt_fram_pos += flt_len;
+      flt_fram_pos += kernel_col_size;
       {%- else %}
-      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
-      flt_fram_addr += flt_addr_offset;
+      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
+      flt_fram_addr += flt_addr_col_offset;
       {%- endif %}
 
       {%- endif %}
@@ -431,7 +432,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
       tmp_input_addr += input_line_size_offset;
 
-      for (uint16_t k = 1; k < kernel_size; ++k) {
+      for (uint16_t k = 1; k < kernel_row_size; ++k) {
         {%- if stride_row > 1 %}
         strided_input_addr = tmp_input_addr;
         {%- endif %}
@@ -624,7 +625,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
         tmp_input_addr += input_line_size_offset;
 
-        for (uint16_t k = 1; k < kernel_size; ++k) {
+        for (uint16_t k = 1; k < kernel_row_size; ++k) {
           {%- if stride_row > 1 %}
           strided_input_addr = tmp_input_addr;
           {%- endif %}
