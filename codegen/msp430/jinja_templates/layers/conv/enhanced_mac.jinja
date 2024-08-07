@@ -129,9 +129,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   {%- if lea_opt %}
   {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
-  mac_init(lea_mac_remain_size_aligned, MSP_LEA_CONVERT_ADDRESS(lea_res_16));
+  mac_init(lea_mac_remain_size_aligned);
   {%- else %}
-  mac_init(lea_mac_size_aligned, MSP_LEA_CONVERT_ADDRESS(lea_res_16));
+  mac_init(lea_mac_size_aligned);
   {%- endif %}
   add_init(lea_remain_size_aligned);
   offset_init(lea_remain_size_aligned);
@@ -294,11 +294,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {% if lea_opt %}
         new_mac_q15(lea_src, lea_flt);
         {%- else %}
-        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res_16);
+        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
         {%- endif %}
 
-        /* MSP430 FR5994 is little-endian */
-        int16_t mac_out = lea_res_16[1];
+        int16_t mac_out = (int16_t)(lea_res[0] >> 16);
         output->data[tmp_out_pos] = mac_out;
 
         flt_mac_addr += flt_channel_offset;
@@ -379,11 +378,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {% if lea_opt %}
           new_mac_q15(lea_src, lea_flt);
           {%- else %}
-          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res_16);
+          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
           {%- endif %}
 
-          /* MSP430 FR5994 is little-endian */
-          int16_t mac_out = lea_res_16[1];
+          int16_t mac_out = (int16_t)(lea_res[0] >> 16);
           output->data[tmp_out_pos] = __saturated_add_q15(mac_out, output->data[tmp_out_pos]);
 
           flt_mac_addr += flt_channel_offset;

@@ -28,8 +28,7 @@ extern _q15 lea_src[];
 extern _q15 lea_tmp[];
 extern _q15 lea_dst[];
 {%- endif %}
-extern _iq31 lea_res_32[];
-extern _q15 lea_res_16[];
+extern _iq31 lea_res[];
 
 {% if lea_opt %}
 extern MSP_LEA_ADDMATRIX_PARAMS* lea_add_params;
@@ -100,7 +99,7 @@ void add_init(uint16_t length);
 
 void fir_init(uint16_t length, uint16_t tapLength);
 
-void mac_init(uint16_t length, uint16_t lea_res_addr);
+void mac_init(uint16_t length);
 
 void offset_init(uint16_t length);
 

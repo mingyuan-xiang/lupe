@@ -37,7 +37,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   {%- if lea_opt %}
-  mac_init(MAKE_ALIGN_2(lea_input_line_remain_size), MSP_LEA_CONVERT_ADDRESS(lea_res_32));
+  mac_init(MAKE_ALIGN_2(lea_input_line_remain_size));
   {%- else %}
   msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_input_line_remain_size) };
   {%- endif %}
@@ -87,10 +87,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- if lea_opt %}
     new_mac_q15(lea_src, lea_tmp);
     {%- else %}
-    msp_mac_q15(&mac_params, lea_src, lea_tmp, lea_res_32);
+    msp_mac_q15(&mac_params, lea_src, lea_tmp, lea_res);
     {%- endif %}
 
-    res = (int16_t)(lea_res_32[0] >> {{ 16 - qf }});
+    res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
     output->data[i] = __saturated_add_q15(output->data[i], res);
 
     {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
@@ -123,10 +123,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- if lea_opt %}
       new_mac_q15(lea_src, lea_tmp);
       {%- else %}
-      msp_mac_q15(&mac_params, lea_src, lea_tmp, lea_res_32);
+      msp_mac_q15(&mac_params, lea_src, lea_tmp, lea_res);
       {%- endif %}
 
-      res = (int16_t)(lea_res_32[0] >> {{ 16 - qf }});
+      res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
       output->data[i] = __saturated_add_q15(output->data[i], res);
 
       weight_fram_addr += weight_line_offset;
