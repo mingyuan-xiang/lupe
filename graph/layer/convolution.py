@@ -106,18 +106,14 @@ class Convolution2D(LupeLayer):
 
     def get_calibration(self):
         """Get the list of acceleration method for calibration"""
-        calibration_list = ["mac", "fir"]
+        calibration_list = ["mac", "fir", "enhanced_fir"]
 
-        if ("enhanced_acc" in self.opt_config and
-            self.opt_config["enhanced_acc"]):
-            if self.group == 1:
-                calibration_list = ["enhanced_mac", "enhanced_fir"]
-            else:
-                # No need to do enhanced mac for depth-wise convolution.
-                calibration_list = ["mac", "enhanced_fir"]
+        # No need to do enhanced mac for depth-wise convolution.
+        if self.group == 1:
+            calibration_list.append("enhanced_mac")
 
         if self.kernel_shape[-1] == 1:
-            calibration_list = ["1x1_mpy", "1x1_mac"]
+            calibration_list += ["1x1_mpy", "1x1_mac"]
 
         if self._calibration_list_idx >= len(calibration_list):
             return None

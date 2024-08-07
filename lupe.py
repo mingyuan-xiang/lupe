@@ -115,8 +115,6 @@ def load_opt_config(config):
 
 def parse_opt_config(opt_config):
     """Parse the configuration file. Set default to False if not present."""
-    if "enhanced_acc" not in opt_config:
-        opt_config["enhanced_acc"] = False
     if "adaptive_gen_mem" not in opt_config:
         opt_config["adaptive_gen_mem"] = False
     if "adaptive_gen_lea" not in opt_config:
