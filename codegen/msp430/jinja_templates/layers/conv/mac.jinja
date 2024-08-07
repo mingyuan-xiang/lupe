@@ -18,7 +18,7 @@
 #define _STRIDE_COL_SIZE {{ stride_col }}
 #define _KERNEL_ROW_SIZE {{ flt_size }}
 #define _KERNEL_COL_SIZE {{ flt_col_size }}
-#define _FLT_LEN _KERNEL_ROW_SIZE * _KERNEL_COL_SIZE
+#define _FLT_LEN (_KERNEL_ROW_SIZE * _KERNEL_COL_SIZE)
 {% if lea_opt %}
 static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
   lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
@@ -88,7 +88,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   {%- if lea_opt %}
-  mac_init(MAKE_ALIGN_2(_FLT_LEN));
+  mac_init(MAKE_ALIGN_2(_FLT_LEN), MSP_LEA_CONVERT_ADDRESS(lea_res_32));
   add_init(MAKE_ALIGN_2(_LEA_ADD_SIZE));
   {%- else %}
   msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(_FLT_LEN) };
@@ -257,9 +257,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- if lea_opt %}
         new_mac_q15(lea_src, lea_flt);
         {%- else %}
-        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res_32);
         {%- endif %}
-        lea_tmp[l] = (int16_t)(lea_res[0] >> {{ 16 - qf }});
+        lea_tmp[l] = (int16_t)(lea_res_32[0] >> {{ 16 - qf }});
 
         mac_input_addr += flt_addr_offset;
       }
@@ -317,9 +317,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- if lea_opt %}
           new_mac_q15(lea_src, lea_flt);
           {%- else %}
-          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res_32);
           {%- endif %}
-          lea_tmp[l] = (int16_t)(lea_res[0] >> {{ 16 - qf }});
+          lea_tmp[l] = (int16_t)(lea_res_32[0] >> {{ 16 - qf }});
 
           mac_input_addr += flt_addr_offset;
         }
