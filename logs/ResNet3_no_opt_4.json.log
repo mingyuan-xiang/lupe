@@ -31,3 +31,38 @@ Image 27, true label: 0, predicted label: 0, accumulative accuracy: 0.8214285714
 Image 28, true label: 9, predicted label: 9, accumulative accuracy: 0.8275862068965517
 Image 29, true label: 6, predicted label: 6, accumulative accuracy: 0.8333333333333334
 total cycles (32767 Hz): 3925842
+Image 30, true label: 6, predicted label: 6, accumulative accuracy: 0.8387096774193549
+Image 31, true label: 5, predicted label: 5, accumulative accuracy: 0.84375
+Image 32, true label: 4, predicted label: 4, accumulative accuracy: 0.8484848484848485
+Image 33, true label: 5, predicted label: 5, accumulative accuracy: 0.8529411764705882
+Image 34, true label: 9, predicted label: 9, accumulative accuracy: 0.8571428571428571
+Image 35, true label: 2, predicted label: 3, accumulative accuracy: 0.8333333333333334
+Image 36, true label: 4, predicted label: 4, accumulative accuracy: 0.8378378378378378
+Image 37, true label: 1, predicted label: 9, accumulative accuracy: 0.8157894736842105
+Image 38, true label: 9, predicted label: 9, accumulative accuracy: 0.8205128205128205
+Image 39, true label: 5, predicted label: 5, accumulative accuracy: 0.825
+total cycles (32767 Hz): 3925938
+Image 40, true label: 4, predicted label: 4, accumulative accuracy: 0.8292682926829268
+Image 41, true label: 6, predicted label: 6, accumulative accuracy: 0.8333333333333334
+Image 42, true label: 5, predicted label: 5, accumulative accuracy: 0.8372093023255814
+Image 43, true label: 6, predicted label: 6, accumulative accuracy: 0.8409090909090909
+Image 44, true label: 0, predicted label: 0, accumulative accuracy: 0.8444444444444444
+Image 45, true label: 9, predicted label: 6, accumulative accuracy: 0.8260869565217391
+Image 46, true label: 3, predicted label: 3, accumulative accuracy: 0.8297872340425532
+Image 47, true label: 9, predicted label: 9, accumulative accuracy: 0.8333333333333334
+Image 48, true label: 7, predicted label: 4, accumulative accuracy: 0.8163265306122449
+Image 49, true label: 6, predicted label: 6, accumulative accuracy: 0.82
+total cycles (32767 Hz): 3925984
+Image 50, true label: 9, predicted label: 9, accumulative accuracy: 0.8235294117647058
+Image 51, true label: 8, predicted label: 8, accumulative accuracy: 0.8269230769230769
+Image 52, true label: 0, predicted label: 7, accumulative accuracy: 0.8113207547169812
+Image 53, true label: 3, predicted label: 5, accumulative accuracy: 0.7962962962962963
+Image 54, true label: 8, predicted label: 8, accumulative accuracy: 0.8
+Image 55, true label: 8, predicted label: 8, accumulative accuracy: 0.8035714285714286
+Image 56, true label: 7, predicted label: 7, accumulative accuracy: 0.8070175438596491
+Image 57, true label: 7, predicted label: 3, accumulative accuracy: 0.7931034482758621
+Image 58, true label: 4, predicted label: 4, accumulative accuracy: 0.7966101694915254
+Image 59, true label: 6, predicted label: 3, accumulative accuracy: 0.7833333333333333
+total cycles (32767 Hz): 3925787
+Image 60, true label: 7, predicted label: 7, accumulative accuracy: 0.7868852459016393
+Image 61, true label: 3, predicted label: 5, accumulative accuracy: 0.7741935483870968

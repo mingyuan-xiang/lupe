@@ -71,7 +71,9 @@ class Convolution2D(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "mac"
+            if self.group != 1:
+                return "mac"
+            return "enhanced_mac"
         else:
             if self.group != 1 and self._acceleration == "enhanced_mac":
                 raise NotImplementedError(
@@ -178,14 +180,22 @@ class Convolution2D(LupeLayer):
 
                 lea_src_size = _size_converter(lea_src_size)
                 lea_flt_size = _size_converter(lea_flt_size)
-                size = math.floor(
-                    (opt_config["lea_size"] - lea_src_size - lea_flt_size) / 2
-                ) - mul
-                if size < 0:
-                    raise ValueError("LEA array size noy big enough")
-                size = _size_converter(size)
-                lea_tmp_size = size
-                lea_dst_size = size
+
+                if self.group == 1:
+                    size = math.floor(
+                        (opt_config["lea_size"] - lea_src_size -
+                            lea_flt_size) / 2
+                    ) - mul
+                    if size < 0:
+                        raise ValueError("LEA array size noy big enough")
+                    size = _size_converter(size)
+                    lea_tmp_size = size
+                    lea_dst_size = size
+                else:
+                    size = _size_converter(opt_config["lea_size"] -
+                        lea_src_size - lea_flt_size)
+                    lea_tmp_size = 0 # no need for lea_tmp buffer
+                    lea_dst_size = size
             elif acceleration == "enhanced_mac":
                 if opt_config["lea_size"] < 2 * mul:
                     raise ValueError("LEA array size noy big enough")

@@ -279,7 +279,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- else %}
         msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
         {%- endif %}
+        {%- if group == 1 %}
         lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
+        {%- else %}
+        lea_dst[l] = (int16_t)(lea_res[0] >> 16);
+        {%- endif %}
 
         mac_input_addr += flt_addr_offset;
       }
@@ -289,6 +293,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- else %}
       add_params.length = lea_remain_size_aligned;
       {%- endif %}
+
+      {%- if group == 1 %}
 
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
       s = tmp_output_pos;
@@ -305,6 +311,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       new_add_q15(lea_dst, lea_tmp, lea_dst);
       {%- else %}
       msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+      {%- endif %}
+
       {%- endif %}
 
       {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
@@ -339,10 +347,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           {%- else %}
           msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
           {%- endif %}
+
+          {%- if group == 1 %}
           lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
+          {%- else %}
+          lea_dst[l] = (int16_t)(lea_res[0] >> 16);
+          {%- endif %}
 
           mac_input_addr += flt_addr_offset;
         }
+
+        {%- if group == 1 %}
 
         DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _LEA_ADD_SIZE);
         {%- if lea_opt %}
@@ -350,6 +365,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- else %}
         msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
         {%- endif %}
+
+        {%- endif %}
+
         DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _LEA_ADD_SIZE);
 
         tmp_output_addr += output_lea_min_size_offset;
@@ -451,7 +469,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
 
       DMA_makeTransfer(lea_add_addr, output_fram_addr, add_size);
-      output_fram_addr += lea_remain_bias_size_aligned;
+      output_fram_addr += output_lea_bias_min_size_offset;
     }
     {%- endif %}
   }
