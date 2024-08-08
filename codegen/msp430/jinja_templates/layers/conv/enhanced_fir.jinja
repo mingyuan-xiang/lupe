@@ -321,9 +321,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         flt_lea_pos++;
         flt_fram_pos++;
         {%- endfor %}
-        {% if flt_col_size % 2 != 0 %}
+
         flt_lea_pos++;
-        {%- endif %}
 
         {%- else %}
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
