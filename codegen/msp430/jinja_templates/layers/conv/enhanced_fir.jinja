@@ -136,8 +136,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
   uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  {%- if flt_col_size % 2 != 0 %}
   uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
   uintptr_t flt_addr_padding_offset = (kernel_col_size + 1) * sizeof(int16_t);
+  {%- endif %}
   uintptr_t input_lea_addr = src_lea_addr;
   uintptr_t input_fram_addr = (uintptr_t)(input->data);
   uintptr_t output_fram_addr = (uintptr_t)(output->data);

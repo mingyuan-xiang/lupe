@@ -71,8 +71,14 @@ class Convolution2D(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "enhanced_fir"
+            return "fir"
         else:
+            if self.group != 1 and self._acceleration == "enhanced_mac":
+                raise NotImplementedError(
+                    "Depth-wise convolution for enhanced_mac is not necessary."
+                    " Please use regular mac"
+                )
+
             return self._acceleration
 
     def get_buffer_size(self, acceleration):
