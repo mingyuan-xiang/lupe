@@ -147,11 +147,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
 {%- endif %}
   {% if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
-  uint16_t lea_skip_pos_before_offset = _OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE;
-  uint16_t lea_skip_pos_before_st = lea_skip_pos_before_offset;
+  uint16_t lea_skip_pos_before_st = _OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE;
   uint16_t lea_skip_pos_before = lea_skip_pos_before_st;
-  uint16_t lea_skip_pos_after_offset = _OUTPUT_COL_SIZE;
-  uint16_t lea_skip_pos_after_st = lea_skip_pos_after_offset;
+  uint16_t lea_skip_pos_after_st = _OUTPUT_COL_SIZE;
   uint16_t lea_skip_pos_after = lea_skip_pos_after_st;
   {%- else %}
   uintptr_t lea_skip_addr = dst_lea_addr;
@@ -178,7 +176,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
   uint16_t input_line_size_pad_offset = input_line_size_offset + sizeof(int16_t);
   {%- endif %}
-  {%- if flt_size % 2 == 0 %}
+  {%- if flt_col_size % 2 == 0 %}
   uint16_t flt_len = kernel_row_size * kernel_col_size;
   {%- if (not has_adaptive_gen_mem) or (flt_len >= adaptive_gen_mem_size) %}
   uintptr_t flt_addr_offset = flt_len * sizeof(int16_t);
@@ -222,9 +220,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_add_q15_params add_params = { .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED };
   msp_offset_q15_params offset_params = { .length = lea_remain_size_aligned, .offset = 0 };
   {%- endif %}
-  {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
-  uint16_t dst_pos;
-  uint16_t s;
+  {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
   uint16_t flt_lea_pos = 0;
   uint16_t flt_fram_pos = 0;
   {%- endif %}
@@ -233,7 +229,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t zero = 0;
   {%- endif %}
 
-  {% if flt_size % 2 != 0 %}
+  {% if flt_col_size % 2 != 0 %}
   /* set the aligned position to be zeros */
   uint16_t lea_reset_pos = 0;
   for (uint16_t k = 0; k < kernel_row_size; ++k) {
@@ -305,29 +301,28 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
 
       /* send kernel to LEA RAM */
-      {%- if flt_size % 2 != 0 %}
+      {%- if flt_col_size % 2 != 0 %}
       /*
       * pad zero to the beginning of the filter if the filter's size is
       * not aligned to 2
       */
-      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
       ++flt_lea_pos;
       {%- else %}
       flt_lea_addr += sizeof(uint16_t);
       {%- endif %}
 
       for (uint16_t k = 0; k < kernel_row_size; ++k) {
-        {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
-        s = flt_fram_pos;
-        dst_pos = flt_lea_pos;
-        {%- for n in range(flt_size) %}
-        lea_flt[dst_pos] = weight->data[s];
-        dst_pos++;
-        s++;
+        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+        {%- for n in range(flt_col_size) %}
+        lea_flt[flt_lea_pos] = weight->data[flt_fram_pos];
+        flt_lea_pos++;
+        flt_fram_pos++;
         {%- endfor %}
+        {% if flt_col_size % 2 != 0 %}
+        flt_lea_pos++;
+        {%- endif %}
 
-        flt_lea_pos += _KERNEL_SIZE_ALIGNED;
-        flt_fram_pos += kernel_col_size;
         {%- else %}
         DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
         flt_lea_addr += flt_addr_padding_offset;
@@ -335,7 +330,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
       }
       /* restore flt_lea_addr pointer to the beginning of the array */
-      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
       flt_lea_pos = 0;
       {%- else %}
       flt_lea_addr = (uintptr_t)lea_flt;
@@ -344,13 +339,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- else %}
 
       {%- if has_adaptive_gen_mem and flt_len < adaptive_gen_mem_size %}
-      s = flt_fram_pos;
       {%- for n in range(flt_len) %}
-      lea_flt[{{ loop.index0 }}] = weight->data[s];
-      s++;
+      lea_flt[{{ loop.index0 }}] = weight->data[flt_fram_pos];
+      flt_fram_pos++;
       {%- endfor %}
 
-      flt_fram_pos += flt_len;
       {%- else %}
       DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
       flt_fram_addr += flt_addr_offset;
@@ -526,16 +519,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       /* skip the babbage values between two lines */
       for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_REMAIN_SIZE; l += _OUTPUT_COL_SIZE) {
         {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
-        s = lea_skip_pos_before;
-        dst_pos = lea_skip_pos_after;
-        {%- for n in range(((in_line_size - flt_col_size) / stride_col + 1) | round | int) %}
-        lea_dst[dst_pos] = lea_dst[s];
-        dst_pos++;
-        s++;
+        {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
+        lea_dst[lea_skip_pos_after] = lea_dst[lea_skip_pos_before];
+        lea_skip_pos_after++;
+        lea_skip_pos_before++;
         {%- endfor %}
 
-        lea_skip_pos_before += lea_skip_pos_before_offset;
-        lea_skip_pos_after += lea_skip_pos_after_offset;
+        lea_skip_pos_before += _FIR_OVERLAP_SIZE;
         {%- else %}
 
         DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);
@@ -738,16 +728,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         /* skip the barbage values between two lines */
         for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_SIZE; l += _OUTPUT_COL_SIZE) {
           {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
-          s = lea_skip_pos_before;
-          dst_pos = lea_skip_pos_after;
           {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
-          lea_dst[dst_pos] = lea_dst[s];
-          dst_pos++;
-          s++;
+          lea_dst[lea_skip_pos_after] = lea_dst[lea_skip_pos_before];
+          lea_skip_pos_after++;
+          lea_skip_pos_before++;
           {%- endfor %}
 
-          lea_skip_pos_before += lea_skip_pos_before_offset;
-          lea_skip_pos_after += lea_skip_pos_after_offset;
+          lea_skip_pos_before += _FIR_OVERLAP_SIZE;
           {%- else %}
 
           DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);

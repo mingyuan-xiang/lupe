@@ -71,7 +71,7 @@ class Convolution2D(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "fir"
+            return "enhanced_fir"
         else:
             return self._acceleration
 
