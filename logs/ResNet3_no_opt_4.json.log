@@ -7,5 +7,7 @@ Image 5, true label: 6, predicted label: 6, accumulative accuracy: 0.83333333333
 Image 6, true label: 1, predicted label: 1, accumulative accuracy: 0.8571428571428571
 Image 7, true label: 6, predicted label: 4, accumulative accuracy: 0.75
 Image 8, true label: 3, predicted label: 3, accumulative accuracy: 0.7777777777777778
-Image 9, true label: 1, predicted label: 9, accumulative accuracy: 0.7
-total cycles (32767 Hz): 2077919
+Image 9, true label: 1, predicted label: 1, accumulative accuracy: 0.8
+total cycles (32767 Hz): 4453405
+Image 10, true label: 0, predicted label: 0, accumulative accuracy: 0.8181818181818182
+Image 11, true label: 9, predicted label: 9, accumulative accuracy: 0.8333333333333334

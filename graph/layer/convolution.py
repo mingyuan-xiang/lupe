@@ -71,7 +71,7 @@ class Convolution2D(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "fir"
+            return "mac"
         else:
             if self.group != 1 and self._acceleration == "enhanced_mac":
                 raise NotImplementedError(

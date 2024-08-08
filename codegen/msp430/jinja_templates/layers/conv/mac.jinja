@@ -97,7 +97,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if has_adaptive_gen_mem %}
   uint16_t dst_pos;
   uint16_t s;
-  {%- if flt_size < adaptive_gen_mem_size %}
+  {%- if flt_col_size < adaptive_gen_mem_size %}
   uint16_t input_channel_pos = 0;
   uint16_t input_fram_pos = 0;
   {%- endif %}
@@ -182,7 +182,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uint16_t tmp_input_addr_offset = sizeof(int16_t) * _STRIDE_COL_SIZE;
 
     /* assemble input to a matrix in mac_buffer */
-    {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     uint16_t mac_buffer_pos = 0;
     input_channel_pos = input_fram_pos;
     {%- else %}
@@ -190,29 +190,27 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     input_channel_addr = input_fram_addr;
     {%- endif %}
     for (uint16_t m = 0; m < output_line_num; ++m) {
-      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
       uint16_t tmp_input_pos = input_channel_pos;
       {%- else %}
       uintptr_t tmp_input_addr = input_channel_addr;
       {%- endif %}
       for (uint16_t n = 0; n < output_line_size; ++n) {
-        {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
         uint16_t tmp_input_row_pos = tmp_input_pos;
         {%- else %}
         uintptr_t tmp_input_row_addr = tmp_input_addr;
         {%- endif %}
         for (uint16_t k = 0; k < kernel_row_size; ++k) {
-          {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+          {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
           s = tmp_input_row_pos;
-          dst_pos = mac_buffer_pos;
-          {%- for n in range(flt_size) %}
-          lupe_buffer_meta.data[dst_pos] = input->data[s];
+          {%- for n in range(flt_col_size) %}
+          lupe_buffer_meta.data[mac_buffer_pos] = input->data[s];
           s++;
-          dst_pos++;
+          mac_buffer_pos++;
           {%- endfor %}
 
           tmp_input_row_pos += input_line_size;
-          mac_buffer_pos += kernel_col_size;
           {%- else %}
           DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
 
@@ -220,13 +218,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           mac_buffer_addr += flt_addr_col_offset;
           {%- endif %}
         }
-        {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
         tmp_input_pos += _STRIDE_COL_SIZE;
         {%- else %}
         tmp_input_addr += tmp_input_addr_offset;
         {%- endif %}
       }
-      {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
       input_channel_pos += input_line_strided_size;
       {%- else %}
       input_channel_addr += input_line_size_strided_offset;
@@ -347,7 +345,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 {%- if group == 1 %}
     }
 {%- endif %}
-    {%- if has_adaptive_gen_mem and flt_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     input_fram_pos += input_len;
     {%- else %}
     input_fram_addr += input_channel_offset;
