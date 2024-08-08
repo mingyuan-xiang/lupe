@@ -146,6 +146,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 {%- if group == 1 %}
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
 {%- endif %}
+  {% if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+  uint16_t lea_skip_pos_before_offset = _OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE;
+  uint16_t lea_skip_pos_before_st = lea_skip_pos_before_offset;
+  uint16_t lea_skip_pos_before = lea_skip_pos_before_st;
+  uint16_t lea_skip_pos_after_offset = _OUTPUT_COL_SIZE;
+  uint16_t lea_skip_pos_after_st = lea_skip_pos_after_offset;
+  uint16_t lea_skip_pos_after = lea_skip_pos_after_st;
+  {%- else %}
   uintptr_t lea_skip_addr = dst_lea_addr;
   uintptr_t lea_skip_addr_before_offset = (_OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE) * sizeof(int16_t);
   uintptr_t lea_skip_addr_before_st = lea_skip_addr + lea_skip_addr_before_offset;
@@ -153,6 +161,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t lea_skip_addr_after_offset = _OUTPUT_COL_SIZE * sizeof(int16_t);
   uintptr_t lea_skip_addr_after_st = lea_skip_addr + lea_skip_addr_after_offset;
   uintptr_t lea_skip_addr_after = lea_skip_addr_after_st;
+  {%- endif %}
+
   {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
   uintptr_t input_remain_offset = _FIR_INPUT_REMAIN_SIZE * _STRIDE_ROW_SIZE * sizeof(int16_t);
   uintptr_t output_remain_offset = _FIR_ADD_OUTPUT_REMAIN_SIZE * sizeof(int16_t);
@@ -506,13 +516,32 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       }
 
       /* accumulate results with previous outputs */
+      {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+      lea_skip_pos_before = lea_skip_pos_before_st;
+      lea_skip_pos_after = lea_skip_pos_after_st;
+      {%- else %}
       lea_skip_addr_before = lea_skip_addr_before_st;
       lea_skip_addr_after = lea_skip_addr_after_st;
+      {%- endif %}
       /* skip the babbage values between two lines */
       for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_REMAIN_SIZE; l += _OUTPUT_COL_SIZE) {
+        {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+        s = lea_skip_pos_before;
+        dst_pos = lea_skip_pos_after;
+        {%- for n in range(((in_line_size - flt_col_size) / stride_col + 1) | round | int) %}
+        lea_dst[dst_pos] = lea_dst[s];
+        dst_pos++;
+        s++;
+        {%- endfor %}
+
+        lea_skip_pos_before += lea_skip_pos_before_offset;
+        lea_skip_pos_after += lea_skip_pos_after_offset;
+        {%- else %}
+
         DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);
         lea_skip_addr_before += lea_skip_addr_before_offset;
         lea_skip_addr_after += lea_skip_addr_after_offset;
+        {%- endif %}
       }
 
       /* send output to LEA RAM */
@@ -699,13 +728,32 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         }
 
         /* accumulate results with previous outputs */
+        {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+        lea_skip_pos_before = lea_skip_pos_before_st;
+        lea_skip_pos_after = lea_skip_pos_after_st;
+        {%- else %}
         lea_skip_addr_before = lea_skip_addr_before_st;
         lea_skip_addr_after = lea_skip_addr_after_st;
+        {%- endif %}
         /* skip the barbage values between two lines */
         for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_SIZE; l += _OUTPUT_COL_SIZE) {
+          {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+          s = lea_skip_pos_before;
+          dst_pos = lea_skip_pos_after;
+          {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
+          lea_dst[dst_pos] = lea_dst[s];
+          dst_pos++;
+          s++;
+          {%- endfor %}
+
+          lea_skip_pos_before += lea_skip_pos_before_offset;
+          lea_skip_pos_after += lea_skip_pos_after_offset;
+          {%- else %}
+
           DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);
           lea_skip_addr_before += lea_skip_addr_before_offset;
           lea_skip_addr_after += lea_skip_addr_after_offset;
+          {%- endif %}
         }
 
         /* send output to LEA RAM */

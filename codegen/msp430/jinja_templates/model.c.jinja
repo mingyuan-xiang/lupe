@@ -16,7 +16,7 @@
 {%- endif %}
 
 {% for layer in layer_list -%}
-{%- if calibration and calibration_list[layer.name] | length > 0 %}
+{%- if calibration and (calibration_list[layer.name] | length) > 0 %}
 {%- for acc in calibration_list[layer.name] %}
 #include <layers/include/{{ layer.name }}_{{ acc }}.h>
 {%- endfor %}
@@ -50,7 +50,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
 {#- layers #}
   {%- for layer in layer_list %}
   /* {{ layer.name }} */
-  {%- if calibration and calibration_list[layer.name] | length > 0 %}
+  {%- if calibration and (calibration_list[layer.name] | length) > 0 %}
 
   {%- for acc in calibration_list[layer.name] %}
   total_time = 0;

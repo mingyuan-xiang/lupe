@@ -287,6 +287,11 @@ class Convolution2D(LupeLayer):
                 opt_config["adaptive_gen_mem_size"]
             )
 
+            has_adaptive_gen_mem = (has_adaptive_gen_mem or
+                (((self.input_size[3] - self.kernel_shape[3]) /
+                    self.strides[1]) + 1) < opt_config["adaptive_gen_mem_size"]
+            )
+
         io_qf, weight_qf = qf
 
         # TODO: not sure if LEA deinterleave works with odd number of channels
