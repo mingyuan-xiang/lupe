@@ -3,7 +3,8 @@
 {%- else %}
 #define _LEA_ADD_SIZE {{ lea_src_size }}
 {% endif %}
-#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
+#define _OUTPUT_SIZE {{ out_len }}
+#define _LEA_REMAIN_SIZE (_OUTPUT_SIZE % _LEA_ADD_SIZE)
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -459,11 +460,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     set_offset(bias->data[i]);
     {%- else %}
     offset_params.offset = bias->data[i];
-    {%- endif %}
-
-    {%- if out_len % 2 != 0 %}
-    /* set the aligned position to be zeros */
-    lea_add[_LEA_REMAIN_SIZE] = 0;
     {%- endif %}
 
     {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
