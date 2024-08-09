@@ -138,7 +138,7 @@ class Convolution2D(LupeLayer):
         mul = 16
 
         def _size_converter(x):
-            """Convert the size to multiple of 64"""
+            """Convert the size to multiple of 16"""
             if x <= mul:
                 return mul
 
@@ -203,7 +203,7 @@ class Convolution2D(LupeLayer):
                 lea_tmp_size = 0 # no need for lea_tmp buffer
                 lea_src_size = size
                 lea_flt_size = size
-                lea_dst_size = 0 # no need for lea_tmp buffer
+                lea_dst_size = 0 # no need for lea_dst buffer
             elif acceleration == "enhanced_fir":
                 s = self.kernel_shape[3]
                 if s % 2:

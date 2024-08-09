@@ -3,6 +3,7 @@
 /* assign the lea buffer pointer */
 #define lea_src (lea_buffer)
 #define lea_tmp (lea_buffer + {{ lea_src_size }})
+#define lea_dst (lea_buffer + {{ lea_src_size + lea_tmp_size }})
 {% endif %}
 
 {%- if lea_opt %}
