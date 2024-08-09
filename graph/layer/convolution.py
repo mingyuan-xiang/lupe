@@ -90,7 +90,7 @@ class Convolution2D(LupeLayer):
             return (
                 1,
                 self.output_size[2] * self.output_size[3],
-                self.kernel_shape[3] * self.kernel_shape[3]
+                self.kernel_shape[2] * self.kernel_shape[3]
             )
         if acceleration  == "1x1_mac":
             return (
@@ -112,7 +112,7 @@ class Convolution2D(LupeLayer):
 
     def get_calibration(self):
         """Get the list of acceleration method for calibration"""
-        calibration_list = ["mac", "fir", "enhanced_fir"]
+        calibration_list = ["fir", "mac", "enhanced_fir"]
 
         # No need to do enhanced mac for depth-wise convolution.
         if self.group == 1:
@@ -221,7 +221,10 @@ class Convolution2D(LupeLayer):
 
             else: # fir
                 lea_src_size = self.input_size[3] + 2
-                lea_flt_size = self.kernel_shape[2] * (self.kernel_shape[2] + 1)
+                s = self.kernel_shape[3]
+                if s % 2:
+                    s += 1
+                lea_flt_size = self.kernel_shape[2] * s
                 if self.strides[0] * self.strides[1] > 1:
                     # we need to make it bigger for deinterleave part
                     lea_tmp_size = self.input_size[3] + 2
@@ -287,7 +290,7 @@ class Convolution2D(LupeLayer):
                 )
             )
             has_adaptive_gen_mem = (has_adaptive_gen_mem or
-                self.kernel_shape[2] < opt_config["adaptive_gen_mem_size"]
+                self.kernel_shape[3] < opt_config["adaptive_gen_mem_size"]
             )
             has_adaptive_gen_mem = (has_adaptive_gen_mem or
                 self.output_size[3] < opt_config["adaptive_gen_mem_size"]

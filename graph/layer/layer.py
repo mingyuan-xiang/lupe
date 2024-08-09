@@ -10,13 +10,14 @@ class LupeLayer(ABC):
     def __init__(
         self, node, model, node_list, opt_config, io=None, qf_offset=0):
         """Initialize the layer
-        
+
         Args:
             node: The ONNX node
             model: The ONNX model
             node_list: The dictionary of nodes
             opt_config: optimization configuration
             io: Indicate if the layer is an input or output (None if other)
+            qf_offset: Fixed-point offset for weights
         """
         self.name = self._get_name(node)
         self.opt_config = opt_config

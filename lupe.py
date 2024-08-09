@@ -193,7 +193,8 @@ def _get_lupe_graph(args, config, out_path, dir_name):
         checker.check_model(model)
 
         graph = LupeGraph(
-            dir_name, model, out_path, config, qf_offset=args.qf_offset)
+            dir_name, model, out_path, config, qf_offset=args.qf_offset
+        )
     else:
         raise FileNotFoundError(
             f"The model file {args.model_path} does not exist"

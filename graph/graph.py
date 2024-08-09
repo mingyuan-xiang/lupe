@@ -14,7 +14,9 @@ from .layer.layer_utils import name_conversion
 
 class LupeGraph:
     """The graph for the DNN model"""
-    def __init__(self, name, model, out_path, opt_config, qf_offset=0):
+    def __init__(
+            self, name, model, out_path, opt_config, qf_offset=0
+        ):
         """Initialize the graph for the DNN model
 
         The graph is just a dictionary of nodes and their connections.
@@ -106,7 +108,9 @@ class LupeGraph:
 
         lupe_type = get_lupe_type(node.op_type)
 
-        layer = get_layer_constructor(lupe_type)(node, model, self.node_list, self.opt_config)
+        layer = get_layer_constructor(lupe_type)(
+            node, model, self.node_list, self.opt_config
+        )
         name = layer.name
         self.node_list[name] = layer
         self.graph[name] = {"parents" : []}

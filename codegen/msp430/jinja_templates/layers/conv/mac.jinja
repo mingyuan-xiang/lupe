@@ -1,5 +1,6 @@
+#define _OUTPUT_SIZE {{ out_len }}
 #define _LEA_ADD_SIZE {{ lea_dst_size }}
-#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
+#define _LEA_REMAIN_SIZE (_OUTPUT_SIZE % _LEA_ADD_SIZE)
 {%- if padding %}
 #define _PADDING_TOP {{ padding["top"] }}
 #define _PADDING_BOTTOM {{ padding["bottom"] }}
@@ -24,7 +25,6 @@
 {%- else %}
 #define _LEA_BIAS_ADD_SIZE {{ lea_src_size }}
 {% endif %}
-#define _OUTPUT_SIZE {{ out_len }}
 #define _LEA_BIAS_REMAIN_SIZE (_OUTPUT_SIZE % _LEA_BIAS_ADD_SIZE)
 {% if lea_opt %}
 static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
