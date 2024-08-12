@@ -59,8 +59,8 @@ class LupeLayer(ABC):
         """If the layer should flip the weights"""
         return False
 
-    def transpose_and_stack(self):
-        """If the layer should transpose the weights and stack bias"""
+    def transpose(self):
+        """If the layer should transpose the weights"""
         return False
 
     def get_calibration(self):
