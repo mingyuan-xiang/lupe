@@ -167,7 +167,6 @@ def enable_uart(baud, port, mode_name, config, qf, print_cnt, dataset):
     f.close()
 
 d = get_dataset(args.dataset)
-d = [d[i] for i in range(12)]
 
 for c in config_list:
     if "acc" in c:

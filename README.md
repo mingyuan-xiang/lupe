@@ -100,6 +100,12 @@ make apps/<app name>/bld/gcc/depclean
 ./lupe.py print --model-name LeNet --model-path models/onnx/LeNet.onnx
 ```
 
+# Run experiments
+
+```
+python scripts/run_experiments.py --model <model name> --dataset <dataset> --qf <qf>
+```
+
 # Model
 
 ## LeNet
