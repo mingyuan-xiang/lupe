@@ -64,6 +64,8 @@ class FullyConnected(LupeLayer):
         if self._acceleration is None:
             return "mac"
 
+        return self._acceleration
+
     def has_weights(self):
         """If the layer has weights"""
         return True
@@ -84,6 +86,10 @@ class FullyConnected(LupeLayer):
     def next_calibration_list_idx(self):
         """Increment _calibration_list_idx"""
         self._calibration_list_idx += 1
+
+    def set_acceleration(self, acceleration):
+        """Set which operation to use"""
+        self._acceleration = acceleration
 
     def _get_size(self, opt_config, acceleration):
         mul = 16
