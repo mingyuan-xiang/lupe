@@ -58,7 +58,7 @@ class MSP430Gen:
 
         # Generate the main file
         maingen(
-            self.src_dir, model_name, dataset_size,
+            self.src_dir, model_name, self.opt_config["name"], dataset_size,
             print_freq=print_freq, add_timer=self.add_timer,
             debug=self.debug, label=self.debug_input_label,
             calibration=self.calibration

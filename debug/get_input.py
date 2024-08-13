@@ -43,7 +43,6 @@ def get_input(dataset, idx):
 
         d = datasets.FashionMNIST(
             './data', train=False, transform=transform, download=True)
-
     else:
         raise NotImplementedError(f"{dataset} is not supported")
 

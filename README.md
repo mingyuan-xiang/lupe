@@ -139,7 +139,7 @@ make apps/<app name>/bld/gcc/depclean
 + fasion_mnist: 10000
 + Clip(-32, 32) only in training
 + q5.10 for activation and bias, `qf_offset=1` for weights
-+ test accuracy in PyTorch (90.69%)
++ test accuracy in PyTorch (90.57%)
 
 # TODO
 

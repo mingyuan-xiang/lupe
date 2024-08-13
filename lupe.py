@@ -114,8 +114,10 @@ def load_opt_config(config):
     with open(config, "r", encoding="utf-8") as file:
         return OrderedDict(json.load(file))
 
-def parse_opt_config(opt_config):
+def parse_opt_config(opt_config, name):
     """Parse the configuration file. Set default to False if not present."""
+    opt_config["name"] = name
+
     if "adaptive_gen_mem" not in opt_config:
         opt_config["adaptive_gen_mem"] = False
     if "adaptive_gen_lea" not in opt_config:
@@ -157,7 +159,11 @@ def _get_configs(args):
     if os.path.isfile(args.config):
         config = load_opt_config(args.config)
 
-    parse_opt_config(config)
+    name = os.path.basename(os.path.normpath(args.config))
+    # remove the json part
+    name = name.split(".")[0]
+
+    parse_opt_config(config, name)
 
     return config
 
