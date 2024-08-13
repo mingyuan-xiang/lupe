@@ -24,7 +24,7 @@ config_list = [
     'no_opt',
     'dma',
     'dma_lea_opt',
-    'dma_lea_opt_buffer',
+    'dma_lea_opt_adaptive_buffer',
     'dma_lea_opt_adaptive_buffer_mem',
     'dma_lea_opt_adaptive_buffer_mem_acc',
 ]
