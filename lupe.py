@@ -45,10 +45,10 @@ def lupe_args():
         calibrate: calibrate the acceleration selection"""
     )
     par.add_argument(
-        "--model-name", type=str, default="DATE_LeNet", help="Model name"
+        "--model-name", type=str, default="LeNet", help="Model name"
     )
     par.add_argument(
-        "--model-path", type=str, default="./models/onnx/DATE_LeNet.onnx",
+        "--model-path", type=str, default="./models/onnx/LeNet.onnx",
         help="Model path of the onnx representation"
     )
     par.add_argument(
