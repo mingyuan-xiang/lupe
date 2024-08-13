@@ -81,7 +81,8 @@ def lupe_args():
         help="Insert printing for input/output into the model"
     )
     par.add_argument(
-        "--debug-dataset", choices=["MNIST", "CIFAR10", "vww", "sc"],
+        "--debug-dataset", choices=[
+            "MNIST", "CIFAR10", "vww", "sc", "fashion_mnist"],
         default="MNIST",
         help="Set the input buffer to be the first image(data) in the dataset"
     )

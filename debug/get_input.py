@@ -36,6 +36,14 @@ def get_input(dataset, idx):
             ]))
     elif dataset.lower() == "sc":
         d = SpeechCommands('./models/data/SpeechCommands', 'testing')
+    elif dataset.lower() == "fashion_mnist":
+        transform = transforms.Compose(
+            [transforms.ToTensor(),
+            transforms.Normalize((0.5,), (0.5,))])
+
+        d = datasets.FashionMNIST(
+            './data', train=False, transform=transform, download=True)
+
     else:
         raise NotImplementedError(f"{dataset} is not supported")
 

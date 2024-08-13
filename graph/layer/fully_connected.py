@@ -62,7 +62,7 @@ class FullyConnected(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "vec_mat"
+            return "mac"
 
     def has_weights(self):
         """If the layer has weights"""
@@ -71,6 +71,19 @@ class FullyConnected(LupeLayer):
     def get_buffer_size(self, acceleration):
         """If the layer needs extra buffer. Return the buffer shape tuple"""
         return None
+
+    def get_calibration(self):
+        """Get the list of acceleration method for calibration"""
+        calibration_list = ["mac", "vec_mat"]
+
+        if self._calibration_list_idx >= len(calibration_list):
+            return None
+        else:
+            return calibration_list[self._calibration_list_idx]
+
+    def next_calibration_list_idx(self):
+        """Increment _calibration_list_idx"""
+        self._calibration_list_idx += 1
 
     def _get_size(self, opt_config, acceleration):
         mul = 16
@@ -113,8 +126,11 @@ class FullyConnected(LupeLayer):
             lea_tmp_size = opt_config["lea_size"]
             lea_dst_size = opt_config["lea_size"]
 
+        if out_size % 2:
+            out_size += 1
+
         if acceleration == "vec_mat":
-            if lea_dst_size < out_size + 1 or lea_tmp_size < 2 * out_size:
+            if (lea_dst_size < out_size) or (lea_tmp_size < 2 * out_size):
                 raise ValueError("LEA array size noy big enough")
 
         return lea_src_size, lea_tmp_size, lea_dst_size
@@ -145,7 +161,7 @@ class FullyConnected(LupeLayer):
         else:
             mat_block_size = self.input_size[1] * output_size_aligned
 
-        mat_block_row_size = mat_block_size / output_size_aligned
+        mat_block_row_size = mat_block_size // output_size_aligned
         if mat_block_row_size % 2:
             mat_block_row_size -= 1
 
