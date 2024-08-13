@@ -25,8 +25,8 @@ config_list = [
     'dma',
     'dma_lea_opt',
     'dma_lea_opt_buffer',
-    'dma_lea_opt_adaptive_mem_buffer',
-    'dma_lea_opt_adaptive_acc_mem_buffer',
+    'dma_lea_opt_adaptive_buffer_mem',
+    'dma_lea_opt_adaptive_buffer_mem_acc',
 ]
 
 def _banner_print(s):
@@ -170,7 +170,7 @@ d = get_dataset(args.dataset)
 d = [d[i] for i in range(12)]
 
 for c in config_list:
-    if "adaptive_acc" in c:
+    if "acc" in c:
         _banner_print("Calibrate Accelerations")
         run_lupe(
             args.model, args.model_path, len(d), args.qf, c, mode="calibrate")

@@ -1,6 +1,0 @@
-{
-    "lea_opt" : true,
-    "adaptive_gen_lea" : true,
-    "adaptive_gen_mem" : true,
-    "global_mem_buffer" : true
-}
