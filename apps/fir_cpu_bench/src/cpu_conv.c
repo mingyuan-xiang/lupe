@@ -6,13 +6,11 @@
 void cpu_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
-  uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
   uint16_t kernel_row_size = weight->dims[2];
   uint16_t kernel_col_size = weight->dims[3];
   uint16_t kernel_size = weight->strides[0];
 
-  int16_t* conv_flt = lea_flt;
   uint16_t input_line_size = input->dims[3];
   uint16_t output_line_size = output->dims[3];
   uint16_t output_line_num = output->dims[2];
@@ -32,7 +30,7 @@ void cpu_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       for (uint16_t c = 0; c < output_line_size; ++c) {
         uint16_t weight_tmp_pos = weight_pos;
         uint16_t input_pos = input_col_pos;
-        int32_t res = bias->data[i];
+        int32_t res = 0;
 
         for (uint16_t j = 0; j < in_channels; ++j) {
           uint16_t input_kernel_row_pos = input_pos;
@@ -53,7 +51,8 @@ void cpu_conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           input_pos += input_len;
         }
         input_col_pos++;
-        output->data[output_pos] = (int16_t)(res >> 16);
+        int16_t res_16 = (int16_t)(res >> 14);
+        output->data[output_pos] = __saturated_add_q15(res_16, bias->data[i]);
         output_pos++;
       }
       input_row_pos += input_line_size;
