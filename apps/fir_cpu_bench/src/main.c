@@ -285,7 +285,6 @@ int main() {
   CONV_BENCH(FIR_CONV, 228, 10);
   CONV_BENCH(FIR_CONV, 229, 10);
   CONV_BENCH(FIR_CONV, 230, 10);
-  */
 
   msp_send_printf("============================ benchmark cpu ============================");
 
@@ -479,6 +478,8 @@ int main() {
   CONV_BENCH(CPU_CONV, 187, 10);
   CONV_BENCH(CPU_CONV, 188, 10);
   CONV_BENCH(CPU_CONV, 189, 10);
+
+  */
   CONV_BENCH(CPU_CONV, 190, 10);
   CONV_BENCH(CPU_CONV, 191, 10);
   CONV_BENCH(CPU_CONV, 192, 10);
