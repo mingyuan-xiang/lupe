@@ -37,21 +37,22 @@ with open(f'cpu_conv.log') as f:
 cpu_df = pd.DataFrame(cpu_data)
 
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-fig = plt.figure()
+fig = plt.figure(figsize=(8, 3))
 fig.add_subplot(111)
 
-scatter = plt.scatter(fir_df['flops'], fir_df['time'], s=15, label='LEA (FIR)')
-scatter = plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, label='CPU')
+plt.scatter(fir_df['flops'], fir_df['time'], s=15, label='LEA (FIR)')
+plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, label='CPU')
 
 plt.xlabel('MegaFLOPs')
 plt.ylabel('Time (s)')
-plt.title(f'2D Convolution (Kernel Size: 3)')
 
 plt.legend(markerscale=2)
 
 fig.tight_layout(pad=0.1)
+
+# plt.show()
 plt.savefig(f'flops_time.png', dpi=500)
