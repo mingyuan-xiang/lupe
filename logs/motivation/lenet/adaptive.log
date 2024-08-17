@@ -1,0 +1,19 @@
+conv1_Conv (enhanced_mac) takes 113439 cycles to execute (REPEAT: 10)
+conv2_Conv (enhanced_mac) takes 63413 cycles to execute (REPEAT: 10)
+conv3_Conv (enhanced_mac) takes 10308 cycles to execute (REPEAT: 10)
+
+conv1_Conv (enhanced_fir) takes 17347 cycles to execute (REPEAT: 10)
+conv2_Conv (enhanced_fir) takes 46381 cycles to execute (REPEAT: 10)
+conv3_Conv (enhanced_fir) takes 365688 cycles to execute (REPEAT: 10)
+
+conv1_Conv (mac) takes 114591 cycles to execute (REPEAT: 10)
+conv2_Conv (mac) takes 200399 cycles to execute (REPEAT: 10)
+conv3_Conv (mac) takes 94564 cycles to execute (REPEAT: 10)
+fc1_Gemm (vec_mat) takes 2686 cycles to execute (REPEAT: 10)
+fc2_Gemm (vec_mat) takes 221 cycles to execute (REPEAT: 10)
+
+conv1_Conv (fir) takes 39248 cycles to execute (REPEAT: 10)
+conv2_Conv (fir) takes 173163 cycles to execute (REPEAT: 10)
+conv3_Conv (fir) takes 370838 cycles to execute (REPEAT: 10)
+fc1_Gemm (mac) takes 2413 cycles to execute (REPEAT: 10)
+fc2_Gemm (mac) takes 272 cycles to execute (REPEAT: 10)
