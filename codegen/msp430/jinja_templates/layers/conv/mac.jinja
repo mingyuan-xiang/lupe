@@ -14,7 +14,6 @@
 #define lea_tmp (lea_buffer + {{ lea_src_size + lea_flt_size }})
 #define lea_dst (lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }})
 {% endif %}
-#define _INPUT_LINE_SIZE {{ in_line_size }}
 #define _STRIDE_ROW_SIZE {{ stride_row }}
 #define _STRIDE_COL_SIZE {{ stride_col }}
 #define _KERNEL_ROW_SIZE {{ flt_size }}
