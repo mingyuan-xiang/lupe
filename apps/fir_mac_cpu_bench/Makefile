@@ -1,6 +1,6 @@
-EXEC = fir_cpu_bench
+EXEC = fir_mac_cpu_bench
 
-OBJECTS = main.o utils.o data.o cpu_conv.o fir_conv.o
+OBJECTS = main.o utils.o data.o cpu_conv.o fir_conv.o mac_conv.o
 
 DEPS = libdsp:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
 

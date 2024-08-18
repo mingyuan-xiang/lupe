@@ -181,7 +181,7 @@ apps/*
 !apps/inter_blink
 !apps/memcpy
 !apps/conv_bench
-!apps/fir_cpu_bench
+!apps/fir_mac_cpu_bench
 
 # calibration folder
 calibration/*

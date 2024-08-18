@@ -31,6 +31,11 @@ with open(f'fir_conv.log') as f:
     fir_data = parse_data(fir_data)
 fir_df = pd.DataFrame(fir_data)
 
+with open(f'mac_conv.log') as f:
+    mac_data = f.read()
+    mac_data = parse_data(mac_data)
+mac_df = pd.DataFrame(mac_data)
+
 with open(f'cpu_conv.log') as f:
     cpu_data = f.read()
     cpu_data = parse_data(cpu_data)
@@ -44,13 +49,14 @@ plt.rcParams["axes.labelweight"] = "bold"
 fig = plt.figure(figsize=(8, 3))
 fig.add_subplot(111)
 
-plt.scatter(fir_df['flops'], fir_df['time'], s=15, label='LEA (FIR)')
-plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, label='CPU')
+plt.scatter(mac_df['flops'], mac_df['time'], s=15, alpha=0.5, color='mediumseagreen', marker='x', label='MAC (LEA)')
+plt.scatter(fir_df['flops'], fir_df['time'], s=15, alpha=0.5, color='crimson', marker='o', label='FIR (LEA)')
+plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, alpha=0.5, color='orange', marker='^', label='CPU')
 
 plt.xlabel('MegaFLOPs')
 plt.ylabel('Time (s)')
 
-plt.legend(markerscale=2)
+plt.legend(fontsize=14, markerscale=2)
 
 fig.tight_layout(pad=0.1)
 
