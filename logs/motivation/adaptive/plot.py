@@ -162,9 +162,13 @@ axs[0, 0].set_ylabel('Normalized to FIR\n(Bottom-up)')
 axs[1, 0].set_ylabel('Normalized to FIR\n(Top-down)')
 
 axs[0, 0].set_xticklabels([])
+axs[0, 0].xaxis.set_tick_params(length=0)
 axs[0, 1].set_xticklabels([])
+axs[0, 1].xaxis.set_tick_params(length=0)
 axs[0, 1].set_yticklabels([])
+axs[0, 1].yaxis.set_tick_params(length=0)
 axs[1, 1].set_yticklabels([])
+axs[1, 1].yaxis.set_tick_params(length=0)
 
 fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.5, -0.01))
 fig.tight_layout(pad=0, rect=[0, 0.04, 1, 1])
