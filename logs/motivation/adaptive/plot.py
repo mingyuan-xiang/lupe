@@ -94,7 +94,7 @@ plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-fig, axs = plt.subplots(2, 2, figsize=(24, 6))
+fig, axs = plt.subplots(2, 2, figsize=(12, 8))
 
 def plot(data, k, ax, title, labels):
     kernel_size = f"kernel size: {k}"
@@ -156,7 +156,7 @@ plot(log_lupe, 5, axs[1, 1], False, labels=[None]*4)
 yticks = axs[0, 0].yaxis.get_major_ticks()
 yticks[0].label1.set_visible(False)
 yticks = axs[1, 0].yaxis.get_major_ticks()
-yticks[3].label1.set_visible(False)
+yticks[6].label1.set_visible(False)
 
 axs[0, 0].set_ylabel('Normalized to FIR\n(Bottom-up)')
 axs[1, 0].set_ylabel('Normalized to FIR\n(Top-down)')
@@ -167,7 +167,7 @@ axs[0, 1].set_yticklabels([])
 axs[1, 1].set_yticklabels([])
 
 fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.5, -0.01))
-fig.tight_layout(pad=0, rect=[0.025, 0.06, 1, 1])
+fig.tight_layout(pad=0, rect=[0, 0.04, 1, 1])
 
 plt.subplots_adjust(hspace=0)
 plt.subplots_adjust(wspace=0)
