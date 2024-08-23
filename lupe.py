@@ -103,7 +103,7 @@ def lupe_args():
         "--baud", type=int, default=19200, help="UART baud rate for calibration"
     )
     par.add_argument(
-        "--port", type=str, default="/dev/cu.usbmodem1203",
+        "--port", type=str, default="/dev/ttyACM3",
         help="UART port for calibration"
     )
 

@@ -18,7 +18,7 @@ from speech_commands import SpeechCommands
 
 PRINT_CNT = 10
 
-data_root_dir = 'models/data'
+data_root_dir = '/home/myxiang/Documents/data'
 
 config_list = [
     'no_opt',
@@ -91,7 +91,7 @@ def parse_img(img, qf):
 def get_args():
     par = argparse.ArgumentParser()
     par.add_argument(
-        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
+        '--port', type=str, default='/dev/ttyACM3', help='UART port'
     )
     par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     par.add_argument('--model', default='LeNet', help='model name')
