@@ -1,0 +1,51 @@
+=========================== benchmark fir ============================
+total cycles (32767 Hz), repeat for 100 times: 251219 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 15)
+total cycles (32767 Hz), repeat for 100 times: 356015 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 15)
+=========================== benchmark fir (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 157370 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 15)
+total cycles for compute (32767 Hz), repeat for 100 times: 255940 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 15)
+=========================== benchmark mac ============================
+total cycles (32767 Hz), repeat for 100 times: 281945 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 15)
+total cycles (32767 Hz), repeat for 100 times: 378992 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 15)
+=========================== benchmark mac (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 98875 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 15)
+total cycles for compute (32767 Hz), repeat for 100 times: 129909 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 15)
+
+=========================== benchmark fir ============================
+total cycles (32767 Hz), repeat for 100 times: 54725 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 5)
+total cycles (32767 Hz), repeat for 100 times: 60730 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 5)
+=========================== benchmark fir (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 29491 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 5)
+total cycles for compute (32767 Hz), repeat for 100 times: 35155 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 5)
+=========================== benchmark mac ============================
+total cycles (32767 Hz), repeat for 100 times: 16576 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 5)
+total cycles (32767 Hz), repeat for 100 times: 4736 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 5)
+=========================== benchmark mac (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 6106 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 5)
+total cycles for compute (32767 Hz), repeat for 100 times: 1961 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 5)
+
+=========================== benchmark fir ============================
+total cycles (32767 Hz), repeat for 100 times: 425251 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 20)
+total cycles (32767 Hz), repeat for 100 times: 636218 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 20)
+=========================== benchmark fir (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 274384 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 20)
+total cycles for compute (32767 Hz), repeat for 100 times: 469439 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 20)
+=========================== benchmark mac ============================
+total cycles (32767 Hz), repeat for 100 times: 538991 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 20)
+total cycles (32767 Hz), repeat for 100 times: 799956 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 20)
+=========================== benchmark mac (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 188769 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 20)
+total cycles for compute (32767 Hz), repeat for 100 times: 273852 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 20)
+
+=========================== benchmark fir ============================
+total cycles (32767 Hz), repeat for 100 times: 126787 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 10)
+total cycles (32767 Hz), repeat for 100 times: 162499 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 10)
+=========================== benchmark fir (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 74802 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 10)
+total cycles for compute (32767 Hz), repeat for 100 times: 109377 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 10)
+=========================== benchmark mac ============================
+total cycles (32767 Hz), repeat for 100 times: 107810 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 10)
+total cycles (32767 Hz), repeat for 100 times: 113908 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 10)
+=========================== benchmark mac (compute) ============================
+total cycles for compute (32767 Hz), repeat for 100 times: 38018 (kernel size: 3, in_channels: 10, out_channels: 10, input size: 10)
+total cycles for compute (32767 Hz), repeat for 100 times: 39264 (kernel size: 5, in_channels: 10, out_channels: 10, input size: 10)
