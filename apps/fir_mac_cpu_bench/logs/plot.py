@@ -58,7 +58,7 @@ plt.ylabel('Time (s)')
 
 plt.legend(fontsize=14, markerscale=2)
 
-fig.tight_layout(pad=0.1)
+fig.tight_layout(pad=0)
 
 # plt.show()
 plt.savefig(f'flops_time.png', dpi=500)

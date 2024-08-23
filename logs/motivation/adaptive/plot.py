@@ -1,8 +1,9 @@
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import numpy as np
 
 # Data provided
-log = {
+log_base = {
     "input size: 5" : {
         "fir": {
             "kernel size: 3" : { "total time" : 333424, "compute time" : 60122 },
@@ -45,14 +46,57 @@ log = {
     }
 }
 
+log_lupe = {
+    "input size: 5" : {
+        "fir": {
+            "kernel size: 3" : { "total time" : 54725, "compute time" : 29491 },
+            "kernel size: 5" : { "total time" : 60730, "compute time" : 35155 },
+        },
+        "mac": {
+            "kernel size: 3" : { "total time" : 16576, "compute time" : 6106 },
+            "kernel size: 5" : { "total time" : 4736, "compute time" : 1961 },
+        }
+    },
+    "input size: 10" : {
+        "fir": {
+            "kernel size: 3" : { "total time" : 126787, "compute time" : 74802 },
+            "kernel size: 5" : { "total time" : 162499, "compute time" : 109377 },
+        },
+        "mac": {
+            "kernel size: 3" : { "total time" : 107810, "compute time" : 38018 },
+            "kernel size: 5" : { "total time" : 113908, "compute time" : 39264 },
+        }
+    },
+    "input size: 15" : {
+        "fir": {
+            "kernel size: 3" : { "total time" : 251219, "compute time" : 157370 },
+            "kernel size: 5" : { "total time" : 356015, "compute time" : 255940 },
+        },
+        "mac": {
+            "kernel size: 3" : { "total time" : 281945, "compute time" : 98875 },
+            "kernel size: 5" : { "total time" : 378992, "compute time" : 129909 },
+        }
+    },
+    "input size: 20" : {
+        "fir": {
+            "kernel size: 3" : { "total time" : 425251, "compute time" : 274384 },
+            "kernel size: 5" : { "total time" : 636218, "compute time" : 469439 },
+        },
+        "mac": {
+            "kernel size: 3" : { "total time" : 538991, "compute time" : 188769 },
+            "kernel size: 5" : { "total time" : 799956, "compute time" : 273852 },
+        }
+    }
+}
+
 plt.rcParams["font.family"] = "Times New Roman"
 plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 3))
+fig, axs = plt.subplots(2, 2, figsize=(24, 6))
 
-def plot(data, k, ax, labels):
+def plot(data, k, ax, title, labels):
     kernel_size = f"kernel size: {k}"
 
     input_sizes = [5, 10, 15, 20]
@@ -89,19 +133,44 @@ def plot(data, k, ax, labels):
         label=labels[3]
     )
 
-    ax.set_title(f"{k}x{k} Kernel")
+    ax.set_ylim([0, 3.0])
+    if title:
+        ax.set_title(f"{k}x{k} Kernel")
+    else:
+        ax.set_xlabel('Input Size')
     ax.set_xticks(index + bar_width / 2)
     ax.set_xticklabels(input_sizes)
+    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
 
 
-plot(log, 3, ax1, labels=[
+plot(log_base, 3, axs[0, 0], True, labels=[None]*4)
+plot(log_base, 5, axs[0, 1], True, labels=[None]*4)
+plot(log_lupe, 3, axs[1, 0], False, labels=[
     "FIR (Compute Time)",
     "FIR (Total Time)",
     "MAC (Compute Time)",
     "MAC (Total Time)",
 ])
-plot(log, 5, ax2, labels=[None]*4)
+plot(log_lupe, 5, axs[1, 1], False, labels=[None]*4)
 
-fig.legend(loc='lower center', bbox_to_anchor=(0.5, -0.12), ncol=4, fontsize=12)
+yticks = axs[0, 0].yaxis.get_major_ticks()
+yticks[0].label1.set_visible(False)
+yticks = axs[1, 0].yaxis.get_major_ticks()
+yticks[3].label1.set_visible(False)
 
-plt.savefig(f"adaptive_conv.png", bbox_inches='tight', dpi=500)
+axs[0, 0].set_ylabel('Normalized to FIR\n(Bottom-up)')
+axs[1, 0].set_ylabel('Normalized to FIR\n(Top-down)')
+
+axs[0, 0].set_xticklabels([])
+axs[0, 1].set_xticklabels([])
+axs[0, 1].set_yticklabels([])
+axs[1, 1].set_yticklabels([])
+
+fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.5, -0.01))
+fig.tight_layout(pad=0, rect=[0.025, 0.06, 1, 1])
+
+plt.subplots_adjust(hspace=0)
+plt.subplots_adjust(wspace=0)
+
+# plt.show()
+plt.savefig(f"adaptive_conv.png", dpi=500)
