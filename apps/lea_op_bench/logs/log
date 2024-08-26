@@ -1,0 +1,594 @@
+=========================== benchmark msp_add_q15 ============================
+
+msp_add_q15 size of 6
+invocation time: 2990; other time: 6964
+total time: 11736
+msp_add_q15 size of 10
+invocation time: 3112; other time: 6964
+total time: 11859
+msp_add_q15 size of 20
+invocation time: 3420; other time: 6964
+total time: 12167
+msp_add_q15 size of 30
+invocation time: 3727; other time: 6964
+total time: 12473
+msp_add_q15 size of 40
+invocation time: 4035; other time: 6964
+total time: 12780
+msp_add_q15 size of 50
+invocation time: 4342; other time: 6963
+total time: 13088
+msp_add_q15 size of 60
+invocation time: 4649; other time: 6964
+total time: 13396
+msp_add_q15 size of 70
+invocation time: 4956; other time: 6963
+total time: 13702
+msp_add_q15 size of 80
+invocation time: 5263; other time: 6963
+total time: 14009
+msp_add_q15 size of 90
+invocation time: 5572; other time: 6963
+total time: 14317
+msp_add_q15 size of 100
+invocation time: 5879; other time: 6963
+total time: 14625
+msp_add_q15 size of 110
+invocation time: 6185; other time: 6963
+total time: 14932
+msp_add_q15 size of 120
+invocation time: 6492; other time: 6964
+total time: 15239
+msp_add_q15 size of 130
+invocation time: 6800; other time: 6964
+total time: 15546
+msp_add_q15 size of 140
+invocation time: 7108; other time: 6964
+total time: 15853
+msp_add_q15 size of 150
+invocation time: 7414; other time: 6963
+total time: 16160
+msp_add_q15 size of 160
+invocation time: 7721; other time: 6963
+total time: 16467
+msp_add_q15 size of 170
+invocation time: 8028; other time: 6963
+total time: 16774
+msp_add_q15 size of 180
+invocation time: 8335; other time: 6963
+total time: 17082
+msp_add_q15 size of 190
+invocation time: 8644; other time: 6963
+total time: 17389
+msp_add_q15 size of 200
+invocation time: 8952; other time: 6963
+total time: 17696
+
+=========================== benchmark msp_mac_q15 ============================
+
+msp_mac_q15 size of 6
+invocation time: 2990; other time: 6819
+total time: 11571
+msp_mac_q15 size of 10
+invocation time: 3113; other time: 6819
+total time: 11694
+msp_mac_q15 size of 20
+invocation time: 3420; other time: 6820
+total time: 12002
+msp_mac_q15 size of 30
+invocation time: 3727; other time: 6820
+total time: 12310
+msp_mac_q15 size of 40
+invocation time: 4034; other time: 6820
+total time: 12616
+msp_mac_q15 size of 50
+invocation time: 4341; other time: 6820
+total time: 12924
+msp_mac_q15 size of 60
+invocation time: 4649; other time: 6820
+total time: 13231
+msp_mac_q15 size of 70
+invocation time: 4956; other time: 6819
+total time: 13537
+msp_mac_q15 size of 80
+invocation time: 5263; other time: 6820
+total time: 13845
+msp_mac_q15 size of 90
+invocation time: 5572; other time: 6819
+total time: 14153
+msp_mac_q15 size of 100
+invocation time: 5879; other time: 6820
+total time: 14459
+msp_mac_q15 size of 110
+invocation time: 6185; other time: 6820
+total time: 14767
+msp_mac_q15 size of 120
+invocation time: 6493; other time: 6820
+total time: 15075
+msp_mac_q15 size of 130
+invocation time: 6800; other time: 6819
+total time: 15382
+msp_mac_q15 size of 140
+invocation time: 7107; other time: 6820
+total time: 15690
+msp_mac_q15 size of 150
+invocation time: 7414; other time: 6820
+total time: 15997
+msp_mac_q15 size of 160
+invocation time: 7721; other time: 6820
+total time: 16302
+msp_mac_q15 size of 170
+invocation time: 8028; other time: 6819
+total time: 16610
+msp_mac_q15 size of 180
+invocation time: 8337; other time: 6820
+total time: 16919
+msp_mac_q15 size of 190
+invocation time: 8643; other time: 6820
+total time: 17226
+msp_mac_q15 size of 200
+invocation time: 8951; other time: 6820
+total time: 17533
+
+=========================== benchmark msp_offset_q15 ============================
+
+msp_offset_q15 size of 6
+invocation time: 2969; other time: 7210
+total time: 12699
+msp_offset_q15 size of 10
+invocation time: 3092; other time: 7209
+total time: 12822
+msp_offset_q15 size of 20
+invocation time: 3400; other time: 7210
+total time: 13129
+msp_offset_q15 size of 30
+invocation time: 3706; other time: 7209
+total time: 13436
+msp_offset_q15 size of 40
+invocation time: 4014; other time: 7209
+total time: 13743
+msp_offset_q15 size of 50
+invocation time: 4321; other time: 7209
+total time: 14050
+msp_offset_q15 size of 60
+invocation time: 4628; other time: 7209
+total time: 14357
+msp_offset_q15 size of 70
+invocation time: 4936; other time: 7208
+total time: 14664
+msp_offset_q15 size of 80
+invocation time: 5243; other time: 7209
+total time: 14971
+msp_offset_q15 size of 90
+invocation time: 5550; other time: 7209
+total time: 15279
+msp_offset_q15 size of 100
+invocation time: 5858; other time: 7209
+total time: 15586
+msp_offset_q15 size of 110
+invocation time: 6164; other time: 7209
+total time: 15893
+msp_offset_q15 size of 120
+invocation time: 6473; other time: 7209
+total time: 16200
+msp_offset_q15 size of 130
+invocation time: 6779; other time: 7208
+total time: 16508
+msp_offset_q15 size of 140
+invocation time: 7087; other time: 7209
+total time: 16816
+msp_offset_q15 size of 150
+invocation time: 7395; other time: 7210
+total time: 17123
+msp_offset_q15 size of 160
+invocation time: 7700; other time: 7209
+total time: 17430
+msp_offset_q15 size of 170
+invocation time: 8009; other time: 7209
+total time: 17738
+msp_offset_q15 size of 180
+invocation time: 8316; other time: 7209
+total time: 18045
+msp_offset_q15 size of 190
+invocation time: 8622; other time: 7209
+total time: 18352
+msp_offset_q15 size of 200
+invocation time: 8930; other time: 7208
+total time: 18659
+
+=========================== benchmark msp_fir_q15 ============================
+
+msp_fir_q15 size of 6
+invocation time: 3994; other time: 7824
+total time: 13355
+msp_fir_q15 size of 10
+invocation time: 4813; other time: 7824
+total time: 14173
+msp_fir_q15 size of 20
+invocation time: 6862; other time: 7824
+total time: 16222
+msp_fir_q15 size of 30
+invocation time: 8910; other time: 7823
+total time: 18270
+msp_fir_q15 size of 40
+invocation time: 10959; other time: 7824
+total time: 20319
+msp_fir_q15 size of 50
+invocation time: 13007; other time: 7823
+total time: 22368
+msp_fir_q15 size of 60
+invocation time: 15054; other time: 7824
+total time: 24416
+msp_fir_q15 size of 70
+invocation time: 17103; other time: 7823
+total time: 26465
+msp_fir_q15 size of 80
+invocation time: 19151; other time: 7824
+total time: 28512
+msp_fir_q15 size of 90
+invocation time: 21200; other time: 7823
+total time: 30561
+msp_fir_q15 size of 100
+invocation time: 23249; other time: 7824
+total time: 32609
+msp_fir_q15 size of 110
+invocation time: 25297; other time: 7824
+total time: 34658
+msp_fir_q15 size of 120
+invocation time: 27345; other time: 7823
+total time: 36705
+msp_fir_q15 size of 130
+invocation time: 29393; other time: 7823
+total time: 38754
+msp_fir_q15 size of 140
+invocation time: 31442; other time: 7823
+total time: 40802
+msp_fir_q15 size of 150
+invocation time: 33490; other time: 7824
+total time: 42851
+msp_fir_q15 size of 160
+invocation time: 35540; other time: 7823
+total time: 44900
+msp_fir_q15 size of 170
+invocation time: 37588; other time: 7824
+total time: 46950
+msp_fir_q15 size of 180
+invocation time: 39636; other time: 7823
+total time: 48994
+msp_fir_q15 size of 190
+invocation time: 41683; other time: 7823
+total time: 51042
+msp_fir_q15 size of 200
+invocation time: 43731; other time: 7823
+total time: 53093
+
+=========================== benchmark msp_fill_q15 ============================
+
+msp_fill_q15 size of 6
+invocation time: 2950; other time: 6390
+total time: 10978
+msp_fill_q15 size of 10
+invocation time: 3072; other time: 6389
+total time: 11102
+msp_fill_q15 size of 20
+invocation time: 3379; other time: 6390
+total time: 11409
+msp_fill_q15 size of 30
+invocation time: 3686; other time: 6390
+total time: 11716
+msp_fill_q15 size of 40
+invocation time: 3994; other time: 6390
+total time: 12023
+msp_fill_q15 size of 50
+invocation time: 4301; other time: 6390
+total time: 12331
+msp_fill_q15 size of 60
+invocation time: 4609; other time: 6390
+total time: 12638
+msp_fill_q15 size of 70
+invocation time: 4916; other time: 6390
+total time: 12944
+msp_fill_q15 size of 80
+invocation time: 5222; other time: 6390
+total time: 13253
+msp_fill_q15 size of 90
+invocation time: 5531; other time: 6390
+total time: 13559
+msp_fill_q15 size of 100
+invocation time: 5838; other time: 6390
+total time: 13866
+msp_fill_q15 size of 110
+invocation time: 6145; other time: 6390
+total time: 14174
+msp_fill_q15 size of 120
+invocation time: 6451; other time: 6390
+total time: 14481
+msp_fill_q15 size of 130
+invocation time: 6759; other time: 6390
+total time: 14789
+msp_fill_q15 size of 140
+invocation time: 7067; other time: 6390
+total time: 15095
+msp_fill_q15 size of 150
+invocation time: 7374; other time: 6390
+total time: 15403
+msp_fill_q15 size of 160
+invocation time: 7681; other time: 6390
+total time: 15710
+msp_fill_q15 size of 170
+invocation time: 7988; other time: 6389
+total time: 16017
+msp_fill_q15 size of 180
+invocation time: 8295; other time: 6390
+total time: 16324
+msp_fill_q15 size of 190
+invocation time: 8602; other time: 6390
+total time: 16632
+msp_fill_q15 size of 200
+invocation time: 8910; other time: 6389
+total time: 16939
+
+=========================== benchmark msp_mpy_q15 ============================
+
+msp_mpy_q15 size of 6
+invocation time: 3092; other time: 6983
+total time: 11776
+msp_mpy_q15 size of 10
+invocation time: 3215; other time: 6984
+total time: 11900
+msp_mpy_q15 size of 20
+invocation time: 3523; other time: 6984
+total time: 12207
+msp_mpy_q15 size of 30
+invocation time: 3830; other time: 6984
+total time: 12514
+msp_mpy_q15 size of 40
+invocation time: 4137; other time: 6983
+total time: 12822
+msp_mpy_q15 size of 50
+invocation time: 4444; other time: 6983
+total time: 13129
+msp_mpy_q15 size of 60
+invocation time: 4752; other time: 6984
+total time: 13436
+msp_mpy_q15 size of 70
+invocation time: 5059; other time: 6983
+total time: 13744
+msp_mpy_q15 size of 80
+invocation time: 5366; other time: 6984
+total time: 14050
+msp_mpy_q15 size of 90
+invocation time: 5673; other time: 6984
+total time: 14357
+msp_mpy_q15 size of 100
+invocation time: 5981; other time: 6983
+total time: 14665
+msp_mpy_q15 size of 110
+invocation time: 6287; other time: 6983
+total time: 14972
+msp_mpy_q15 size of 120
+invocation time: 6594; other time: 6984
+total time: 15279
+msp_mpy_q15 size of 130
+invocation time: 6902; other time: 6983
+total time: 15586
+msp_mpy_q15 size of 140
+invocation time: 7210; other time: 6983
+total time: 15894
+msp_mpy_q15 size of 150
+invocation time: 7517; other time: 6984
+total time: 16201
+msp_mpy_q15 size of 160
+invocation time: 7824; other time: 6984
+total time: 16508
+msp_mpy_q15 size of 170
+invocation time: 8132; other time: 6984
+total time: 16816
+msp_mpy_q15 size of 180
+invocation time: 8438; other time: 6984
+total time: 17123
+msp_mpy_q15 size of 190
+invocation time: 8745; other time: 6984
+total time: 17430
+msp_mpy_q15 size of 200
+invocation time: 9053; other time: 6983
+total time: 17736
+
+=========================== benchmark msp_deinterleave_q15 ============================
+
+msp_deinterleave_q15 size of 6
+invocation time: 2847; other time: 5837
+total time: 11121
+msp_deinterleave_q15 size of 10
+invocation time: 2908; other time: 5836
+total time: 11182
+msp_deinterleave_q15 size of 20
+invocation time: 3092; other time: 5836
+total time: 11367
+msp_deinterleave_q15 size of 30
+invocation time: 3215; other time: 5837
+total time: 11490
+msp_deinterleave_q15 size of 40
+invocation time: 3400; other time: 5836
+total time: 11674
+msp_deinterleave_q15 size of 50
+invocation time: 3522; other time: 5836
+total time: 11796
+msp_deinterleave_q15 size of 60
+invocation time: 3706; other time: 5836
+total time: 11981
+msp_deinterleave_q15 size of 70
+invocation time: 3830; other time: 5836
+total time: 12104
+msp_deinterleave_q15 size of 80
+invocation time: 4014; other time: 5836
+total time: 12288
+msp_deinterleave_q15 size of 90
+invocation time: 4136; other time: 5837
+total time: 12411
+msp_deinterleave_q15 size of 100
+invocation time: 4321; other time: 5836
+total time: 12595
+msp_deinterleave_q15 size of 110
+invocation time: 4444; other time: 5837
+total time: 12719
+msp_deinterleave_q15 size of 120
+invocation time: 4629; other time: 5836
+total time: 12903
+msp_deinterleave_q15 size of 130
+invocation time: 4752; other time: 5836
+total time: 13026
+msp_deinterleave_q15 size of 140
+invocation time: 4936; other time: 5837
+total time: 13209
+msp_deinterleave_q15 size of 150
+invocation time: 5059; other time: 5836
+total time: 13332
+msp_deinterleave_q15 size of 160
+invocation time: 5243; other time: 5836
+total time: 13518
+msp_deinterleave_q15 size of 170
+invocation time: 5367; other time: 5837
+total time: 13641
+msp_deinterleave_q15 size of 180
+invocation time: 5550; other time: 5837
+total time: 13824
+msp_deinterleave_q15 size of 190
+invocation time: 5673; other time: 5837
+total time: 13947
+msp_deinterleave_q15 size of 200
+invocation time: 5858; other time: 5837
+total time: 14131
+
+=========================== benchmark msp_matrix_mpy_q15 ============================
+
+msp_matrix_mpy_q15 size of 6
+invocation time: 3768; other time: 7577
+total time: 14152
+msp_matrix_mpy_q15 size of 10
+invocation time: 3973; other time: 7578
+total time: 14357
+msp_matrix_mpy_q15 size of 20
+invocation time: 4485; other time: 7577
+total time: 14870
+msp_matrix_mpy_q15 size of 30
+invocation time: 4997; other time: 7578
+total time: 15381
+msp_matrix_mpy_q15 size of 40
+invocation time: 5509; other time: 7577
+total time: 15894
+msp_matrix_mpy_q15 size of 50
+invocation time: 6021; other time: 7578
+total time: 16406
+msp_matrix_mpy_q15 size of 60
+invocation time: 6534; other time: 7577
+total time: 16918
+msp_matrix_mpy_q15 size of 70
+invocation time: 7045; other time: 7578
+total time: 17430
+msp_matrix_mpy_q15 size of 80
+invocation time: 7557; other time: 7578
+total time: 17942
+msp_matrix_mpy_q15 size of 90
+invocation time: 8070; other time: 7577
+total time: 18454
+msp_matrix_mpy_q15 size of 100
+invocation time: 8582; other time: 7578
+total time: 18966
+msp_matrix_mpy_q15 size of 110
+invocation time: 9094; other time: 7577
+total time: 19477
+msp_matrix_mpy_q15 size of 120
+invocation time: 9606; other time: 7578
+total time: 19989
+msp_matrix_mpy_q15 size of 130
+invocation time: 10118; other time: 7578
+total time: 20502
+msp_matrix_mpy_q15 size of 140
+invocation time: 10629; other time: 7578
+total time: 21014
+msp_matrix_mpy_q15 size of 150
+invocation time: 11142; other time: 7578
+total time: 21527
+msp_matrix_mpy_q15 size of 160
+invocation time: 11654; other time: 7577
+total time: 22039
+msp_matrix_mpy_q15 size of 170
+invocation time: 12166; other time: 7578
+total time: 22551
+msp_matrix_mpy_q15 size of 180
+invocation time: 12678; other time: 7577
+total time: 23062
+msp_matrix_mpy_q15 size of 190
+invocation time: 13190; other time: 7578
+total time: 23575
+msp_matrix_mpy_q15 size of 200
+invocation time: 13702; other time: 7577
+total time: 24087
+
+=========================== benchmark DMA ============================
+
+DMA size of 6
+DMA time: 2109
+total time: 5120
+DMA size of 10
+DMA time: 2272
+total time: 5283
+DMA size of 20
+DMA time: 2681
+total time: 5693
+DMA size of 30
+DMA time: 3091
+total time: 6103
+DMA size of 40
+DMA time: 3501
+total time: 6513
+DMA size of 50
+DMA time: 3911
+total time: 6921
+DMA size of 60
+DMA time: 4320
+total time: 7332
+DMA size of 70
+DMA time: 4731
+total time: 7741
+DMA size of 80
+DMA time: 5140
+total time: 8151
+DMA size of 90
+DMA time: 5550
+total time: 8561
+DMA size of 100
+DMA time: 5960
+total time: 8970
+DMA size of 110
+DMA time: 6369
+total time: 9380
+DMA size of 120
+DMA time: 6779
+total time: 9790
+DMA size of 130
+DMA time: 7188
+total time: 10199
+DMA size of 140
+DMA time: 7598
+total time: 10608
+DMA size of 150
+DMA time: 8007
+total time: 11018
+DMA size of 160
+DMA time: 8417
+total time: 11428
+DMA size of 170
+DMA time: 8826
+total time: 11837
+DMA size of 180
+DMA time: 9235
+total time: 12248
+DMA size of 190
+DMA time: 9645
+total time: 12656
+DMA size of 200
+DMA time: 10056
+total time: 13067
+@@@@

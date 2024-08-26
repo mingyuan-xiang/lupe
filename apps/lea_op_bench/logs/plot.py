@@ -1,0 +1,146 @@
+import re
+from collections import defaultdict
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+
+def parse_log(log):
+    benchmarks = defaultdict(list)
+    current_benchmark = None
+
+    for line in log.splitlines():
+        if "benchmark" in line:
+            current_benchmark = re.search(r'benchmark (.*) ', line).group(1).strip()
+        elif "size of" in line:
+            size = int(re.search(r'size of (\d+)', line).group(1))
+            benchmarks[current_benchmark].append({'size': size})
+        elif "invocation time" in line:
+            invocation_time = int(re.search(r'invocation time: (\d+)', line).group(1))
+            benchmarks[current_benchmark][-1]['core time'] = invocation_time
+
+            other_time = int(re.search(r'other time: (\d+)', line).group(1))
+            benchmarks[current_benchmark][-1]['set-up time'] = other_time
+        elif "DMA time" in line:
+            dma_time = int(re.search(r'DMA time: (\d+)', line).group(1))
+            benchmarks[current_benchmark][-1]['core time'] = dma_time
+        elif "total time" in line:
+            total_time = int(re.search(r'total time: (\d+)', line).group(1))
+            benchmarks[current_benchmark][-1]['total time'] = total_time
+
+    for d in benchmarks['DMA']:
+        d['set-up time'] = d['total time'] - d['core time']
+
+    for v in benchmarks:
+        for d in benchmarks[v]:
+            d['total time'] = d['set-up time'] + d['core time']
+
+    return benchmarks
+
+with open('log', 'r') as file:
+    log = file.read()
+
+log_data = parse_log(log)
+
+bar_width = 2.5
+plt.rcParams["font.family"] = "Times New Roman"
+plt.rcParams.update({'font.size': 16})
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
+
+n_subplots = len(log_data)
+
+fig, axes = plt.subplots(n_subplots, 1, figsize=(8, n_subplots * 1))
+
+def disable_tick(t):
+    t.label1.set_visible(False)
+    t.tick1line.set_markersize(0)
+    t.tick2line.set_markersize(0)
+
+for i, (key, values) in enumerate(log_data.items()):
+    sizes = [entry['size'] for entry in values]
+    core_times = [entry['core time'] for entry in values]
+    setup_times = [entry['set-up time'] for entry in values]
+    total_times = [entry['total time'] for entry in values]
+
+    norm_factor = total_times[0]
+
+    norm_core_times = [core_time / norm_factor for core_time in core_times]
+    norm_setup_times = [setup_time / norm_factor for setup_time in setup_times]
+
+    core_label = None
+    total_label = None
+    if key == 'DMA':
+        core_label = 'Core Time'
+        total_label = 'Total Time'
+
+    axes[i].bar(sizes, norm_core_times, bar_width, label=core_label, color='mediumvioletred', hatch='\\\\')
+    axes[i].bar(sizes, norm_setup_times, bar_width, bottom=norm_core_times, label=total_label, color='pink')
+
+    axes[i].yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
+    axes[i].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+
+    if key == 'msp_add_q15':
+        pass
+
+    norm_total_times = [total_time / norm_factor for total_time in total_times]
+    max_time = max(norm_total_times)
+    axes[i].set_ylim([0, max_time + 0.5])
+
+    if key == 'msp_fill_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+
+    if key == 'msp_mac_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+
+    if key == 'msp_add_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+
+    if key == 'msp_fir_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+        disable_tick(yticks[4])
+
+    if key == 'msp_offset_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+
+    if key == 'msp_mpy_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[2])
+
+    if key != 'DMA':
+        axes[i].set_xticklabels([])
+        axes[i].xaxis.set_tick_params(length=0)
+
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[0])
+    else:
+        axes[i].set_xlabel('Input Size')
+
+        x_sizes = []
+        for s in range(len(sizes)):
+            if s % 2 == 0:
+                x_sizes.append(sizes[s])
+
+        axes[i].set_xticks(x_sizes)
+        axes[i].set_xticklabels(x_sizes, fontsize=12)
+
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[3])
+
+    axes[i].text(0.5, 0.85, key, ha='center', va='center', transform=axes[i].transAxes, 
+        fontsize=12, bbox=dict(facecolor='white', edgecolor='gainsboro', boxstyle='round,pad=0.1'))
+
+    axes[i].tick_params(axis='y', labelsize=12)
+
+
+fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.55, -0.007))
+fig.tight_layout(pad=0, rect=[0.03, 0.04, 1, 1])
+
+fig.text(0.0, 0.5, 'Normalized Time', va='center', rotation='vertical', fontsize=18)
+
+plt.subplots_adjust(hspace=0)
+
+plt.savefig(f"lea_perf.png", dpi=500)
