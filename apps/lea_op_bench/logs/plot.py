@@ -38,7 +38,12 @@ def parse_log(log):
 with open('log', 'r') as file:
     log = file.read()
 
-log_data = parse_log(log)
+data = parse_log(log)
+
+log_data = {}
+for d in data:
+    if d in ('msp_fir_q15', 'msp_mac_q15', 'msp_mpy_q15', 'DMA'):
+        log_data[d] = data[d]
 
 bar_width = 2.5
 plt.rcParams["font.family"] = "Times New Roman"
@@ -78,33 +83,30 @@ for i, (key, values) in enumerate(log_data.items()):
     axes[i].yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     axes[i].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
-    if key == 'msp_add_q15':
-        pass
-
     norm_total_times = [total_time / norm_factor for total_time in total_times]
     max_time = max(norm_total_times)
     axes[i].set_ylim([0, max_time + 0.5])
 
-    if key == 'msp_fill_q15':
-        yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
+    # if key == 'msp_fill_q15':
+    #     yticks = axes[i].yaxis.get_major_ticks()
+    #     disable_tick(yticks[2])
 
     if key == 'msp_mac_q15':
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[2])
 
-    if key == 'msp_add_q15':
-        yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
+    # if key == 'msp_add_q15':
+    #     yticks = axes[i].yaxis.get_major_ticks()
+    #     disable_tick(yticks[2])
 
     if key == 'msp_fir_q15':
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[2])
         disable_tick(yticks[4])
 
-    if key == 'msp_offset_q15':
-        yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
+    # if key == 'msp_offset_q15':
+    #     yticks = axes[i].yaxis.get_major_ticks()
+    #     disable_tick(yticks[2])
 
     if key == 'msp_mpy_q15':
         yticks = axes[i].yaxis.get_major_ticks()
@@ -136,10 +138,10 @@ for i, (key, values) in enumerate(log_data.items()):
     axes[i].tick_params(axis='y', labelsize=12)
 
 
-fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.55, -0.007))
-fig.tight_layout(pad=0, rect=[0.03, 0.04, 1, 1])
+fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.55, -0.017))
+fig.tight_layout(pad=0, rect=[0.03, 0.09, 1, 1])
 
-fig.text(0.0, 0.5, 'Normalized Time', va='center', rotation='vertical', fontsize=18)
+fig.text(0.0, 0.58, 'Normalized Time', va='center', rotation='vertical', fontsize=18)
 
 plt.subplots_adjust(hspace=0)
 
