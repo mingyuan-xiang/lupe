@@ -1,0 +1,194 @@
+{
+    "LeNet": [
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.988,
+            "total_cycles": 211386910
+        },
+        {
+            "optimization_flags": "dma",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.988,
+            "total_cycles": 499183075
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem_acc",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.9883,
+            "total_cycles": 76388051
+        },
+        {
+            "optimization_flags": "no_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.988,
+            "total_cycles": 614794981
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.988,
+            "total_cycles": 226436169
+        },
+        {
+            "optimization_flags": "dma_lea_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.988,
+            "total_cycles": 226617173
+        }
+    ],
+    "ResNet3": [
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.7967,
+            "total_cycles": 2030235347
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem_acc",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8048,
+            "total_cycles": 711982497
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.7967,
+            "total_cycles": 2079517839
+        },
+        {
+            "optimization_flags": "dma_lea_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.7967,
+            "total_cycles": 2029333299
+        },
+        {
+            "optimization_flags": "no_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.7967,
+            "total_cycles": 5219523314
+        },
+        {
+            "optimization_flags": "dma",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.7967,
+            "total_cycles": 4415012646
+        }
+    ],
+    "MLPClassifier": [
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem_acc",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.9055,
+            "total_cycles": 21338348
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8874,
+            "total_cycles": 27078392
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8874,
+            "total_cycles": 27031536
+        },
+        {
+            "optimization_flags": "no_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8874,
+            "total_cycles": 50126170
+        },
+        {
+            "optimization_flags": "dma_lea_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8874,
+            "total_cycles": 27208161
+        },
+        {
+            "optimization_flags": "dma",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.8874,
+            "total_cycles": 43310144
+        }
+    ],
+    "MobileNetV2": [
+        {
+            "optimization_flags": "dma_lea_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 8059,
+            "last_accuracy": 0.8048144931132895,
+            "total_cycles": 883724516
+        },
+        {
+            "optimization_flags": "no_opt",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 8059,
+            "last_accuracy": 0.8048144931132895,
+            "total_cycles": 2426741271
+        },
+        {
+            "optimization_flags": "dma",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 8059,
+            "last_accuracy": 0.8048144931132895,
+            "total_cycles": 1831468422
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer_mem",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 5570,
+            "last_accuracy": 0.8041292639138241,
+            "total_cycles": 550499694
+        },
+        {
+            "optimization_flags": "dma_lea_opt_adaptive_buffer",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 8059,
+            "last_accuracy": 0.8048144931132895,
+            "total_cycles": 884819038
+        }
+    ]
+}
