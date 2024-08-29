@@ -44,7 +44,7 @@ data = parse_log(log)
 
 log_data = {}
 for d in data:
-    if d in ('msp_fir_q15', 'msp_mac_q15', 'msp_mpy_q15', 'DMA'):
+    if d in ('msp_fir_q15', 'msp_mac_q15', 'msp_add_q15', 'DMA'):
         log_data[d] = data[d]
 
 bar_width = 2.5
@@ -87,12 +87,12 @@ for i, (key, values) in enumerate(log_data.items()):
     core_label = None
     total_label = None
     if key == 'DMA':
-        st_time = 'Start-up Time'
-        core_label = 'Core Time'
-        total_label = 'Set-up Time'
+        st_time = 'Start-up Overhead'
+        core_label = 'Compute Time'
+        total_label = 'Set-up Overhead'
 
-    axes[i].bar(sizes, constant, bar_width, label=st_time, color='firebrick', hatch='++')
-    axes[i].bar(sizes, real_norm_core_times, bar_width, bottom=constant, label=core_label, color='royalblue', hatch='oo')
+    axes[i].bar(sizes, real_norm_core_times, bar_width, label=core_label, color='royalblue', hatch='oo')
+    axes[i].bar(sizes, constant, bar_width, label=st_time, bottom=real_norm_core_times, color='firebrick', hatch='++')
     axes[i].bar(sizes, norm_setup_times, bar_width, bottom=norm_core_times, label=total_label, color='pink')
 
     axes[i].yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
@@ -110,9 +110,9 @@ for i, (key, values) in enumerate(log_data.items()):
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[1])
 
-    # if key == 'msp_add_q15':
-    #     yticks = axes[i].yaxis.get_major_ticks()
-    #     disable_tick(yticks[2])
+    if key == 'msp_add_q15':
+        yticks = axes[i].yaxis.get_major_ticks()
+        disable_tick(yticks[1])
 
     if key == 'msp_fir_q15':
         yticks = axes[i].yaxis.get_major_ticks()
@@ -124,9 +124,9 @@ for i, (key, values) in enumerate(log_data.items()):
     #     yticks = axes[i].yaxis.get_major_ticks()
     #     disable_tick(yticks[2])
 
-    if key == 'msp_mpy_q15':
-        yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[1])
+    # if key == 'msp_mpy_q15':
+    #     yticks = axes[i].yaxis.get_major_ticks()
+    #     disable_tick(yticks[1])
 
     if key != 'DMA':
         axes[i].set_xticklabels([])

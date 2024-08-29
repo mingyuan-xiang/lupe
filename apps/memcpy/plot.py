@@ -40,7 +40,6 @@ ax.set_xlabel('Words (2 Btyes)')
 ax.set_ylabel('Time/MicroSec')
 ax.set_xlim([0, 100])
 ax.set_ylim([0, 180])
-ax.set_title('Latency of Data Movement (16 MHz)')
 
 freq = ((2 ** 15 - 1) * 10000) / 1000000
 
