@@ -89,7 +89,7 @@ for i, (key, values) in enumerate(log_data.items()):
     if key == 'DMA':
         st_time = 'Start-up Time'
         core_label = 'Core Time'
-        total_label = 'Total Time'
+        total_label = 'Set-up Time'
 
     axes[i].bar(sizes, constant, bar_width, label=st_time, color='firebrick', hatch='++')
     axes[i].bar(sizes, real_norm_core_times, bar_width, bottom=constant, label=core_label, color='royalblue', hatch='oo')
@@ -108,7 +108,7 @@ for i, (key, values) in enumerate(log_data.items()):
 
     if key == 'msp_mac_q15':
         yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
+        disable_tick(yticks[1])
 
     # if key == 'msp_add_q15':
     #     yticks = axes[i].yaxis.get_major_ticks()
@@ -116,8 +116,9 @@ for i, (key, values) in enumerate(log_data.items()):
 
     if key == 'msp_fir_q15':
         yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
-        disable_tick(yticks[4])
+        disable_tick(yticks[1])
+        disable_tick(yticks[3])
+        disable_tick(yticks[5])
 
     # if key == 'msp_offset_q15':
     #     yticks = axes[i].yaxis.get_major_ticks()
@@ -125,7 +126,7 @@ for i, (key, values) in enumerate(log_data.items()):
 
     if key == 'msp_mpy_q15':
         yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[2])
+        disable_tick(yticks[1])
 
     if key != 'DMA':
         axes[i].set_xticklabels([])
@@ -148,11 +149,12 @@ for i, (key, values) in enumerate(log_data.items()):
 
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[3])
+        disable_tick(yticks[1])
 
         current_ticks = axes[i].get_xticks()
         new_ticks = list(current_ticks) + [52]  # Add a new tick at 2.5
         axes[i].set_xticks(new_ticks)
-        axes[i].axvline(x=52, color='orange', linestyle='--', label='Maximum Input Width')
+        axes[i].axvline(x=52, color='orange', linestyle='--', label='Max Input Width')
 
     axes[i].text(0.5, 0.85, key, ha='center', va='center', transform=axes[i].transAxes, 
         fontsize=12, bbox=dict(facecolor='white', edgecolor='gainsboro', boxstyle='round,pad=0.1'))
