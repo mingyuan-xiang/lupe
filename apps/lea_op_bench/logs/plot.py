@@ -2,6 +2,8 @@ import re
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+import numpy as np
+from sklearn.linear_model import LinearRegression
 
 def parse_log(log):
     benchmarks = defaultdict(list)
@@ -71,13 +73,26 @@ for i, (key, values) in enumerate(log_data.items()):
     norm_core_times = [core_time / norm_factor for core_time in core_times]
     norm_setup_times = [setup_time / norm_factor for setup_time in setup_times]
 
+    # Use linear regression to get the intercept
+    y = np.array(norm_core_times)
+    x = np.array(sizes).reshape(-1, 1)
+    model = LinearRegression()
+    model.fit(x, y)
+    intercept = model.intercept_
+
+    constant = [intercept] * len(sizes)
+    real_norm_core_times = [t - intercept for t in norm_core_times]
+
+    st_time = None
     core_label = None
     total_label = None
     if key == 'DMA':
+        st_time = 'Start-up Time'
         core_label = 'Core Time'
         total_label = 'Total Time'
 
-    axes[i].bar(sizes, norm_core_times, bar_width, label=core_label, color='mediumvioletred', hatch='\\\\')
+    axes[i].bar(sizes, constant, bar_width, label=st_time, color='firebrick', hatch='++')
+    axes[i].bar(sizes, real_norm_core_times, bar_width, bottom=constant, label=core_label, color='royalblue', hatch='oo')
     axes[i].bar(sizes, norm_setup_times, bar_width, bottom=norm_core_times, label=total_label, color='pink')
 
     axes[i].yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
@@ -118,6 +133,7 @@ for i, (key, values) in enumerate(log_data.items()):
 
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[0])
+        axes[i].axvline(x=52, color='orange', linestyle='--')
     else:
         axes[i].set_xlabel('Input Size')
 
@@ -125,6 +141,7 @@ for i, (key, values) in enumerate(log_data.items()):
         for s in range(len(sizes)):
             if s % 2 == 0:
                 x_sizes.append(sizes[s])
+        x_sizes.append(52)
 
         axes[i].set_xticks(x_sizes)
         axes[i].set_xticklabels(x_sizes, fontsize=12)
@@ -132,13 +149,20 @@ for i, (key, values) in enumerate(log_data.items()):
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[3])
 
+        current_ticks = axes[i].get_xticks()
+        new_ticks = list(current_ticks) + [52]  # Add a new tick at 2.5
+        axes[i].set_xticks(new_ticks)
+        axes[i].axvline(x=52, color='orange', linestyle='--', label='Maximum Input Width')
+
     axes[i].text(0.5, 0.85, key, ha='center', va='center', transform=axes[i].transAxes, 
         fontsize=12, bbox=dict(facecolor='white', edgecolor='gainsboro', boxstyle='round,pad=0.1'))
 
     axes[i].tick_params(axis='y', labelsize=12)
 
-
-fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.55, -0.017))
+fig.legend(
+    loc='lower center', ncol=4,
+    fontsize=12, bbox_to_anchor=(0.5, -0.017)
+)
 fig.tight_layout(pad=0, rect=[0.03, 0.09, 1, 1])
 
 fig.text(0.0, 0.615, 'Normalized to Input Size of 6', va='center', rotation='vertical', fontsize=16)
