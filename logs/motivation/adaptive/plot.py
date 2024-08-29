@@ -94,7 +94,7 @@ plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-fig, axs = plt.subplots(2, 2, figsize=(12, 8))
+fig, axs = plt.subplots(1, 2, figsize=(12, 4))
 
 def plot(data, k, ax, title, labels):
     kernel_size = f"kernel size: {k}"
@@ -103,37 +103,22 @@ def plot(data, k, ax, title, labels):
     fir_total_times = [data[f"input size: {size}"]["fir"][kernel_size]["total time"] for size in input_sizes]
     mac_total_times = [data[f"input size: {size}"]["mac"][kernel_size]["total time"] for size in input_sizes]
 
-    fir_compute_times = [data[f"input size: {size}"]["fir"][kernel_size]["compute time"] for size in input_sizes]
-    mac_compute_times = [data[f"input size: {size}"]["mac"][kernel_size]["compute time"] for size in input_sizes]
-
+    normalized_fir_total_times = [fir_total_times[i] / fir_total_times[i] for i in range(len(input_sizes))]
     normalized_mac_total_times = [mac_total_times[i] / fir_total_times[i] for i in range(len(input_sizes))]
-    normalized_mac_compute_times = [mac_compute_times[i] / fir_total_times[i] for i in range(len(input_sizes))]
 
     bar_width = 0.25
     index = np.arange(len(input_sizes))
 
     ax.bar(
-        index, np.array(fir_compute_times) / np.array(fir_total_times),
-        bar_width, label=labels[0], color='mediumvioletred', hatch='\\\\'
+        index, normalized_fir_total_times,
+        bar_width, label=labels[0], color='firebrick', hatch='++'
     )
     ax.bar(
-        index, 1-np.array(fir_compute_times) / np.array(fir_total_times),
-        bar_width, bottom=np.array(fir_compute_times) / np.array(fir_total_times),
-        color='pink', label=labels[1]
+        index + bar_width, normalized_mac_total_times, bar_width,
+        label=labels[1], color='royalblue', hatch='\\\\'
     )
 
-    ax.bar(
-        index + bar_width, normalized_mac_compute_times, bar_width,
-        label=labels[2], color='seagreen', hatch='\\\\'
-    )
-    ax.bar(
-        index + bar_width,
-        np.array(normalized_mac_total_times) - np.array(normalized_mac_compute_times),
-        bar_width, bottom=np.array(normalized_mac_compute_times), color='mediumspringgreen',
-        label=labels[3]
-    )
-
-    ax.set_ylim([0, 3.0])
+    ax.set_ylim([0, 1.5])
     if title:
         ax.set_title(f"{k}x{k} Kernel")
     else:
@@ -143,35 +128,23 @@ def plot(data, k, ax, title, labels):
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
 
 
-plot(log_base, 3, axs[0, 0], True, labels=[None]*4)
-plot(log_base, 5, axs[0, 1], True, labels=[None]*4)
-plot(log_lupe, 3, axs[1, 0], False, labels=[
-    "FIR (Compute Time)",
-    "FIR (Total Time)",
-    "MAC (Compute Time)",
-    "MAC (Total Time)",
+# plot(log_base, 3, axs[0, 0], True, labels=[None]*4)
+# plot(log_base, 5, axs[0, 1], True, labels=[None]*4)
+plot(log_lupe, 3, axs[0], False, labels=[
+    "FIR",
+    "MAC",
 ])
-plot(log_lupe, 5, axs[1, 1], False, labels=[None]*4)
+plot(log_lupe, 5, axs[1], False, labels=[None]*4)
 
-yticks = axs[0, 0].yaxis.get_major_ticks()
+yticks = axs[0].yaxis.get_major_ticks()
 yticks[0].label1.set_visible(False)
-yticks = axs[1, 0].yaxis.get_major_ticks()
-yticks[6].label1.set_visible(False)
 
-axs[0, 0].set_ylabel('Normalized to FIR\n(Bottom-up)')
-axs[1, 0].set_ylabel('Normalized to FIR\n(Top-down)')
+axs[0].set_ylabel('Normalized to FIR\n(Top-down)')
+axs[1].set_yticklabels([])
+axs[1].yaxis.set_tick_params(length=0)
 
-axs[0, 0].set_xticklabels([])
-axs[0, 0].xaxis.set_tick_params(length=0)
-axs[0, 1].set_xticklabels([])
-axs[0, 1].xaxis.set_tick_params(length=0)
-axs[0, 1].set_yticklabels([])
-axs[0, 1].yaxis.set_tick_params(length=0)
-axs[1, 1].set_yticklabels([])
-axs[1, 1].yaxis.set_tick_params(length=0)
-
-fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.5, -0.01))
-fig.tight_layout(pad=0, rect=[0, 0.04, 1, 1])
+fig.legend(loc='lower center', ncol=4, fontsize=12, bbox_to_anchor=(0.54, -0.02))
+fig.tight_layout(pad=0, rect=[0, 0.08, 1, 1])
 
 plt.subplots_adjust(hspace=0)
 plt.subplots_adjust(wspace=0)

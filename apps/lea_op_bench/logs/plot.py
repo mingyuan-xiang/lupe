@@ -154,7 +154,7 @@ for i, (key, values) in enumerate(log_data.items()):
         current_ticks = axes[i].get_xticks()
         new_ticks = list(current_ticks) + [52]  # Add a new tick at 2.5
         axes[i].set_xticks(new_ticks)
-        axes[i].axvline(x=52, color='orange', linestyle='--', label='Max Input Width')
+        axes[i].axvline(x=52, color='orange', linestyle='--', label='Max Input Size')
 
     axes[i].text(0.5, 0.85, key, ha='center', va='center', transform=axes[i].transAxes, 
         fontsize=12, bbox=dict(facecolor='white', edgecolor='gainsboro', boxstyle='round,pad=0.1'))
