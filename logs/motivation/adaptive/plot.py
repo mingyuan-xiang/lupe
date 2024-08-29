@@ -96,7 +96,7 @@ plt.rcParams["axes.labelweight"] = "bold"
 
 fig, axs = plt.subplots(1, 2, figsize=(12, 4))
 
-def plot(data, k, ax, title, labels):
+def plot(data, k, ax, labels):
     kernel_size = f"kernel size: {k}"
 
     input_sizes = [5, 10, 15, 20]
@@ -119,10 +119,8 @@ def plot(data, k, ax, title, labels):
     )
 
     ax.set_ylim([0, 1.5])
-    if title:
-        ax.set_title(f"{k}x{k} Kernel")
-    else:
-        ax.set_xlabel('Input Size')
+    ax.set_title(f"{k}x{k} Kernel")
+    ax.set_xlabel('Input Size')
     ax.set_xticks(index + bar_width / 2)
     ax.set_xticklabels(input_sizes)
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
@@ -130,11 +128,11 @@ def plot(data, k, ax, title, labels):
 
 # plot(log_base, 3, axs[0, 0], True, labels=[None]*4)
 # plot(log_base, 5, axs[0, 1], True, labels=[None]*4)
-plot(log_lupe, 3, axs[0], False, labels=[
+plot(log_lupe, 3, axs[0], labels=[
     "FIR",
     "MAC",
 ])
-plot(log_lupe, 5, axs[1], False, labels=[None]*4)
+plot(log_lupe, 5, axs[1], labels=[None]*4)
 
 yticks = axs[0].yaxis.get_major_ticks()
 yticks[0].label1.set_visible(False)
