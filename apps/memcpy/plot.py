@@ -72,4 +72,6 @@ ax.text(x_intersection, -0.026, f'{x_intersection}', horizontalalignment='center
 
 ax.legend()
 
+plt.xticks(np.arange(0, 100, 30))
+
 plt.savefig('data_movement.png', dpi=500)

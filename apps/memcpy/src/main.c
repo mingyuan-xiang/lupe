@@ -14,7 +14,7 @@
 #define REPEAT 10000
 
 DSPLIB_DATA(buffer, 2) _q15 buffer_lea[SIZE];
-volatile _q15 volatile_buffer_cpu[SIZE];
+volatile __ro_hinv _q15 volatile_buffer_cpu[SIZE];
 _q15 buffer_cpu[SIZE];
 
 DMA_initParam dma_config;
