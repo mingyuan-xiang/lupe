@@ -15,6 +15,7 @@ int16_t* offset_vector;
 MSP_LEA_DEINTERLEAVE_PARAMS* lea_deinterleave_params;
 uint16_t deinterleave_cmdId;
 uint16_t deinterleave_channel;
+MSP_LEA_MPYMATRIXROW_PARAMS* lea_vector_matrix_mpy_params;
 
 static int DMA_is_init = 0;
 
@@ -126,6 +127,12 @@ void deinterleave_init(uint16_t length, uint16_t channel, uint16_t numChannels) 
   deinterleave_channel = channel;
 }
 
+void vector_matrix_mpy_init(uint16_t mat_row, uint16_t mat_col) {
+  lea_vector_matrix_mpy_params = (MSP_LEA_MPYMATRIXROW_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_MPYMATRIXROW_PARAMS)/sizeof(uint32_t));
+  lea_vector_matrix_mpy_params->rowSize = mat_row;
+  lea_vector_matrix_mpy_params->colSize = mat_col;
+}
+
 void add_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));
 }
@@ -154,6 +161,10 @@ void mpy_clear() {
 
 void deinterleave_clear() {
   msp_lea_freeMemory(sizeof(MSP_LEA_DEINTERLEAVE_PARAMS)/sizeof(uint32_t));
+}
+
+void vector_matrix_mpy_clear() {
+  msp_lea_freeMemory(sizeof(MSP_LEA_MPYMATRIXROW_PARAMS)/sizeof(uint32_t));
 }
 
 /* Wake up CPU once DMA is complete */
