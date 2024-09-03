@@ -74,9 +74,9 @@ plt.rcParams["axes.labelweight"] = "bold"
 fig = plt.figure(figsize=(8, 3))
 fig.add_subplot(111)
 
-plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, alpha=0.5, color='orange', marker='^', label='CPU')
-plt.scatter(mac_df['flops'], mac_df['time'], s=15, alpha=0.5, color='mediumseagreen', marker='x', label='MAC (LEA)')
-plt.scatter(fir_df['flops'], fir_df['time'], s=15, alpha=0.5, color='crimson', marker='o', label='FIR (LEA)')
+plt.scatter(cpu_df['flops'], cpu_df['time'], s=15, alpha=1, color='orange', marker='^', label='CPU')
+plt.scatter(mac_df['flops'], mac_df['time'], s=15, alpha=1, color='mediumseagreen', marker='x', label='MAC (LEA)')
+plt.scatter(fir_df['flops'], fir_df['time'], s=15, alpha=1, color='crimson', marker='o', label='FIR (LEA)')
 
 # for m, f in model_flops.items():
 #     plt.axvline(x=f[0], color='black', linestyle='--')
@@ -88,7 +88,7 @@ plt.ylabel('Normalized to MAC')
 plt.legend(fontsize=12, markerscale=2, ncol=3, loc='upper center', bbox_to_anchor=(0.5, 1.19), framealpha=1)
 plt.gca().yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
 
-fig.tight_layout(pad=0)
+fig.tight_layout(pad=0.05)
 
 # plt.show()
 plt.savefig(f'flops_time.png', dpi=500)
