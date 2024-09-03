@@ -37,7 +37,7 @@ plt.rcParams.update({'font.size': 14})
 
 fig, ax = plt.subplots()
 ax.set_xlabel('Words (2 Btyes)')
-ax.set_ylabel('Time/MicroSec')
+ax.set_ylabel('Time (MicroSec)')
 ax.set_xlim([0, 100])
 ax.set_ylim([0, 180])
 
