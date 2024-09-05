@@ -3,13 +3,15 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as ticker
 import json
 
+# TODO: use color map
 opt_flags = {
     'no_opt' : ('Bottom-up Approach', 'pink', 'xx'),
     'dma' : ('DMA Optimization',  'deepskyblue', '||'),
     'dma_lea_opt' : ('LEA Optimization',  'mediumspringgreen', '--'),
     'dma_lea_opt_adaptive_buffer' : ('Adaptive Buffer',  'darkorange', 'oo'),
     'dma_lea_opt_adaptive_buffer_mem' : ('Adaptive Data Movement',  'royalblue', '\\\\'),
-    'dma_lea_opt_adaptive_buffer_mem_acc' : ('Adaptive Acceleration',  'firebrick', '++'),
+    'dma_lea_opt_adaptive_buffer_mem_batched' : ('Batched Acceleration',  'royalblue', '++'),
+    'dma_lea_opt_adaptive_buffer_mem_acc' : ('Adaptive Acceleration',  'firebrick', '//'),
 }
 
 results_json = 'results.json'
