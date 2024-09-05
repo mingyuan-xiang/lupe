@@ -11,6 +11,13 @@ uint16_t rand(uint16_t low, uint16_t high) {
   return prand_range(high - low) + low;
 }
 
+#define FREQ 10000
+#define LEN 10
+#define LIMIT (FREQ * (LEN - 1))
+
+__ro_hinv uint32_t times[LEN];
+__ro_hinv uint32_t cnts[LEN];
+
 int main() {
   watchdog_disable();
   gpio_init_all_ports();
@@ -30,8 +37,24 @@ int main() {
   while (1) {
     gpio_toggle(1, 0);
     gpio_toggle(1, 1);
+
+    if (cnt % FREQ == 0) {
+      uint16_t i = cnt / FREQ;
+      times[i] = get_saved_time();
+      cnts[i] = cnt;
+    }
+
+    if (cnt == LIMIT) {
+      break;
+    }
+
+    cnt++;
   }
   stop_intermittent_tests();
 
   intermittent_stop();
+
+  for (uint16_t i = 0 ; i < LEN; ++i) {
+    msp_send_printf("cnt = %n; time = %n", cnts[i], times[i]);
+  }
 }
