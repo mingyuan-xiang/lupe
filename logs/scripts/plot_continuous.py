@@ -97,7 +97,7 @@ fig.legend(handles=l, loc='lower center', ncol=7, fontsize=12, bbox_to_anchor=(0
 
 plt.subplots_adjust(wspace=0)
 
-fig.tight_layout(pad=0, rect=[0, 0.05, 1, 1])
+fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 1])
 
 plt.savefig(f'figures/opt_perf_continous.png', dpi=500)
 

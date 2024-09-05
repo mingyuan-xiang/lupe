@@ -165,7 +165,7 @@ fig.legend(
     loc='lower center', ncol=4,
     fontsize=12, bbox_to_anchor=(0.5, -0.017)
 )
-fig.tight_layout(pad=0, rect=[0.03, 0.09, 1, 1])
+fig.tight_layout(pad=0.05, rect=[0.03, 0.09, 1, 1])
 
 fig.text(0.0, 0.615, 'Normalized to Input Size of 6', va='center', rotation='vertical', fontsize=16)
 

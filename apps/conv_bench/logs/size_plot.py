@@ -35,7 +35,7 @@ with open(f'fir_conv_{kernel_size}.log') as f:
     fir_data = parse_data(data)
 
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
@@ -77,5 +77,5 @@ plt.text(1.05 + 0.08, 0.25, 'FIR', transform=plt.gca().transAxes, fontsize=12, v
 plt.xlim(x.min() - 1, x.max() + 1)
 plt.ylim(y.min() - 1, y.max() + 1)
 
-fig.tight_layout(pad=0)
+fig.tight_layout(pad=0.05)
 plt.savefig(f'figures/fir_vs_mac_{kernel_size}.png', dpi=500)
