@@ -35,7 +35,7 @@ with open(f'fir_conv_{kernel_size}.log') as f:
     fir_data = parse_data(data)
 
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
@@ -70,7 +70,6 @@ contour = plt.contour(xi, yi, zi, levels=[0], colors='black', linewidths=1.5)
 
 plt.xlabel('Input Size')
 plt.ylabel('Input Channels + Output Channels')
-plt.title(f'Convolution Benchmark (Kernel Size: {kernel_size})')
 
 plt.text(1.05 + 0.08, 0.75, 'MAC', transform=plt.gca().transAxes, fontsize=12, verticalalignment='center', color='black')
 plt.text(1.05 + 0.08, 0.25, 'FIR', transform=plt.gca().transAxes, fontsize=12, verticalalignment='center', color='black')
@@ -78,5 +77,5 @@ plt.text(1.05 + 0.08, 0.25, 'FIR', transform=plt.gca().transAxes, fontsize=12, v
 plt.xlim(x.min() - 1, x.max() + 1)
 plt.ylim(y.min() - 1, y.max() + 1)
 
-fig.tight_layout(pad=0.1)
+fig.tight_layout(pad=0.05)
 plt.savefig(f'figures/fir_vs_mac_{kernel_size}.png', dpi=500)

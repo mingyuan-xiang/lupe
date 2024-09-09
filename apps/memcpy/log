@@ -1,201 +1,211 @@
-Test Ways to copy memory
-
 ============================= Loop Copy (Unrolled) =======================================
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 5, time: 1126
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 1, time: 265
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 10, time: 1946
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 5, time: 654
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 15, time: 3133
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 10, time: 1187
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 20, time: 4302
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 15, time: 1945
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 25, time: 5491
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 20, time: 2683
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 30, time: 6658
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 25, time: 3441
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 35, time: 7847
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 30, time: 4178
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 40, time: 9015
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 35, time: 4895
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 45, time: 10204
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 40, time: 5632
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 50, time: 11372
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 45, time: 6410
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 55, time: 12561
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 50, time: 7148
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 60, time: 13728
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 55, time: 7865
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 65, time: 14917
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 60, time: 8603
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 70, time: 16085
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 65, time: 9381
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 75, time: 17274
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 70, time: 10119
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 80, time: 18442
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 75, time: 10836
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 85, time: 19630
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 80, time: 11573
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 90, time: 20860
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 85, time: 12351
 
-(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 95, time: 22048
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 90, time: 13089
+
+(REPEAT=10000) copy memory with Loop Copy (Unrolled); size: 95, time: 13806
 
 ============================= Loop Copy =======================================
 
-(REPEAT=10000) copy memory with Loop Copy; size: 5, time: 2396
+(REPEAT=10000) copy memory with Loop Copy; size: 1, time: 961
 
-(REPEAT=10000) copy memory with Loop Copy; size: 10, time: 4240
+(REPEAT=10000) copy memory with Loop Copy; size: 5, time: 2784
 
-(REPEAT=10000) copy memory with Loop Copy; size: 15, time: 6085
+(REPEAT=10000) copy memory with Loop Copy; size: 10, time: 5181
 
-(REPEAT=10000) copy memory with Loop Copy; size: 20, time: 7929
+(REPEAT=10000) copy memory with Loop Copy; size: 15, time: 7537
 
-(REPEAT=10000) copy memory with Loop Copy; size: 25, time: 9773
+(REPEAT=10000) copy memory with Loop Copy; size: 20, time: 9851
 
-(REPEAT=10000) copy memory with Loop Copy; size: 30, time: 11618
+(REPEAT=10000) copy memory with Loop Copy; size: 25, time: 12269
 
-(REPEAT=10000) copy memory with Loop Copy; size: 35, time: 13462
+(REPEAT=10000) copy memory with Loop Copy; size: 30, time: 14583
 
-(REPEAT=10000) copy memory with Loop Copy; size: 40, time: 15306
+(REPEAT=10000) copy memory with Loop Copy; size: 35, time: 16939
 
-(REPEAT=10000) copy memory with Loop Copy; size: 45, time: 17149
+(REPEAT=10000) copy memory with Loop Copy; size: 40, time: 19335
 
-(REPEAT=10000) copy memory with Loop Copy; size: 50, time: 18995
+(REPEAT=10000) copy memory with Loop Copy; size: 45, time: 21629
 
-(REPEAT=10000) copy memory with Loop Copy; size: 55, time: 20839
+(REPEAT=10000) copy memory with Loop Copy; size: 50, time: 24027
 
-(REPEAT=10000) copy memory with Loop Copy; size: 60, time: 22683
+(REPEAT=10000) copy memory with Loop Copy; size: 55, time: 26381
 
-(REPEAT=10000) copy memory with Loop Copy; size: 65, time: 24527
+(REPEAT=10000) copy memory with Loop Copy; size: 60, time: 28697
 
-(REPEAT=10000) copy memory with Loop Copy; size: 70, time: 26370
+(REPEAT=10000) copy memory with Loop Copy; size: 65, time: 31114
 
-(REPEAT=10000) copy memory with Loop Copy; size: 75, time: 28215
+(REPEAT=10000) copy memory with Loop Copy; size: 70, time: 33428
 
-(REPEAT=10000) copy memory with Loop Copy; size: 80, time: 30059
+(REPEAT=10000) copy memory with Loop Copy; size: 75, time: 35785
 
-(REPEAT=10000) copy memory with Loop Copy; size: 85, time: 31903
+(REPEAT=10000) copy memory with Loop Copy; size: 80, time: 38181
 
-(REPEAT=10000) copy memory with Loop Copy; size: 90, time: 33748
+(REPEAT=10000) copy memory with Loop Copy; size: 85, time: 40475
 
-(REPEAT=10000) copy memory with Loop Copy; size: 95, time: 35592
+(REPEAT=10000) copy memory with Loop Copy; size: 90, time: 42870
+
+(REPEAT=10000) copy memory with Loop Copy; size: 95, time: 45226
 
 ============================= memcpy() =======================================
 
+(REPEAT=10000) copy memory with memcpy(); size: 1, time: 1309
+
 (REPEAT=10000) copy memory with memcpy(); size: 5, time: 2293
 
-(REPEAT=10000) copy memory with memcpy(); size: 10, time: 3523
+(REPEAT=10000) copy memory with memcpy(); size: 10, time: 3522
 
-(REPEAT=10000) copy memory with memcpy(); size: 15, time: 4752
+(REPEAT=10000) copy memory with memcpy(); size: 15, time: 4751
 
-(REPEAT=10000) copy memory with memcpy(); size: 20, time: 5982
+(REPEAT=10000) copy memory with memcpy(); size: 20, time: 5980
 
-(REPEAT=10000) copy memory with memcpy(); size: 25, time: 7211
+(REPEAT=10000) copy memory with memcpy(); size: 25, time: 7209
 
-(REPEAT=10000) copy memory with memcpy(); size: 30, time: 8441
+(REPEAT=10000) copy memory with memcpy(); size: 30, time: 8438
 
-(REPEAT=10000) copy memory with memcpy(); size: 35, time: 9671
+(REPEAT=10000) copy memory with memcpy(); size: 35, time: 9667
 
-(REPEAT=10000) copy memory with memcpy(); size: 40, time: 10900
+(REPEAT=10000) copy memory with memcpy(); size: 40, time: 10896
 
-(REPEAT=10000) copy memory with memcpy(); size: 45, time: 12129
+(REPEAT=10000) copy memory with memcpy(); size: 45, time: 12125
 
-(REPEAT=10000) copy memory with memcpy(); size: 50, time: 13359
+(REPEAT=10000) copy memory with memcpy(); size: 50, time: 13354
 
-(REPEAT=10000) copy memory with memcpy(); size: 55, time: 14589
+(REPEAT=10000) copy memory with memcpy(); size: 55, time: 14583
 
-(REPEAT=10000) copy memory with memcpy(); size: 60, time: 15817
+(REPEAT=10000) copy memory with memcpy(); size: 60, time: 15812
 
-(REPEAT=10000) copy memory with memcpy(); size: 65, time: 17047
+(REPEAT=10000) copy memory with memcpy(); size: 65, time: 17041
 
-(REPEAT=10000) copy memory with memcpy(); size: 70, time: 18276
+(REPEAT=10000) copy memory with memcpy(); size: 70, time: 18270
 
-(REPEAT=10000) copy memory with memcpy(); size: 75, time: 19506
+(REPEAT=10000) copy memory with memcpy(); size: 75, time: 19500
 
-(REPEAT=10000) copy memory with memcpy(); size: 80, time: 20735
+(REPEAT=10000) copy memory with memcpy(); size: 80, time: 20728
 
-(REPEAT=10000) copy memory with memcpy(); size: 85, time: 21964
+(REPEAT=10000) copy memory with memcpy(); size: 85, time: 21957
 
-(REPEAT=10000) copy memory with memcpy(); size: 90, time: 23194
+(REPEAT=10000) copy memory with memcpy(); size: 90, time: 23187
 
-(REPEAT=10000) copy memory with memcpy(); size: 95, time: 24424
+(REPEAT=10000) copy memory with memcpy(); size: 95, time: 24415
 
 ============================= DMA =======================================
 
-(REPEAT=10000) copy memory with DMA; size: 5, time: 5102
+(REPEAT=10000) copy memory with DMA; size: 1, time: 5017
 
-(REPEAT=10000) copy memory with DMA; size: 10, time: 5307
+(REPEAT=10000) copy memory with DMA; size: 5, time: 5181
 
-(REPEAT=10000) copy memory with DMA; size: 15, time: 5511
+(REPEAT=10000) copy memory with DMA; size: 10, time: 5386
 
-(REPEAT=10000) copy memory with DMA; size: 20, time: 5716
+(REPEAT=10000) copy memory with DMA; size: 15, time: 5590
 
-(REPEAT=10000) copy memory with DMA; size: 25, time: 5920
+(REPEAT=10000) copy memory with DMA; size: 20, time: 5795
 
-(REPEAT=10000) copy memory with DMA; size: 30, time: 6125
+(REPEAT=10000) copy memory with DMA; size: 25, time: 6000
 
-(REPEAT=10000) copy memory with DMA; size: 35, time: 6330
+(REPEAT=10000) copy memory with DMA; size: 30, time: 6205
 
-(REPEAT=10000) copy memory with DMA; size: 40, time: 6535
+(REPEAT=10000) copy memory with DMA; size: 35, time: 6410
 
-(REPEAT=10000) copy memory with DMA; size: 45, time: 6740
+(REPEAT=10000) copy memory with DMA; size: 40, time: 6614
 
-(REPEAT=10000) copy memory with DMA; size: 50, time: 6945
+(REPEAT=10000) copy memory with DMA; size: 45, time: 6819
 
-(REPEAT=10000) copy memory with DMA; size: 55, time: 7150
+(REPEAT=10000) copy memory with DMA; size: 50, time: 7024
 
-(REPEAT=10000) copy memory with DMA; size: 60, time: 7355
+(REPEAT=10000) copy memory with DMA; size: 55, time: 7229
 
-(REPEAT=10000) copy memory with DMA; size: 65, time: 7560
+(REPEAT=10000) copy memory with DMA; size: 60, time: 7433
 
-(REPEAT=10000) copy memory with DMA; size: 70, time: 7765
+(REPEAT=10000) copy memory with DMA; size: 65, time: 7639
 
-(REPEAT=10000) copy memory with DMA; size: 75, time: 7969
+(REPEAT=10000) copy memory with DMA; size: 70, time: 7843
 
-(REPEAT=10000) copy memory with DMA; size: 80, time: 8175
+(REPEAT=10000) copy memory with DMA; size: 75, time: 8048
 
-(REPEAT=10000) copy memory with DMA; size: 85, time: 8379
+(REPEAT=10000) copy memory with DMA; size: 80, time: 8253
 
-(REPEAT=10000) copy memory with DMA; size: 90, time: 8584
+(REPEAT=10000) copy memory with DMA; size: 85, time: 8458
 
-(REPEAT=10000) copy memory with DMA; size: 95, time: 8790
+(REPEAT=10000) copy memory with DMA; size: 90, time: 8663
+
+(REPEAT=10000) copy memory with DMA; size: 95, time: 8867
 
 ============================= DMA (Optimized) =======================================
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 5, time: 2089
+(REPEAT=10000) copy memory with DMA (Optimized); size: 1, time: 1740
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 10, time: 2293
+(REPEAT=10000) copy memory with DMA (Optimized); size: 5, time: 1904
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 15, time: 2498
+(REPEAT=10000) copy memory with DMA (Optimized); size: 10, time: 2108
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 20, time: 2703
+(REPEAT=10000) copy memory with DMA (Optimized); size: 15, time: 2313
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 25, time: 2909
+(REPEAT=10000) copy memory with DMA (Optimized); size: 20, time: 2518
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 30, time: 3113
+(REPEAT=10000) copy memory with DMA (Optimized); size: 25, time: 2723
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 35, time: 3318
+(REPEAT=10000) copy memory with DMA (Optimized); size: 30, time: 2927
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 40, time: 3523
+(REPEAT=10000) copy memory with DMA (Optimized); size: 35, time: 3133
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 45, time: 3727
+(REPEAT=10000) copy memory with DMA (Optimized); size: 40, time: 3338
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 50, time: 3933
+(REPEAT=10000) copy memory with DMA (Optimized); size: 45, time: 3542
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 55, time: 4138
+(REPEAT=10000) copy memory with DMA (Optimized); size: 50, time: 3747
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 60, time: 4342
+(REPEAT=10000) copy memory with DMA (Optimized); size: 55, time: 3952
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 65, time: 4547
+(REPEAT=10000) copy memory with DMA (Optimized); size: 60, time: 4157
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 70, time: 4753
+(REPEAT=10000) copy memory with DMA (Optimized); size: 65, time: 4361
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 75, time: 4957
+(REPEAT=10000) copy memory with DMA (Optimized); size: 70, time: 4567
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 80, time: 5162
+(REPEAT=10000) copy memory with DMA (Optimized); size: 75, time: 4771
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 85, time: 5367
+(REPEAT=10000) copy memory with DMA (Optimized); size: 80, time: 4976
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 90, time: 5572
+(REPEAT=10000) copy memory with DMA (Optimized); size: 85, time: 5181
 
-(REPEAT=10000) copy memory with DMA (Optimized); size: 95, time: 5777
+(REPEAT=10000) copy memory with DMA (Optimized); size: 90, time: 5385
+
+(REPEAT=10000) copy memory with DMA (Optimized); size: 95, time: 5591
+
+@@@@

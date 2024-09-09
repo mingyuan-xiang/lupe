@@ -318,6 +318,7 @@ int main() {
   CONV_BENCH(FIR_CONV, 262, 10);
   CONV_BENCH(FIR_CONV, 263, 10);
 
+
 /*
   msp_send_printf("============================ benchmark mac ============================");
 
@@ -585,6 +586,7 @@ int main() {
   CONV_BENCH(MAC_CONV, 261, 10);
   CONV_BENCH(MAC_CONV, 262, 10);
   CONV_BENCH(MAC_CONV, 263, 10);
+
   */
 
   exit();

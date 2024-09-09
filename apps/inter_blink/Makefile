@@ -2,7 +2,7 @@ EXEC = inter_blink
 
 OBJECTS = main.o
 
-DEPS = libdsp:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmsppoweroff:gcc librng:gcc libmspdriver:gcc libmsp:gcc
+DEPS = libdsp:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmsppoweroff:gcc libmsptimer:gcc librng:gcc libmspdriver:gcc libmsp:gcc
 
 # clock config
 export LIBMSP_CLK_DCOFREQ = 16
