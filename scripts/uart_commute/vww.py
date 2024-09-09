@@ -100,7 +100,7 @@ for idx, (image, label) in enumerate(vww):
     print(msg)
     f.write(msg + "\n")
 
-    if idx % PRINT_CNT == (PRINT_CNT - 1):
+    if (idx % PRINT_CNT == (PRINT_CNT - 1)) or (idx == len(vww) - 1):
         # receive the time
         msg = par.get_msg()
         print(msg)
