@@ -83,15 +83,15 @@ extern MSP_LEA_MPYMATRIXROW_PARAMS* lea_vector_matrix_mpy_params;
 }
 {% else %}
 #define DMA_makeTransfer(src, dst, size) {\
-	DMA_setTransferSize(DMA_CHANNEL_0, size); \
-	DMA_setSrcAddress(DMA_CHANNEL_0, src, DMA_DIRECTION_INCREMENT); \
+  DMA_setTransferSize(DMA_CHANNEL_0, size); \
+  DMA_setSrcAddress(DMA_CHANNEL_0, src, DMA_DIRECTION_INCREMENT); \
   DMA_setDstAddress(DMA_CHANNEL_0, dst, DMA_DIRECTION_INCREMENT); \
-	DMA_enableTransfers(DMA_CHANNEL_0); \
+  DMA_enableTransfers(DMA_CHANNEL_0); \
   uint16_t interruptState = __get_interrupt_state(); \
   __disable_interrupt(); \
   DMA_startTransfer(DMA_CHANNEL_0); \
-	__bis_SR_register(GIE + LPM0_bits); \
-	__set_interrupt_state(interruptState); \
+  __bis_SR_register(GIE + LPM0_bits); \
+  __set_interrupt_state(interruptState); \
 }
 {%- endif %}
 
