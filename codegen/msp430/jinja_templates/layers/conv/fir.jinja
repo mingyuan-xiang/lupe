@@ -71,7 +71,7 @@ static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src
   /* Invoke the LEACMD__ADDMATRIX command. */
   msp_lea_invokeCommand(LEACMD__ADDMATRIX);
 }
-
+{% if stride_col > 1 %}
 static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q15* src, _q15* dst) {
   lea_deinterleave_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
 
@@ -82,6 +82,7 @@ static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q1
   /* Invoke the command. */
   msp_lea_invokeCommand(deinterleave_cmdId);
 }
+{%- endif %}
 {%- endif %}
 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
