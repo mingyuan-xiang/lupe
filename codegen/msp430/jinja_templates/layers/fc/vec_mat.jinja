@@ -77,6 +77,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   uintptr_t block_offset = block_size * sizeof(int16_t);
 
+  {%- if (output_size % 2) != 0 %}
+  uintptr_t tmp_addr;
+  {%- endif %}
+
   {%- if lea_opt %}
   vector_matrix_mpy_init(_MAT_REMAIN_ROW_SIZE_ALIGNED, _OUTPUT_SIZE_ALIGNED);
   add_init(_OUTPUT_SIZE_ALIGNED);
@@ -106,8 +110,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if (input_size % mat_block_row_size) != 0 %}
   /* send weight matrix (remain) block */
   {%- if (output_size % 2) != 0 %}
-  uintptr_t tmp_addr = lea_tmp_addr;
-  for (uint16_t j = 0; j < ; ++j) {
+  tmp_addr = lea_tmp_addr;
+  for (uint16_t j = 0; j < remain_block_size; j += output_size) {
     DMA_makeTransfer(weight_fram_addr, tmp_addr, output_size);
     tmp_addr += sizeof(int16_t);
     weight_fram_addr += output_size_offset;
@@ -175,7 +179,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     /* send weight matrix block */
     {%- if (output_size % 2) != 0 %}
     tmp_addr = lea_tmp_addr;
-    for (uint16_t j = 0; j < ; ++j) {
+    for (uint16_t j = 0; j < block_size; j += output_size) {
       DMA_makeTransfer(weight_fram_addr, tmp_addr, output_size);
       tmp_addr += sizeof(int16_t);
       weight_fram_addr += output_size_offset;

@@ -114,10 +114,10 @@ class FullyConnected(LupeLayer):
                 lea_dst_size = 0 # no need for lea_dst buffer
             else: # vec_mat
                 if out_size % 2:
-                    out_size =+ 1
+                    out_size += 1
 
                 if opt_config["lea_size"] < 3 * out_size + 1:
-                    raise ValueError("LEA array size noy big enough")
+                    raise ValueError("LEA array size not big enough")
 
                 s = opt_config["lea_size"] - out_size
                 # (out_size + 1) * size will always be smaller than s
@@ -137,7 +137,7 @@ class FullyConnected(LupeLayer):
 
         if acceleration == "vec_mat":
             if (lea_dst_size < out_size) or (lea_tmp_size < 2 * out_size):
-                raise ValueError("LEA array size noy big enough")
+                raise ValueError("LEA array size not big enough")
 
         return lea_src_size, lea_tmp_size, lea_dst_size
 

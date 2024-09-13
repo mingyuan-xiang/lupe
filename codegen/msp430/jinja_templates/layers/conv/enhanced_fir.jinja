@@ -517,7 +517,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       lea_skip_addr_before = lea_skip_addr_before_st;
       lea_skip_addr_after = lea_skip_addr_after_st;
       {%- endif %}
-      /* skip the babbage values between two lines */
+      /* skip the garbage values between two lines */
       for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_REMAIN_SIZE; l += _OUTPUT_COL_SIZE) {
         {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
         {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
@@ -726,7 +726,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         lea_skip_addr_before = lea_skip_addr_before_st;
         lea_skip_addr_after = lea_skip_addr_after_st;
         {%- endif %}
-        /* skip the barbage values between two lines */
+        /* skip the garbage values between two lines */
         for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_SIZE; l += _OUTPUT_COL_SIZE) {
           {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
           {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
