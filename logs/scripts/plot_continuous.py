@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.ticker as ticker
 import json
+import numpy as np
 
-# TODO: use color map
 opt_flags = {
     'no_opt' : ('Bottom-up Approach', 'pink', 'xx'),
     'dma' : ('DMA Optimization',  'deepskyblue', '||'),
@@ -11,8 +11,14 @@ opt_flags = {
     'dma_lea_opt_adaptive_buffer' : ('Adaptive Buffer',  'darkorange', 'oo'),
     'dma_lea_opt_adaptive_buffer_mem' : ('Adaptive Data Movement',  'royalblue', '\\\\'),
     'dma_lea_opt_adaptive_buffer_mem_batched' : ('Batched Acceleration',  'royalblue', '++'),
-    'dma_lea_opt_adaptive_buffer_mem_acc' : ('Adaptive Acceleration',  'firebrick', '//'),
+    'dma_lea_opt_adaptive_buffer_mem_acc' : ('Adaptive Generation',  'firebrick', '//'),
 }
+
+cmap = plt.get_cmap('cool')
+N = len(opt_flags)
+colors = cmap(np.linspace(0, 1, N))
+for (key, (label, _, marker)), color in zip(opt_flags.items(), colors):
+    opt_flags[key] = (label, color, marker)
 
 results_json = 'results.json'
 with open(results_json, 'r') as f:
@@ -68,7 +74,7 @@ def plot(n, r, ax):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.set_ylim([0, 9])
+    ax.set_ylim([0, 30])
 
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
@@ -76,11 +82,11 @@ def plot(n, r, ax):
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    if n != 'LeNet':
+    if n != 'DS_CNN':
         ax.set_yticklabels([])
         ax.yaxis.set_tick_params(length=0)
     else:
-        ax.set_ylabel('Normalized to Adaptive Acceleration')
+        ax.set_ylabel('Normalized to Adaptive Generation')
 
     ax.set_title(n)
     ax.grid(axis='y', zorder=0)
