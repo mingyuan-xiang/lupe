@@ -88,6 +88,8 @@ def plot(n, r, ax):
     else:
         ax.set_ylabel('Normalized to Adaptive Generation')
 
+    if n == 'DS_CNN':
+        n = 'DS-CNN'
     ax.set_title(n)
     ax.grid(axis='y', zorder=0)
 
