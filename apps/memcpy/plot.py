@@ -33,22 +33,34 @@ parsed_data = parse_log_data('log')
 
 # plot the logs
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 14})
+plt.rcParams.update({'font.size': 16})
+plt.rcParams["font.weight"] = "bold"
+plt.rcParams["axes.labelweight"] = "bold"
 
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize=(10, 2.5))
 ax.set_xlabel('Words (2 Btyes)')
 ax.set_ylabel('Time (MicroSec)')
-ax.set_xlim([0, 100])
-ax.set_ylim([0, 180])
+ax.set_xlim([0, 41])
+ax.set_ylim([0, 65])
 
 freq = ((2 ** 15 - 1) * 10000) / 1000000
 
 for method, data in parsed_data.items():
-    sizes = sorted(data.keys())
-    times = [data[size] / freq for size in sizes]
-    ax.plot(sizes, times, label=method)
+    if method == 'DMA':
+        continue
+    sizes = []
+    times = []
+    for size in sorted(data.keys()):
+        if size <= 40:
+            times.append(data[size] / freq)
+            sizes.append(size)
+    if method == 'DMA (Optimized)':
+        ax.plot(sizes, times, label='DMA')
+    elif method == 'memcpy()':
+        ax.plot(sizes, times, label='memcpy')
+    else:
+        ax.plot(sizes, times, label=method)
 
-# Find the intersection of 'DMA (Optimized)' and 'Loop Assign (Unrolled)'
 def regression(data):
     sizes = np.array(sorted(data.keys()))
     times = np.array([data[size] for size in sizes]) / freq
@@ -70,8 +82,10 @@ ax.plot([x_intersection, x_intersection], [y_intersection, 0], 'gray', linestyle
 # Print the x-coordinate of the intersection directly on the plot
 ax.text(x_intersection, -0.026, f'{x_intersection}', horizontalalignment='center', verticalalignment='top', transform=ax.get_xaxis_transform())
 
-ax.legend()
+ax.legend(fontsize=12)
 
-plt.xticks(np.arange(0, 100, 30))
+plt.xticks(np.arange(0, 40, 30))
+
+fig.tight_layout(pad=0.05)
 
 plt.savefig('data_movement.png', dpi=500)
