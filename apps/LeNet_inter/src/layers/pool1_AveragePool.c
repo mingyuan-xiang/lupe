@@ -1,0 +1,42 @@
+#include <layers/include/utils.h>
+#include <layers/include/pool1_AveragePool.h>
+#include <buffer/include/buffer.h>
+
+void pool1_AveragePool(mat_t* input, mat_t* output) {
+  uint16_t in_ch = input->dims[1];
+  uint16_t rows = input->dims[2];
+  uint16_t cols = input->dims[3];
+  uint16_t in_row_stride = input->strides[2];
+  uint16_t height = 2;
+  uint16_t width = 2;
+  uint16_t pool_row_offset = in_row_stride * height;
+  int32_t agg;
+
+  uint16_t ch_offset = 0;
+  uint16_t out_offset = 0;
+  for (uint16_t s = 0; s < in_ch; ++s) {
+    for (uint16_t r = 0; r < rows; r += height) {
+      uint16_t in_row_offset = ch_offset;
+      for (uint16_t c = 0; c < cols; c += width) {
+        agg = 0;
+        uint16_t h = r + height;
+        uint16_t w = c + width;
+        uint16_t h_offset = in_row_offset;
+        for (uint16_t i = r; i < h; ++i) {
+          uint16_t in_offset = h_offset;
+          for (uint16_t j = c; j < w; ++j) {
+            int16_t in_data = *(input->data + in_offset);
+            agg = __saturated_add_iq31(agg, in_data);
+            ++in_offset;
+          }
+          h_offset += in_row_stride;
+        }
+        agg /= 4;
+        *(output->data + out_offset) = agg;
+        ++out_offset;
+        in_row_offset += width;
+      }
+      ch_offset += pool_row_offset;
+    }
+  }
+}
