@@ -26,7 +26,7 @@ void fc2_Gemm(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_fc2_Gemm_MAIN) {
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
-      output->data[i] = intermittent_buffer[0];
+      output->data[idx] = intermittent_buffer[0];
 
       intermittent_status[COMPUTE_IO_COL] = idx;
     }
@@ -48,7 +48,7 @@ void fc2_Gemm(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       res = (int16_t)(lea_res[0] >> 15);
       res = __saturated_add_q15(output->data[i], res);
       uint16_t next_i = i + 1;
-      DOUBLE_BUFFER_WRITE(next_i, COMPUTE_IO_COL, res, output->data[i])
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IO_COL, res, output->data[i])
 
       weight_fram_addr += weight_line_offset;
     }

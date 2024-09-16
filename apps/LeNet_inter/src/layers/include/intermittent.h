@@ -4,7 +4,7 @@
 #define COMPUTE_CK 0
 #define COMPUTE_PAD 1
 #define COMPUTE_IN_CH 2
-#define COMPUTE_OUT_CN 3
+#define COMPUTE_OUT_CH 3
 #define COMPUTE_IO_ROW 4
 #define COMPUTE_IO_COL 5
 

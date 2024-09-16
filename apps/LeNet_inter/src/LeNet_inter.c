@@ -88,6 +88,7 @@ uint16_t LeNet_inter(mat_t* model_in) {
     fc2_Gemm(&fc2_Gemm_in_meta, &fc2_Gemm_out_meta, &fc2_weight_meta, &fc2_bias_meta);
     intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_END;
   default:
+    break;
   }
 
   /* Get the max score */
