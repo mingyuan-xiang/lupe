@@ -27,7 +27,7 @@ extern _q15 lea_dst[];
 extern _iq31 lea_res[];
 
 #define INTERMITTENT_BUFFER_SIZE 28
-extern __ro_hinv uint16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
+extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 #define WRITE_DOUBLE_BUFFER_W_VAR(var, offset) { \
     __asm__ __volatile__ ( \
@@ -43,6 +43,15 @@ extern __ro_hinv uint16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
   var = var | DOUBLE_BUFFER_WRITE;
   WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
   DMA_makeTransfer(in_addr, out_addr, size);
+  var = var & DOUBLE_BUFFER_COMPLETE;
+  WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
+}
+
+#define DOUBLE_BUFFER_WRITE(var, offset, in, out) {
+  intermittent_buffer[0] = in;
+  var = var | DOUBLE_BUFFER_WRITE;
+  WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
+  out = in;
   var = var & DOUBLE_BUFFER_COMPLETE;
   WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
 }

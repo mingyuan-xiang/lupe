@@ -127,7 +127,7 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     /* Recover loop variables */
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       /* Start transferring to output buffer. Recover from temporary buffer */
-      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE
+      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uintptr_t addr = (uintptr_t)(output->data) + \
         intermittent_status[COMPUTE_OUT_CH] * output_len + \
         (line - 1) * output_line_size;

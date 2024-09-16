@@ -1,6 +1,7 @@
 #include <layers/include/utils.h>
 #include <layers/include/relu3_Clip.h>
 #include <buffer/include/buffer.h>
+#include <layers/include/intermittent.h>
 
 void relu3_Clip(mat_t* input, mat_t* output) {
   uint16_t size = input->strides[0];
