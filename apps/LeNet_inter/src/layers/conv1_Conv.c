@@ -74,91 +74,91 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
   /* Pad the input for (2, 2, 2, 2) */
-  switch (intermittent_status[CONV_PAD]) {
+  switch (intermittent_status[COMPUTE_PAD]) {
   case 0:
     memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
-    intermittent_status[CONV_PAD]++;
+    intermittent_status[COMPUTE_PAD]++;
   case 1:
-    if (intermittent_status[CONV_ROW] >= input_line_num) {
-      intermittent_status[CONV_ROW] = 0;
-      intermittent_status[CONV_IN_CH]++;
+    if (intermittent_status[COMPUTE_ROW] >= input_line_num) {
+      intermittent_status[COMPUTE_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
     }
 
     uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
     uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
     uint16_t input_len_bf = input_line_num * input_line_size_bf;
     _q15* padding_ptr_in = input->data + \
-      intermittent_status[CONV_IN_CH] * input_len_bf + \
-      intermittent_status[CONV_ROW] * input_line_size_bf;
+      intermittent_status[COMPUTE_IN_CH] * input_len_bf + \
+      intermittent_status[COMPUTE_ROW] * input_line_size_bf;
     _q15* padding_ptr_out = output->data + \
-      intermittent_status[CONV_IN_CH] * input_len + \
-      intermittent_status[CONV_ROW] * input_line_size;
+      intermittent_status[COMPUTE_IN_CH] * input_len + \
+      intermittent_status[COMPUTE_ROW] * input_line_size;
 
-    for (uint16_t i = intermittent_status[CONV_IN_CH]; i < in_channels; ++i) {
+    for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < in_channels; ++i) {
       padding_ptr_out += input_line_size;
       padding_ptr_out += input_line_size;
-      for (uint16_t j = intermittent_status[CONV_ROW]; j < input_line_num; ++j) {
+      for (uint16_t j = intermittent_status[COMPUTE_ROW]; j < input_line_num; ++j) {
         padding_ptr_out += _PADDING_LEFT;
         DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
         padding_ptr_in += input_line_size_bf;
         padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
 
-        intermittent_status[CONV_ROW]++;
+        intermittent_status[COMPUTE_ROW]++;
       }
       padding_ptr_out += input_line_size;
       padding_ptr_out += input_line_size;
 
-      intermittent_status[CONV_ROW] = 0;
-      intermittent_status[CONV_IN_CH]++;
+      intermittent_status[COMPUTE_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
     }
-    intermittent_status[CONV_PAD]++;
+    intermittent_status[COMPUTE_PAD]++;
   case 2:
   DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
-  intermittent_status[CONV_PAD]++;
+  intermittent_status[COMPUTE_PAD]++;
   case 3:
   memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
   case 4:
-  intermittent_status[CONV_IN_CH] = 0;
+  intermittent_status[COMPUTE_IN_CH] = 0;
   default:
   }
   
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_MAIN) {
     /* convolution */
     /* Recover loop variables */
-    if (intermittent_status[CONV_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       /* Start transferring to output buffer. Recover from temporary buffer */
-      uint16_t line = intermittent_status[CONV_IO_ROW] & DOUBLE_BUFFER_COMPLETE
+      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE
       uintptr_t addr = (uintptr_t)(output->data) + \
-        intermittent_status[CONV_OUT_CH] * output_len + \
+        intermittent_status[COMPUTE_OUT_CH] * output_len + \
         (line - 1) * output_line_size;
       DMA_makeTransfer(intermittent_buffer_addr, addr, output_line_size);
 
-      intermittent_status[CONV_IO_ROW] = line;
+      intermittent_status[COMPUTE_IO_ROW] = line;
     }
-    if (intermittent_status[CONV_IO_ROW] >= output_line_num) {
-      intermittent_status[CONV_IO_ROW] = 0;
-      intermittent_status[CONV_IN_CH]++;
+    if (intermittent_status[COMPUTE_IO_ROW] >= output_line_num) {
+      intermittent_status[COMPUTE_IO_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
     }
-    if (intermittent_status[CONV_IN_CH] >= in_channels) {
-      intermittent_status[CONV_IN_CH] = 0;
-      intermittent_status[CONV_OUT_CH]++;
+    if (intermittent_status[COMPUTE_IN_CH] >= in_channels) {
+      intermittent_status[COMPUTE_IN_CH] = 0;
+      intermittent_status[COMPUTE_OUT_CH]++;
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
-      intermittent_status[CONV_OUT_CH] * output_addr_offset;
+      intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      intermittent_status[CONV_OUT_CH] * weight->strides[0] + \
-      intermittent_status[CONV_IN_CH] * weight->strides[1];
+      intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+      intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
 
-    for (i = intermittent_status[CONV_OUT_CH]; i < out_channels; ++i) {
+    for (i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
       input_fram_addr = (uintptr_t)(input->data) + \
-        intermittent_status[CONV_IN_CH] * input_channel_offset;
+        intermittent_status[COMPUTE_IN_CH] * input_channel_offset;
 
-      for (uint16_t j = intermittent_status[CONV_IN_CH]; j < in_channels; ++j) {
+      for (uint16_t j = intermittent_status[COMPUTE_IN_CH]; j < in_channels; ++j) {
         uintptr_t tmp_output_addr = output_fram_addr + \
-          intermittent_status[CONV_IO_ROW] * output_line_size_offset;
+          intermittent_status[COMPUTE_IO_ROW] * output_line_size_offset;
         input_channel_addr = input_fram_addr + \
-        intermittent_status[CONV_IO_ROW] * input_line_size_offset;
+        intermittent_status[COMPUTE_IO_ROW] * input_line_size_offset;
 
         /* send kernel to LEA RAM */
         /*
@@ -175,7 +175,7 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         /* restore flt_lea_addr pointer to the beginning of the array */
         flt_lea_addr = (uintptr_t)lea_flt;
 
-        for (uint16_t l = intermittent_status[CONV_IO_ROW]; l < output_line_num; ++l) {
+        for (uint16_t l = intermittent_status[COMPUTE_IO_ROW]; l < output_line_num; ++l) {
           uintptr_t tmp_input_addr = input_channel_addr;
 
           /* send output to LEA RAM */
@@ -199,20 +199,20 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
           /* bring back output from LEA RAM */
           uint16_t next_l = l + 1;
-          DOUBLE_BUFFER_TRANSFER(next_l, CONV_IO_ROW, output_lea_addr, tmp_output_addr, output_line_size)
+          DOUBLE_BUFFER_TRANSFER(next_l, COMPUTE_IO_ROW, output_lea_addr, tmp_output_addr, output_line_size)
 
           tmp_output_addr += output_line_size_offset;
           input_channel_addr += input_line_size_offset;
         }
         input_fram_addr += input_channel_offset;
 
-        intermittent_status[CONV_IO_ROW] = 0;
-        intermittent_status[CONV_IN_CH]++;
+        intermittent_status[COMPUTE_IO_ROW] = 0;
+        intermittent_status[COMPUTE_IN_CH]++;
       }
       output_fram_addr += output_addr_offset;
 
-      intermittent_status[CONV_IN_CH] = 0;
-      intermittent_status[CONV_OUT_CH]++;
+      intermittent_status[COMPUTE_IN_CH] = 0;
+      intermittent_status[COMPUTE_OUT_CH]++;
     }
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_BIAS;
@@ -224,33 +224,33 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uint16_t add_size = _LEA_ADD_SIZE;
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
 
-    /* Recover loop variables. We use CONV_IN_CH as it will be zero when the start of this */
-    if (intermittent_status[CONV_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+    /* Recover loop variables. We use COMPUTE_IN_CH as it will be zero when the start of this */
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       /* Start transferring to output buffer. Recover from temporary buffer */
-      uint16_t line = intermittent_status[CONV_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uint16_t size = line;
       if (size > lea_remain_size) {
         size = add_size;
       }
       uintptr_t addr = (uintptr_t)(output->data) + \
-        intermittent_status[CONV_IN_CH] * output_len + (line - size);
+        intermittent_status[COMPUTE_IN_CH] * output_len + (line - size);
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
 
-      intermittent_status[CONV_IO_ROW] = line;
+      intermittent_status[COMPUTE_IO_ROW] = line;
     }
 
-    if (intermittent_status[CONV_IO_ROW] >= output_len) {
-      intermittent_status[CONV_IO_ROW] = 0;
-      intermittent_status[CONV_IN_CH]++;
+    if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
+      intermittent_status[COMPUTE_IO_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
     }
 
     output_fram_addr = (uintptr_t)(output->data) + \
-      intermittent_status[CONV_IN_CH] * output_len + \
-      intermittent_status[CONV_IO_ROW];
+      intermittent_status[COMPUTE_IN_CH] * output_len + \
+      intermittent_status[COMPUTE_IO_ROW];
 
-    for (uint16_t i = intermittent_status[CONV_IN_CH]; i < out_channels; ++i) {
+    for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < out_channels; ++i) {
       offset_params.offset = bias->data[i];
-      if (intermittent_status[CONV_IO_ROW] == 0) {
+      if (intermittent_status[COMPUTE_IO_ROW] == 0) {
         offset_params.length = lea_remain_size_aligned;
         add_params.length = lea_remain_size_aligned;
 
@@ -260,7 +260,7 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         msp_offset_q15(&offset_params, lea_add, lea_add);
 
         uint16_t next_r = lea_remain_size;
-        DOUBLE_BUFFER_TRANSFER(next_r, CONV_IO_ROW, lea_add_addr, output_fram_addr, lea_remain_size)
+        DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, lea_remain_size)
 
         output_fram_addr += output_remain_size_offset;
       }
@@ -268,29 +268,29 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       offset_params.length = add_size;
       add_params.length = add_size;
 
-      for (uint16_t j = intermittent_status[CONV_IO_ROW]; j < output_len; j += add_size) {
+      for (uint16_t j = intermittent_status[COMPUTE_IO_ROW]; j < output_len; j += add_size) {
         DMA_makeTransfer(output_fram_addr, lea_add_addr, add_size);
 
         msp_add_q15(&add_params, lea_add, lea_add, lea_add);
         msp_offset_q15(&offset_params, lea_add, lea_add);
 
         uint16_t next_r = j + add_size;
-        DOUBLE_BUFFER_TRANSFER(next_r, CONV_IO_ROW, lea_add_addr, output_fram_addr, add_size)
+        DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, add_size)
 
         output_fram_addr += output_lea_min_size_offset;
       }
 
-      intermittent_status[CONV_IO_ROW] = 0
-      intermittent_status[CONV_IN_CH]++;
+      intermittent_status[COMPUTE_IO_ROW] = 0
+      intermittent_status[COMPUTE_IN_CH]++;
     }
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_EXIT;
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_EXIT) {
-    intermittent_status[CONV_PAD] = 0;
-    intermittent_status[CONV_IO_ROW] = 0;
-    intermittent_status[CONV_IN_CH] = 0;
-    intermittent_status[CONV_OUT_CH] = 0;
+    intermittent_status[COMPUTE_PAD] = 0;
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH] = 0;
+    intermittent_status[COMPUTE_OUT_CH] = 0;
   }
 }

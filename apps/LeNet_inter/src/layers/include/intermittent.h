@@ -2,10 +2,11 @@
 #define INTERMITTENT_H
 
 #define COMPUTE_CK 0
-#define CONV_PAD 1
-#define CONV_IN_CH 2
-#define CONV_OUT_CN 3
-#define CONV_IO_ROW 4
+#define COMPUTE_PAD 1
+#define COMPUTE_IN_CH 2
+#define COMPUTE_OUT_CN 3
+#define COMPUTE_IO_ROW 4
+#define COMPUTE_IO_COL 5
 
 #define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
 #define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer

@@ -1,23 +1,40 @@
 #include <layers/include/utils.h>
 #include <layers/include/pool2_AveragePool.h>
 #include <buffer/include/buffer.h>
+#include <layers/include/intermittent.h>
 
 void pool2_AveragePool(mat_t* input, mat_t* output) {
   uint16_t in_ch = input->dims[1];
   uint16_t rows = input->dims[2];
   uint16_t cols = input->dims[3];
   uint16_t in_row_stride = input->strides[2];
+  uint16_t in_len = input->strides[1];
+  uint16_t out_len = output->strides[1];
+  uint16_t out_rows = output->dims[2];
+  uint16_t out_cols = output->dims[3];
   uint16_t height = 2;
   uint16_t width = 2;
   uint16_t pool_row_offset = in_row_stride * height;
   int32_t agg;
 
-  uint16_t ch_offset = 0;
-  uint16_t out_offset = 0;
-  for (uint16_t s = 0; s < in_ch; ++s) {
-    for (uint16_t r = 0; r < rows; r += height) {
-      uint16_t in_row_offset = ch_offset;
-      for (uint16_t c = 0; c < cols; c += width) {
+  if (intermittent_status[COMPUTE_IO_COL] > out_cols) {
+    intermittent_status[COMPUTE_IO_COL] = 0;
+    intermittent_status[COMPUTE_IO_ROW]++;
+  }
+  if (intermittent_status[COMPUTE_IO_ROW] > out_rows) {
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH]++;
+  }
+
+  uint16_t ch_offset = intermittent_status[COMPUTE_IN_CH] * in_len + \
+    intermittent_status[COMPUTE_IO_ROW] * pool_row_offset;
+  uint16_t out_offset = intermittent_status[COMPUTE_IN_CH] * out_len + \
+    intermittent_status[COMPUTE_IO_ROW] * out_rows + \
+    intermittent_status[COMPUTE_IO_COL];
+  for (uint16_t s = intermittent_status[COMPUTE_IN_CH]; s < in_ch; ++s) {
+    for (uint16_t r = intermittent_status[COMPUTE_IO_ROW]; r < rows; r += height) {
+      uint16_t in_row_offset = ch_offset + intermittent_status[COMPUTE_IO_COL] * width;
+      for (uint16_t c = intermittent_status[COMPUTE_IO_COL]; c < cols; c += width) {
         agg = 0;
         uint16_t h = r + height;
         uint16_t w = c + width;
@@ -35,8 +52,16 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
         *(output->data + out_offset) = agg;
         ++out_offset;
         in_row_offset += width;
+
+        intermittent_status[COMPUTE_IO_COL]++;
       }
       ch_offset += pool_row_offset;
+
+      intermittent_status[COMPUTE_IO_COL] = 0;
+      intermittent_status[COMPUTE_IO_ROW]++;
     }
+
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH]++;
   }
 }
