@@ -71,7 +71,7 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE] = 0;
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_MAIN) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_MAIN) {
     /* convolution */
     /* Recover loop variables */
     if (intermittent_status[CONV_IO_ROW] & DOUBLE_BUFFER_WRITE) {
@@ -164,10 +164,10 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       intermittent_status[CONV_OUT_CH]++;
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_BIAS;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv_BIAS;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_BIAS) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_BIAS) {
     /* add bias and left shift */
     _q15* lea_add = lea_src;
     uint16_t add_size = _LEA_ADD_SIZE;
@@ -218,10 +218,10 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       intermittent_status[CONV_IN_CH]++;
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_EXIT;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv_EXIT;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_EXIT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_EXIT) {
     intermittent_status[CONV_PAD] = 0;
     intermittent_status[CONV_IO_ROW] = 0;
     intermittent_status[CONV_IN_CH] = 0;
