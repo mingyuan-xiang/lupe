@@ -6,15 +6,14 @@ The template for the main file is in the jinja_templates directory.
 
 import os
 
-from . import JINJA_DIR
 from .helpers import jinja_gen
 
 def maingen(
-        code_dir, model_name, config_name, dataset_size, print_freq=100,
-        add_timer=True, debug=False, label=0, calibration=False
+        code_dir, model_name, config_name, dataset_size, jinja_dir,
+        print_freq=100, add_timer=True, debug=False, label=0, calibration=False
     ):
     """Generate the main file using jinja template"""
-    template_path = os.path.join(JINJA_DIR, "main.c.jinja")
+    template_path = os.path.join(jinja_dir, "main.c.jinja")
     params = {
         "model_name": model_name,
         "config_name" : config_name,

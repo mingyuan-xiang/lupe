@@ -2,12 +2,11 @@
 
 import os
 
-from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def _gen(node, name, qf, debug, opt_config, acceleration, code_dir):
+def _gen(node, name, qf, debug, opt_config, acceleration, code_dir, jinja_dir):
     # header
-    header_template_path = os.path.join(JINJA_DIR, "layer.h.jinja")
+    header_template_path = os.path.join(jinja_dir, "layer.h.jinja")
     header_params = {
         "layer_name": name,
         "has_weights" : node.has_weights(),
@@ -17,14 +16,14 @@ def _gen(node, name, qf, debug, opt_config, acceleration, code_dir):
     if node.has_weights():
         code_qf = (qf, node.weight.qf)
 
-    jinja_dir = os.path.join(JINJA_DIR, "layers")
+    layer_dir = os.path.join(jinja_dir, "layers")
     # c file
-    cfile_template_path = os.path.join(JINJA_DIR, "layer.c.jinja")
+    cfile_template_path = os.path.join(jinja_dir, "layer.c.jinja")
     cfile_params = {
         "layer_name": name,
         "debug" : debug,
         "code" : node.get_code(
-            name, jinja_dir, opt_config, code_qf, acceleration
+            name, layer_dir, opt_config, code_qf, acceleration
         ),
         "has_extra_buffer" : node.get_buffer_size(acceleration) is not None
     }
@@ -36,7 +35,7 @@ def _gen(node, name, qf, debug, opt_config, acceleration, code_dir):
         code_dir
     )
 
-def layergen(code_dir, graph, opt_config, qf, debug, calibration):
+def layergen(code_dir, graph, opt_config, qf, debug, calibration, jinja_dir):
     """Generates code for each layer of the graph
     
     Args:
@@ -52,7 +51,10 @@ def layergen(code_dir, graph, opt_config, qf, debug, calibration):
             acceleration = graph.node_list[n].get_calibration()
             if acceleration is not None:
                 name = node.name + "_" + acceleration
-                _gen(node, name, qf, debug, opt_config, acceleration, code_dir)
+                _gen(
+                    node, name, qf, debug, opt_config, acceleration,
+                    code_dir, jinja_dir
+                )
                 continue
 
-        _gen(node, node.name, qf, debug, opt_config, None, code_dir)
+        _gen(node, node.name, qf, debug, opt_config, None, code_dir, jinja_dir)

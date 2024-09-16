@@ -2,6 +2,8 @@
 
 import os
 
+from . import JINJA_DIR
+
 from .maingen import maingen
 from .modelgen import modelgen
 from .weightgen import weightgen
@@ -9,6 +11,7 @@ from .arrgen import arrgen
 from .utilsgen import utilsgen
 from .layergen import layergen
 from .makefilegen import makefilegen
+from .intermittentgen import intermittentgen
 
 import pprint
 
@@ -50,8 +53,13 @@ class MSP430Gen:
 
     def gen(
         self, model_name, dataset_size, print_freq=100, loc="hi",
-        calibration=False):
+        calibration=False, intermittent=False):
         """Generate the code"""
+        if intermittent:
+            jinja_dir = os.path.join(JINJA_DIR, 'intermittent')
+        else:
+            jinja_dir = os.path.join(JINJA_DIR, 'continuous')
+
         # Create the include directory
         if not os.path.exists(os.path.join(self.src_dir, "include")):
             os.makedirs(os.path.join(self.src_dir, "include"))
@@ -59,13 +67,15 @@ class MSP430Gen:
         # Generate the main file
         maingen(
             self.src_dir, model_name, self.opt_config["name"], dataset_size,
-            print_freq=print_freq, add_timer=self.add_timer,
+            jinja_dir, print_freq=print_freq, add_timer=self.add_timer,
             debug=self.debug, label=self.debug_input_label,
             calibration=self.calibration
         )
 
         # Generate the model file
-        modelgen(self.src_dir, self.graph, self.debug, self.calibration)
+        modelgen(
+            self.src_dir, self.graph, self.debug, self.calibration, jinja_dir
+        )
 
         # Generate the weight and bias files
         params_dir = os.path.join(self.src_dir, "params")
@@ -100,7 +110,7 @@ class MSP430Gen:
             os.makedirs(os.path.join(buffer_dir, "include"))
         arrgen(
             buffer_dir, self.graph, max_shape, self.qf, loc=loc,
-            debug_input=self.debug_input, calibration=self.calibration
+            debug_input=self.debug_input, calibration=self.calibration,
         )
 
         # Generate the layer code
@@ -108,17 +118,20 @@ class MSP430Gen:
         if not os.path.exists(layer_dir):
             os.makedirs(layer_dir)
             os.makedirs(os.path.join(layer_dir, "include"))
-        utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf)
+        utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf, jinja_dir)
         layergen(
             layer_dir, self.graph, self.opt_config, self.qf,
-            self.debug, self.calibration
+            self.debug, self.calibration, jinja_dir
         )
 
         # Generate the makefile
         makefilegen(
             self.code_dir, self.graph, has_extra_buffer, self.opt_config,
-            self.calibration
+            self.calibration, jinja_dir
         )
+
+        if intermittent:
+            intermittentgen(layer_dir, self.graph, jinja_dir)
 
     def print_config(self):
         """Print the configuration"""

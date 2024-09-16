@@ -6,19 +6,18 @@ The template for the model file is in the jinja_templates directory.
 
 import os
 
-from . import JINJA_DIR
 from .helpers import jinja_gen
 
-def modelgen(code_dir, graph, debug, calibration):
+def modelgen(code_dir, graph, debug, calibration, jinja_dir):
     """Generate the model using jinja template"""
     model_name = graph.name
 
     # model header
-    header_template_path = os.path.join(JINJA_DIR, "model.h.jinja")
+    header_template_path = os.path.join(jinja_dir, "model.h.jinja")
     header_params = {"model_name": model_name}
 
     # model c file
-    cfile_template_path = os.path.join(JINJA_DIR, "model.c.jinja")
+    cfile_template_path = os.path.join(jinja_dir, "model.c.jinja")
     nodes = graph.get_hidden_layers()
     nodes_dic = []
     calibration_list = {}

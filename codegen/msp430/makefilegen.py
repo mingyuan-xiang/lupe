@@ -8,11 +8,10 @@ import os
 
 from jinja2 import Template
 
-from . import JINJA_DIR
-
-def makefilegen(code_dir, graph, has_extra_buffer, opt_config, calibration):
+def makefilegen(code_dir, graph, has_extra_buffer, opt_config,
+        calibration, jinja_dir):
     """Generate the Makefile using jinja template"""
-    template_path = os.path.join(JINJA_DIR, "makefile.jinja")
+    template_path = os.path.join(jinja_dir, "makefile.jinja")
 
     nodes_with_weights = [
         n for n in graph.get_hidden_layers() if graph.node_list[n].has_weights()

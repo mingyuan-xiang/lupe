@@ -106,6 +106,10 @@ def lupe_args():
         "--port", type=str, default="/dev/cu.usbmodem1203",
         help="UART port for calibration"
     )
+    par.add_argument(
+        "--intermittent", action=argparse.BooleanOptionalAction, default=False,
+        help="Add intermittent-safe support"
+    )
 
     return par.parse_args()
 
@@ -250,7 +254,8 @@ def _generate(args, mode, graph, config, out_path, dir_name):
     generator.print_config()
 
     generator.gen(
-        dir_name, args.dataset_size, args.print_freq, calibration=cal
+        dir_name, args.dataset_size, args.print_freq, calibration=cal,
+        intermittent=args.intermittent
     )
 
     # Generate the outer Makefile for the maker
