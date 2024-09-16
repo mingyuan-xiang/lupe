@@ -1,6 +1,7 @@
 #include <layers/include/utils.h>
 #include <layers/include/conv1_Conv.h>
 #include <buffer/include/buffer.h>
+#include <layers/include/intermittent.h>
 
 
 #define _LEA_ADD_SIZE 400
