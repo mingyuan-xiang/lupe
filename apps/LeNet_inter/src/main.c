@@ -7,6 +7,7 @@
 #include <include/LeNet_inter.h>
 #include <buffer/include/input.h>
 #include <layers/include/utils.h>
+#include <layers/include/intermittent.h>
 
 void init() {
   watchdog_disable();
@@ -40,6 +41,7 @@ int main() {
   for (uint16_t i = 0; i < 10000; ++i) {
     msp_recv_mat(&input_meta);
 
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_START;
     start_timer();
     l = LeNet_inter(&input_meta);
 
