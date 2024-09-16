@@ -16,14 +16,14 @@ void fc2_Gemm(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_mac_q15_params mac_params = { .length = MAKE_ALIGN_2(lea_input_line_remain_size) };
   int16_t res;
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_fc2_Gemm_BIAS) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_fc2_Gemm_MAIN) {
     /* add bias first so that we don't need to set the input to 0 */
     DMA_makeTransfer((uintptr_t)(bias->data), (uintptr_t)(output->data), output_size);
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc2_Gemm_MAIN;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc2_Gemm_BIAS;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_fc2_Gemm_MAIN) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_fc2_Gemm_BIAS) {
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
       output->data[idx] = intermittent_buffer[0];

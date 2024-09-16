@@ -42,6 +42,7 @@ int main() {
     msp_recv_mat(&input_meta);
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_START;
+
     start_timer();
     l = LeNet_inter(&input_meta);
 

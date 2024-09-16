@@ -26,14 +26,14 @@ extern _q15 lea_tmp[];
 extern _q15 lea_dst[];
 extern _iq31 lea_res[];
 
-#define INTERMITTENT_BUFFER_SIZE 28
+#define INTERMITTENT_BUFFER_SIZE 1600
 extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 #define WRITE_DOUBLE_BUFFER_W_VAR(var, offset) { \
   __asm__ __volatile__ ( \
       "MOVX.W %0, &intermittent_status+%c1\n\t" \
       : \
-      : "r" (var), "i" (offset) \
+      : "r" (var), "i" (GET_OFFSET(offset)) \
       : "memory" \
   ); \
 }
