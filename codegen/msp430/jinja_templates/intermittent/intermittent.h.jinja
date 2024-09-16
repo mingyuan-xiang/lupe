@@ -23,9 +23,9 @@
 #define INTERMITTENT_{{ model_name }}_START {{ increment_counter() }}
 {%- for layer in layer_list %}
 #define INTERMITTENT_{{ layer }}_MAIN {{ increment_counter() }}
-#define INTERMITTENT_{{ layer }}_DMA {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_BIAS {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_EXIT {{ increment_counter() }}
+#define INTERMITTENT_{{ layer }}_DMA {{ increment_counter() }}
 {%- endfor %}
 #define INTERMITTENT_{{ model_name }}_END {{ increment_counter() }}
 

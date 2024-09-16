@@ -51,8 +51,6 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
 
-  uintptr_t inter_buffer_addr = (uintptr_t)intermittent_buffer;
-  
   msp_fir_q15_params conv_params = {
     .length = MAKE_ALIGN_2(input_line_size - kernel_col_size + 1),
     .tapLength = MAKE_ALIGN_2(kernel_col_size),
@@ -62,6 +60,7 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(output_line_size) };
   msp_offset_q15_params offset_params = { .length = lea_remain_size_aligned, .offset = 0 };
 
+  uintptr_t intermittent_buffer_addr = (uintptr_t)intermittent_buffer;
   
   /* set the aligned position to be zeros */
   uint16_t lea_reset_pos = 0;
@@ -122,27 +121,23 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   default:
   }
   
-  if (intermittent_status[COMPUTE_CK] == COMPUTE_WEIGHT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_MAIN) {
     /* convolution */
     /* Recover loop variables */
-    if (intermittent_status[CONV_K_ROW] >= kernel_row_size) {
-      if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_COMPLETE) {
-        /* Complete double buffering. No need for recovery */
-        intermittent_status[CONV_K_ROW] = 0;
-        intermittent_status[CONV_IO_ROW]++;
-      } else if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_TMP) {
-        /* Start transferring to tmp buffer, but get interrupted. So, we need to recompute. */
+    if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_COMPLETE) {
+      /* Complete double buffering. No need for recovery */
+      if (intermittent_status[CONV_K_ROW] >= kernel_row_size) {
+        /* Results are not saved, so we need to recompute */
         intermittent_status[CONV_K_ROW]--;
-      } else {
-        /* Start transferring to output buffer. Recover from tmp buffer */
-        uintptr_t addr = (uintptr_t)(output->data) + \
-          intermittent_status[CONV_OUT_CH] * output_len + \
-          intermittent_status[CONV_IO_ROW] * output_line_size;
-        DMA_makeTransfer(inter_buffer_addr, addr, output_line_size);
-        intermittent_status[CONV_K_ROW] = 0;
-        intermittent_status[CONV_IO_ROW]++;
       }
+    } else {
+      /* Start transferring to output buffer. Recover from tmp buffer */
+      uintptr_t addr = (uintptr_t)(output->data) + \
+        intermittent_status[CONV_OUT_CH] * output_len + \
+        intermittent_status[CONV_IO_ROW] * output_line_size;
+      DMA_makeTransfer((uintptr_t)intermittent_buffer, addr, output_line_size);
     }
+
     if (intermittent_status[CONV_IO_ROW] >= output_line_num) {
       intermittent_status[CONV_IO_ROW] = 0;
       intermittent_status[CONV_IN_CH]++;
@@ -207,18 +202,19 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             intermittent_status[CONV_K_ROW]++;
           }
 
+          /* TODO: write this and bias and exit */
+
           /* bring back output from LEA RAM */
+          DMA_makeTransfer(output_lea_addr, intermittent_buffer_addr, output_line_size);
           intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_TMP;
-          DMA_makeTransfer(output_lea_addr, inter_buffer_addr, output_line_size);
-          intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_FINAL;
           DMA_makeTransfer(output_lea_addr, tmp_output_addr, output_line_size);
           intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_COMPLETE;
 
-          tmp_output_addr += output_line_size_offset;
-          input_channel_addr += input_line_size_offset;
-
           intermittent_status[CONV_K_ROW] = 0;
           intermittent_status[CONV_IO_ROW]++;
+
+          tmp_output_addr += output_line_size_offset;
+          input_channel_addr += input_line_size_offset;
         }
         input_fram_addr += input_channel_offset;
 
@@ -231,42 +227,95 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       intermittent_status[CONV_OUT_CH]++;
     }
 
-    intermittent_status[COMPUTE_CK] = COMPUTE_BIAS;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_BIAS;
   }
 
-  if (intermittent_status[COMPUTE_CK] == COMPUTE_BIAS) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_BIAS) {
     /* add bias and left shift */
     /* Recover loop variables. We use CONV_IN_CH as it will be zero when the start of this */
-    output_fram_addr = (uintptr_t)(output->data);
+
+    if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_FINAL) {
+        /* Start transferring to output buffer. Recover from tmp buffer */
+        uintptr_t addr = (uintptr_t)(output->data) + \
+          intermittent_status[CONV_OUT_CH] * output_len;
+        DMA_makeTransfer((uintptr_t)intermittent_buffer, addr, lea_remain_size);
+      }
+
+    if (intermittent_status[CONV_IO_ROW] == 0) {
+      if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_COMPLETE) {
+        /* Complete double buffering. No need for recovery */
+        intermittent_status[CONV_IO_ROW] = lea_remain_size;
+      } else if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_FINAL) {
+        /* Start transferring to output buffer. Recover from tmp buffer */
+        uintptr_t addr = (uintptr_t)(output->data) + \
+          intermittent_status[CONV_OUT_CH] * output_len;
+        DMA_makeTransfer((uintptr_t)intermittent_buffer, addr, lea_remain_size);
+      }
+    } else {
+      if (intermittent_status[CONV_IO_ROW] < output_len) {
+        if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_COMPLETE) {
+          /* Complete double buffering. No need for recovery */
+          intermittent_status[CONV_IO_ROW] = lea_remain_size;
+        } else if (intermittent_status[BUFFER_COMMIT] == DOUBLE_BUFFER_FINAL) {
+          /* Start transferring to output buffer. Recover from tmp buffer */
+          uintptr_t addr = (uintptr_t)(output->data) + \
+            intermittent_status[CONV_OUT_CH] * output_len + \
+            intermittent_status[CONV_IO_ROW];
+          DMA_makeTransfer((uintptr_t)intermittent_buffer, addr, lea_remain_size);
+        }
+      }
+
+
+    if (intermittent_status[CONV_IO_ROW] > output_len) {
+      intermittent_status[CONV_IO_ROW] = 0;
+      intermittent_status[CONV_IN_CH]++;
+    }
+    }
+
+    output_fram_addr = (uintptr_t)(output->data) + \
+      intermittent_status[CONV_IN_CH] * output_len + \
+      intermittent_status[CONV_IO_ROW];
 
     _q15* lea_add = lea_src;
     uint16_t add_size = _LEA_ADD_SIZE;
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
     for (uint16_t i = intermittent_status[CONV_IN_CH]; i < out_channels; ++i) {
-      switch (intermittent_status[CONV_IO_ROW])
       offset_params.offset = bias->data[i];
-      offset_params.length = lea_remain_size_aligned;
-      add_params.length = lea_remain_size_aligned;
+      if (intermittent_status[CONV_IO_ROW] == 0) {
+        offset_params.length = lea_remain_size_aligned;
+        add_params.length = lea_remain_size_aligned;
 
-      DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_remain_size);
-
-      msp_add_q15(&add_params, lea_add, lea_add, lea_add);
-      msp_offset_q15(&offset_params, lea_add, lea_add);
-
-      DMA_makeTransfer(lea_add_addr, output_fram_addr, lea_remain_size);
-      output_fram_addr += output_remain_size_offset;
-      offset_params.length = add_size;
-      add_params.length = add_size;
-
-      for (uint16_t j = lea_remain_size; j < output_len; j += add_size) {
-        DMA_makeTransfer(output_fram_addr, lea_add_addr, add_size);
+        DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_remain_size);
 
         msp_add_q15(&add_params, lea_add, lea_add, lea_add);
         msp_offset_q15(&offset_params, lea_add, lea_add);
 
-        DMA_makeTransfer(lea_add_addr, output_fram_addr, add_size);
-        output_fram_addr += output_lea_min_size_offset;
+        DOUBLE_BUFFER_TRANSFER(lea_add_addr, output_fram_addr, lea_remain_size);
+
+        output_fram_addr += output_remain_size_offset;
+        intermittent_status[CONV_IO_ROW] += lea_remain_size;
       }
+
+      if (intermittent_status[CONV_IO_ROW] >= lea_remain_size) {
+        offset_params.length = add_size;
+        add_params.length = add_size;
+
+        for (uint16_t j = intermittent_status[CONV_IO_ROW]; j < output_len; j += add_size) {
+          DMA_makeTransfer(output_fram_addr, lea_add_addr, add_size);
+
+          msp_add_q15(&add_params, lea_add, lea_add, lea_add);
+          msp_offset_q15(&offset_params, lea_add, lea_add);
+
+          DOUBLE_BUFFER_TRANSFER(lea_add_addr, output_fram_addr, add_size);
+          output_fram_addr += output_lea_min_size_offset;
+
+          intermittent_status[CONV_IO_ROW] += add_size;
+        }
+
+      }
+
+      intermittent_status[CONV_IO_ROW] = 0
+      intermittent_status[CONV_IN_CH]++;
     }
   }
 

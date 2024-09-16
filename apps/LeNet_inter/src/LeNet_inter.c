@@ -36,57 +36,57 @@
 
 uint16_t LeNet_inter(mat_t* model_in) {
   switch (intermittent_status[COMPUTE_CK]) {
-  case 0:
+  case INTERMITTENT_LeNet_START:
     DMA_makeTransfer((uintptr_t)(model_in->data), (uintptr_t)(conv1_Conv_in_meta.data), GET_MAT_SIZE(model_in));
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv;
-  case INTERMITTENT_conv1_Conv:
-    /* conv1_Conv */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_MAIN;
+  case INTERMITTENT_conv1_Conv_MAIN:
+  /* conv1_Conv */
     conv1_Conv(&conv1_Conv_in_meta, &conv1_Conv_out_meta, &conv1_weight_meta, &conv1_bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu1_Clip;
-  case INTERMITTENT_relu1_Clip:
-    /* relu1_Clip */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu1_Clip_MAIN;
+  case INTERMITTENT_relu1_Clip_MAIN:
+  /* relu1_Clip */
     relu1_Clip(&relu1_Clip_in_meta, &relu1_Clip_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool1_AveragePool;
-  case INTERMITTENT_pool1_AveragePool:
-    /* pool1_AveragePool */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool1_AveragePool_MAIN;
+  case INTERMITTENT_pool1_AveragePool_MAIN:
+  /* pool1_AveragePool */
     pool1_AveragePool(&pool1_AveragePool_in_meta, &pool1_AveragePool_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv2_Conv;
-  case INTERMITTENT_conv2_Conv:
-    /* conv2_Conv */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv2_Conv_MAIN;
+  case INTERMITTENT_conv2_Conv_MAIN:
+  /* conv2_Conv */
     conv2_Conv(&conv2_Conv_in_meta, &conv2_Conv_out_meta, &conv2_weight_meta, &conv2_bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu2_Clip;
-  case INTERMITTENT_relu2_Clip:
-    /* relu2_Clip */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu2_Clip_MAIN;
+  case INTERMITTENT_relu2_Clip_MAIN:
+  /* relu2_Clip */
     relu2_Clip(&relu2_Clip_in_meta, &relu2_Clip_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool2_AveragePool;
-  case INTERMITTENT_pool2_AveragePool:
-    /* pool2_AveragePool */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool2_AveragePool_MAIN;
+  case INTERMITTENT_pool2_AveragePool_MAIN:
+  /* pool2_AveragePool */
     pool2_AveragePool(&pool2_AveragePool_in_meta, &pool2_AveragePool_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv;
-  case INTERMITTENT_conv3_Conv:
-    /* conv3_Conv */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv_MAIN;
+  case INTERMITTENT_conv3_Conv_MAIN:
+  /* conv3_Conv */
     conv3_Conv(&conv3_Conv_in_meta, &conv3_Conv_out_meta, &conv3_weight_meta, &conv3_bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu3_Clip;
-  case INTERMITTENT_relu3_Clip:
-    /* relu3_Clip */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu3_Clip_MAIN;
+  case INTERMITTENT_relu3_Clip_MAIN:
+  /* relu3_Clip */
     relu3_Clip(&relu3_Clip_in_meta, &relu3_Clip_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_Flatten;
-  case INTERMITTENT_Flatten:
-    /* Flatten */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_Flatten_MAIN;
+  case INTERMITTENT_Flatten_MAIN:
+  /* Flatten */
     Flatten(&Flatten_in_meta, &Flatten_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc1_Gemm;
-  case INTERMITTENT_fc1_Gemm:
-    /* fc1_Gemm */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc1_Gemm_MAIN;
+  case INTERMITTENT_fc1_Gemm_MAIN:
+  /* fc1_Gemm */
     fc1_Gemm(&fc1_Gemm_in_meta, &fc1_Gemm_out_meta, &fc1_weight_meta, &fc1_bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu4_Clip;
-  case INTERMITTENT_relu4_Clip:
-    /* relu4_Clip */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_relu4_Clip_MAIN;
+  case INTERMITTENT_relu4_Clip_MAIN:
+  /* relu4_Clip */
     relu4_Clip(&relu4_Clip_in_meta, &relu4_Clip_out_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc2_Gemm;
-  case INTERMITTENT_fc2_Gemm:
-    /* fc2_Gemm */
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_fc2_Gemm_MAIN;
+  case INTERMITTENT_fc2_Gemm_MAIN:
+  /* fc2_Gemm */
     fc2_Gemm(&fc2_Gemm_in_meta, &fc2_Gemm_out_meta, &fc2_weight_meta, &fc2_bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_EXIT;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_END;
   default:
   }
 
