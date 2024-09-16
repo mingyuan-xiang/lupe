@@ -24,7 +24,8 @@ extern _q15 lea_tmp[];
 extern _q15 lea_dst[];
 extern _iq31 lea_res[];
 
-
+#define INTERMITTENT_BUFFER_SIZE 28
+extern __ro_hinv uint16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
 

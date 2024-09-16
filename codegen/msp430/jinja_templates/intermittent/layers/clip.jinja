@@ -1,0 +1,12 @@
+void {{ layer_name }}(mat_t* input, mat_t* output) {
+  uint16_t size = input->strides[0];
+  for (uint16_t i = 0; i < size; ++i) {
+    if (input->data[i] > {{ max }}) {
+      output->data[i] = {{ max }};
+    } else if (input->data[i] < {{ min }}) {
+      output->data[i] = {{ min }};
+    } else {
+      output->data[i] = input->data[i];
+    }
+  }
+}

@@ -1,0 +1,866 @@
+{% if global_mem_buffer %}
+#define _LEA_ADD_SIZE {{ lea_buffer_size }}
+{%- else %}
+#define _LEA_ADD_SIZE {{ lea_src_size }}
+{% endif %}
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_ADD_SIZE)
+{%- if padding %}
+#define _PADDING_TOP {{ padding["top"] }}
+#define _PADDING_BOTTOM {{ padding["bottom"] }}
+#define _PADDING_RIGHT {{ padding["right"] }}
+#define _PADDING_LEFT {{ padding["left"] }}
+{%- endif %}
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_flt (lea_buffer + {{ lea_src_size }})
+#define lea_tmp (lea_buffer + {{ lea_src_size + lea_flt_size }})
+#define lea_dst (lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }})
+{% endif %}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+#define _STRIDE_COL_SIZE {{ stride_col }}
+
+#define _INPUT_ROW_SIZE {{ in_line_num }}
+#define _INPUT_COL_SIZE {{ in_line_size }}
+#define _KERNEL_ROW_SIZE {{ flt_size }}
+#define _KERNEL_COL_SIZE {{ flt_col_size }}
+#define _OUTPUT_ROW_SIZE (((_INPUT_ROW_SIZE - _KERNEL_ROW_SIZE) / _STRIDE_ROW_SIZE) + 1)
+#define _OUTPUT_COL_SIZE (((_INPUT_COL_SIZE - _KERNEL_COL_SIZE) / _STRIDE_COL_SIZE) + 1)
+#define _KERNEL_SIZE_ALIGNED MAKE_ALIGN_2(_KERNEL_COL_SIZE)
+
+#define _FIR_OVERLAP_SIZE ((_KERNEL_SIZE_ALIGNED - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) - 1) / _STRIDE_COL_SIZE)
+
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+#define ___LEA_SRC_SIZE {{ lea_src_size }}
+#define __LEA_SRC_SIZE (___LEA_SRC_SIZE - ((___LEA_SRC_SIZE / _INPUT_COL_SIZE) - _KERNEL_COL_SIZE))
+{%- else %}
+#define __LEA_SRC_SIZE {{ lea_src_size }}
+{%- endif %}
+/* _LEA_SRC_SIZE will always be mutiple of 2 */
+#define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (_KERNEL_SIZE_ALIGNED - _KERNEL_COL_SIZE) * 2)
+#define _FIR_TOTAL_SIZE (_OUTPUT_ROW_SIZE * _INPUT_COL_SIZE)
+#define _FIR_INPUT_SIZE (_LEA_SRC_SIZE - (_LEA_SRC_SIZE % _INPUT_COL_SIZE))
+#define _FIR_INPUT_REMAIN_SIZE (_FIR_TOTAL_SIZE % _FIR_INPUT_SIZE)
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+/* Make sure deinterleave works with odd _INPUT_COL_SIZE */
+#define _FIR_OUTPUT_REMAIN_SIZE (((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * (_INPUT_COL_SIZE + 1) - 1) - _KERNEL_COL_SIZE + 1)
+{%- else %}
+#define _FIR_OUTPUT_REMAIN_SIZE (_FIR_INPUT_REMAIN_SIZE - _KERNEL_COL_SIZE + 1)
+{%- endif %}
+#define _FIR_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE)
+#define _FIR_ADD_OUTPUT_REMAIN_SIZE ((_FIR_INPUT_REMAIN_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE)
+#define _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_REMAIN_SIZE)
+{% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+/* Make sure deinterleave works with odd _INPUT_COL_SIZE */
+#define _FIR_OUTPUT_SIZE (((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * (_INPUT_COL_SIZE + 1) - 1) - _KERNEL_COL_SIZE + 1)
+{%- else %}
+#define _FIR_OUTPUT_SIZE (_FIR_INPUT_SIZE - _KERNEL_COL_SIZE + 1)
+{%- endif %}
+#define _FIR_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_OUTPUT_SIZE)
+#define _FIR_ADD_OUTPUT_SIZE ((_FIR_INPUT_SIZE / _INPUT_COL_SIZE) * _OUTPUT_COL_SIZE)
+#define _FIR_ADD_OUTPUT_SIZE_ALIGNED MAKE_ALIGN_2(_FIR_ADD_OUTPUT_SIZE)
+{% if stride_col > 1 %}
+#define _DEINTERLEAVE_REMAIN_SIZE (_FIR_OUTPUT_REMAIN_SIZE_ALIGNED / _STRIDE_COL_SIZE)
+#define _DEINTERLEAVE_REMAIN_SIZE_ALIGNED MAKE_ALIGN_2(_DEINTERLEAVE_REMAIN_SIZE)
+#define _DEINTERLEAVE_SIZE (_FIR_OUTPUT_SIZE_ALIGNED / _STRIDE_COL_SIZE)
+#define _DEINTERLEAVE_SIZE_ALIGNED MAKE_ALIGN_2(_DEINTERLEAVE_SIZE)
+{%- endif %}
+{% if lea_opt %}
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+
+static inline __attribute__((always_inline)) void new_fir_q15(_q15* coeffs, const _q15* src, _q15* dst) {
+  /* Set MSP_LEA_FIR_PARAMS structure. */
+  lea_fir_params->coeffs = MSP_LEA_CONVERT_ADDRESS(coeffs);
+  lea_fir_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_fir_params);
+
+  /* Invoke the LEACMD__FIR command. */
+  msp_lea_invokeCommand(LEACMD__FIR);
+}
+
+static inline __attribute__((always_inline)) void set_offset(int16_t offset) {
+  offset_vector[0] = offset;
+  offset_vector[1] = offset;
+}
+
+static inline __attribute__((always_inline)) void new_offset_q15(const _q15* src, _q15* dst) {
+  lea_offset_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(src);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_offset_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+{% if stride_col > 1 %}
+static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q15* src, _q15* dst) {
+  lea_deinterleave_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(&src[deinterleave_channel]);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_deinterleave_params);
+
+  /* Invoke the command. */
+  msp_lea_invokeCommand(deinterleave_cmdId);
+}
+{%- endif %}
+{%- endif %}
+
+void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+  uint16_t in_channels = input->dims[1];
+  uint16_t out_channels = output->dims[1];
+{%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) or (group == 1) %}
+  uint16_t output_len = output->strides[1];
+{%- endif %}
+  uint16_t input_len = input->strides[1];
+  uint16_t kernel_row_size = _KERNEL_ROW_SIZE;
+  uint16_t kernel_col_size = _KERNEL_COL_SIZE;
+
+  uintptr_t src_lea_addr = (uintptr_t)lea_src;
+  uintptr_t dst_lea_addr = (uintptr_t)lea_dst;
+  uintptr_t tmp_lea_addr = (uintptr_t)lea_tmp;
+
+  uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
+  uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
+  {%- if flt_col_size % 2 != 0 %}
+  uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
+  uintptr_t flt_addr_padding_offset = (kernel_col_size + 1) * sizeof(int16_t);
+  {%- endif %}
+  uintptr_t input_lea_addr = src_lea_addr;
+  uintptr_t input_fram_addr = (uintptr_t)(input->data);
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
+  uintptr_t input_channel_addr = input_fram_addr;
+  uintptr_t input_channel_offset = input_len * sizeof(int16_t);
+{%- if group == 1 %}
+  uintptr_t output_addr_offset = output_len * sizeof(int16_t);
+{%- endif %}
+  {% if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+  uint16_t lea_skip_pos_before_st = _OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE;
+  uint16_t lea_skip_pos_before = lea_skip_pos_before_st;
+  uint16_t lea_skip_pos_after_st = _OUTPUT_COL_SIZE;
+  uint16_t lea_skip_pos_after = lea_skip_pos_after_st;
+  {%- else %}
+  uintptr_t lea_skip_addr = dst_lea_addr;
+  uintptr_t lea_skip_addr_before_offset = (_OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE) * sizeof(int16_t);
+  uintptr_t lea_skip_addr_before_st = lea_skip_addr + lea_skip_addr_before_offset;
+  uintptr_t lea_skip_addr_before = lea_skip_addr_before_st;
+  uintptr_t lea_skip_addr_after_offset = _OUTPUT_COL_SIZE * sizeof(int16_t);
+  uintptr_t lea_skip_addr_after_st = lea_skip_addr + lea_skip_addr_after_offset;
+  uintptr_t lea_skip_addr_after = lea_skip_addr_after_st;
+  {%- endif %}
+
+  {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
+  uintptr_t input_remain_offset = _FIR_INPUT_REMAIN_SIZE * _STRIDE_ROW_SIZE * sizeof(int16_t);
+  uintptr_t output_remain_offset = _FIR_ADD_OUTPUT_REMAIN_SIZE * sizeof(int16_t);
+  {%- endif %}
+  {%- if (in_line_size * out_line_num) >= ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) %}
+  uintptr_t input_offset = _FIR_INPUT_SIZE * _STRIDE_ROW_SIZE * sizeof(int16_t);
+  uintptr_t output_offset = _FIR_ADD_OUTPUT_SIZE * sizeof(int16_t);
+  {%- endif %}
+
+  int16_t* conv_flt = lea_flt;
+  uint16_t input_line_size = input->dims[3];
+  uint16_t input_line_size_offset = input_line_size * sizeof(int16_t);
+  {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+  uint16_t input_line_size_pad_offset = input_line_size_offset + sizeof(int16_t);
+  {%- endif %}
+  {%- if flt_col_size % 2 == 0 %}
+  uint16_t flt_len = kernel_row_size * kernel_col_size;
+  {%- if (not has_adaptive_gen_mem) or (flt_len >= adaptive_gen_mem_size) %}
+  uintptr_t flt_addr_offset = flt_len * sizeof(int16_t);
+  {%- endif %}
+  {%- endif %}
+
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
+  {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
+  uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
+  {%- endif %}
+  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
+  uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
+  {%- endif %}
+  uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
+  {% if stride_row > 1 %}
+  uint16_t input_line_strided_size_offset = input_line_size_offset * _STRIDE_ROW_SIZE;
+  {%- endif %}
+
+  {%- if lea_opt %}
+  {% if stride_col > 1 %}
+  deinterleave_init(_DEINTERLEAVE_REMAIN_SIZE_ALIGNED, 0, _STRIDE_COL_SIZE);
+  {%- endif %}
+  uint16_t tapLength = MAKE_ALIGN_2(kernel_col_size);
+  add_init(MAKE_ALIGN_2(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED));
+  fir_init(_FIR_OUTPUT_REMAIN_SIZE_ALIGNED, tapLength);
+  offset_init(lea_remain_size_aligned);
+  {%- else %}
+  {% if stride_col > 1 %}
+  msp_deinterleave_q15_params deinterleave_params = {
+    .length = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED,
+    .channel = 0,
+    .numChannels = _STRIDE_COL_SIZE
+  };
+  {%- endif %}
+  msp_fir_q15_params conv_params = {
+    .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED,
+    .tapLength = MAKE_ALIGN_2(kernel_col_size),
+    .coeffs = lea_flt,
+    .enableCircularBuffer = false 
+  };
+  msp_add_q15_params add_params = { .length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED };
+  msp_offset_q15_params offset_params = { .length = lea_remain_size_aligned, .offset = 0 };
+  {%- endif %}
+  {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+  uint16_t flt_lea_pos = 0;
+  uint16_t flt_fram_pos = 0;
+  {%- endif %}
+
+  {%- if dma_opt %}
+  uint16_t zero = 0;
+  {%- endif %}
+
+  {% if flt_col_size % 2 != 0 %}
+  /* set the aligned position to be zeros */
+  uint16_t lea_reset_pos = 0;
+  for (uint16_t k = 0; k < kernel_row_size; ++k) {
+    lea_flt[lea_reset_pos] = 0;
+    lea_reset_pos += (kernel_col_size + 1);
+  }
+  {%- endif %}
+
+  {%- if padding %}
+
+  /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
+  {%- if dma_opt %}
+  DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
+  {%- else %}
+  memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
+  {%- endif %}
+  uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
+  uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
+  _q15* padding_ptr_in = input->data;
+  _q15* padding_ptr_out = output->data;
+  for (uint16_t i = 0; i < in_channels; ++i) {
+    {%- for n in range(padding["top"]) %}
+    padding_ptr_out += input_line_size;
+    {%- endfor %}
+    for (uint16_t j = 0; j < input_line_num; ++j) {
+      padding_ptr_out += _PADDING_LEFT;
+      {%- if has_adaptive_gen_mem and (in_line_size - padding["left"] - padding["right"] < adaptive_gen_mem_size) %}
+      {%- for n in range(in_line_size - padding["left"] - padding["right"]) %}
+      *padding_ptr_out = *padding_ptr_in;
+      ++padding_ptr_out;
+      ++padding_ptr_in;
+      {%- endfor %}
+
+      padding_ptr_out += _PADDING_RIGHT;
+      {%- else %}
+      DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
+      padding_ptr_in += input_line_size_bf;
+      padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
+      {%- endif %}
+    }
+    {%- for n in range(padding["bottom"]) %}
+    padding_ptr_out += input_line_size;
+    {%- endfor %}
+  }
+
+  DMA_makeTransfer(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input));
+  {%- endif %} 
+  {%- if dma_opt %}
+  DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(output));
+  {%- else %}
+  memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
+  {%- endif %}
+
+  /* convolution */
+{%- if group == 1 %}
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    input_fram_addr = (uintptr_t)(input->data);
+{%- else %}
+  uintptr_t tmp_output_addr = output_fram_addr;
+{%- endif %}
+    for (uint16_t j = 0; j < in_channels; ++j) {
+      {%- if group == 1 %}
+      uintptr_t tmp_output_addr = output_fram_addr;
+      {%- endif %}
+      input_channel_addr = input_fram_addr;
+      uintptr_t tmp_input_addr = input_channel_addr;
+      {%- if stride_row > 1 %}
+      uintptr_t strided_input_addr = tmp_input_addr;
+      {%- endif %}
+
+      /* send kernel to LEA RAM */
+      {%- if flt_col_size % 2 != 0 %}
+      /*
+      * pad zero to the beginning of the filter if the filter's size is
+      * not aligned to 2
+      */
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+      ++flt_lea_pos;
+      {%- else %}
+      flt_lea_addr += sizeof(uint16_t);
+      {%- endif %}
+
+      for (uint16_t k = 0; k < kernel_row_size; ++k) {
+        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+        {%- for n in range(flt_col_size) %}
+        lea_flt[flt_lea_pos] = weight->data[flt_fram_pos];
+        flt_lea_pos++;
+        flt_fram_pos++;
+        {%- endfor %}
+
+        flt_lea_pos++;
+
+        {%- else %}
+        DMA_makeTransfer(flt_fram_addr, flt_lea_addr, kernel_col_size);
+        flt_lea_addr += flt_addr_padding_offset;
+        flt_fram_addr += flt_addr_col_offset;
+        {%- endif %}
+      }
+      /* restore flt_lea_addr pointer to the beginning of the array */
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+      flt_lea_pos = 0;
+      {%- else %}
+      flt_lea_addr = (uintptr_t)lea_flt;
+      {%- endif %}
+
+      {%- else %}
+
+      {%- if has_adaptive_gen_mem and flt_len < adaptive_gen_mem_size %}
+      {%- for n in range(flt_len) %}
+      lea_flt[{{ loop.index0 }}] = weight->data[flt_fram_pos];
+      flt_fram_pos++;
+      {%- endfor %}
+
+      {%- else %}
+      DMA_makeTransfer(flt_fram_addr, flt_lea_addr, flt_len);
+      flt_fram_addr += flt_addr_offset;
+      {%- endif %}
+
+      {%- endif %}
+
+      {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
+
+/*************************************************************
+* Do the reminder of FIR first
+************************************************************/
+      conv_flt = lea_flt;
+      {%- if not lea_opt %}
+      conv_params.coeffs = conv_flt;
+      {%- endif %}
+
+      {%- if lea_opt %}
+      lea_fir_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      {%- if stride_col > 1 %}
+      lea_deinterleave_params->vectorSize = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED;
+      lea_add_params->vectorSize = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED;
+      {%- else %}
+      lea_add_params->vectorSize = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      {%- endif %}
+
+      {%- else %}
+      conv_params.length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      {%- if stride_col > 1 %}
+      deinterleave_params.length = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED;
+      add_params.length = _DEINTERLEAVE_REMAIN_SIZE_ALIGNED;
+      {%- else %}
+      add_params.length = _FIR_OUTPUT_REMAIN_SIZE_ALIGNED;
+      {%- endif %}
+      {%- endif %}
+      {% if in_line_size % 2 == 0 %}
+      lea_src[_FIR_INPUT_REMAIN_SIZE] = 0;
+      lea_src[_FIR_INPUT_REMAIN_SIZE + 1] = 0;
+      {%- endif %}
+
+      /*
+       * Do the FIR on the first row and save the results in lea_dst.
+       * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
+       */
+
+      /* send input to LEA RAM */
+      {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
+      input_lea_addr = src_lea_addr;
+      for (uint16_t r = 0; r < _FIR_INPUT_REMAIN_SIZE; r += _INPUT_COL_SIZE) {
+        DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+        {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+        input_lea_addr += input_line_size_pad_offset;
+        {%- else %}
+        input_lea_addr += input_line_size_offset;
+        {%- endif %}
+        strided_input_addr += input_line_strided_size_offset;
+      }
+      {%- else %}
+      DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
+      {%- endif %}
+
+      /* convolution */
+      {%- if stride_col > 1 %}
+      {%- if lea_opt %}
+      new_fir_q15(conv_flt, lea_src, lea_tmp);
+
+      /*
+      * stride
+      * Use lea deinterleave and store it in the lea_src
+      */
+      new_deinterleave_q15(lea_tmp, lea_dst);
+      {%- else %}
+      msp_fir_q15(&conv_params, lea_src, lea_tmp);
+
+      /*
+      * stride
+      * Use lea deinterleave and store it in the lea_src
+      */
+      msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_dst);
+      {%- endif %}
+
+      {%- else %}
+
+      {%- if lea_opt %}
+      new_fir_q15(conv_flt, lea_src, lea_dst);
+      {%- else %}
+      msp_fir_q15(&conv_params, lea_src, lea_dst);
+      {%- endif %}
+      {%- endif %}
+
+      {%- if lea_opt %}
+      conv_flt += tapLength;
+      {%- else %}
+      conv_flt += conv_params.tapLength;
+      {%- endif %}
+      tmp_input_addr += input_line_size_offset;
+
+      for (uint16_t k = 1; k < kernel_row_size; ++k) {
+        {%- if stride_row > 1 %}
+        strided_input_addr = tmp_input_addr;
+        {%- endif %}
+        {%- if not lea_opt %}
+        conv_params.coeffs = conv_flt;
+        {%- endif %}
+
+        /* send input to LEA RAM */
+        {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
+        input_lea_addr = src_lea_addr;
+        for (uint16_t r = 0; r < _FIR_INPUT_REMAIN_SIZE; r += _INPUT_COL_SIZE) {
+          DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+          {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+          input_lea_addr += input_line_size_pad_offset;
+          {%- else %}
+          input_lea_addr += input_line_size_offset;
+          {%- endif %}
+          strided_input_addr += input_line_strided_size_offset;
+        }
+        {%- else %}
+        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_REMAIN_SIZE);
+        {%- endif %}
+
+        /* convolution */
+        {%- if lea_opt %}
+        new_fir_q15(conv_flt, lea_src, lea_tmp);
+        {%- else %}
+        msp_fir_q15(&conv_params, lea_src, lea_tmp);
+        {%- endif %}
+
+        {%- if stride_col > 1 %}
+        /*
+        * stride
+        * Use lea deinterleave and store it in the lea_src
+        */
+        {%- if lea_opt %}
+        new_deinterleave_q15(lea_tmp, lea_src);
+        {%- else %}
+        msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_src);
+        {%- endif %}
+        {%- endif %}
+
+        /* accumulate results for a 2D convolution */
+        {%- if stride_col > 1 %}
+        {%- if lea_opt %}
+        new_add_q15(lea_dst, lea_src, lea_dst);
+        {%- else %}
+        msp_add_q15(&add_params, lea_dst, lea_src, lea_dst);
+        {%- endif %}
+
+        {%- else %}
+        {%- if lea_opt %}
+        new_add_q15(lea_dst, lea_tmp, lea_dst);
+        {%- else %}
+        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+        {%- endif %}
+        {%- endif %}
+
+        {%- if lea_opt %}
+        conv_flt += tapLength;
+        {%- else %}
+        conv_flt += conv_params.tapLength;
+        {%- endif %}
+        tmp_input_addr += input_line_size_offset;
+      }
+
+      /* accumulate results with previous outputs */
+      {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+      lea_skip_pos_before = lea_skip_pos_before_st;
+      lea_skip_pos_after = lea_skip_pos_after_st;
+      {%- else %}
+      lea_skip_addr_before = lea_skip_addr_before_st;
+      lea_skip_addr_after = lea_skip_addr_after_st;
+      {%- endif %}
+      /* skip the garbage values between two lines */
+      for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_REMAIN_SIZE; l += _OUTPUT_COL_SIZE) {
+        {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+        {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
+        lea_dst[lea_skip_pos_after] = lea_dst[lea_skip_pos_before];
+        lea_skip_pos_after++;
+        lea_skip_pos_before++;
+        {%- endfor %}
+
+        lea_skip_pos_before += _FIR_OVERLAP_SIZE;
+        {%- else %}
+
+        DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);
+        lea_skip_addr_before += lea_skip_addr_before_offset;
+        lea_skip_addr_after += lea_skip_addr_after_offset;
+        {%- endif %}
+      }
+
+      /* send output to LEA RAM */
+      DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_REMAIN_SIZE);
+
+      {%- if lea_opt %}
+      lea_add_params->vectorSize = _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED;
+      new_add_q15(lea_dst, lea_tmp, lea_dst);
+      {%- else %}
+      add_params.length = _FIR_ADD_OUTPUT_REMAIN_SIZE_ALIGNED;
+      msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+      {%- endif %}
+
+      /* bring back output from LEA RAM */
+      DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _FIR_ADD_OUTPUT_REMAIN_SIZE);
+      input_channel_addr += input_remain_offset;
+      tmp_input_addr = input_channel_addr;
+      tmp_output_addr += output_remain_offset;
+      {%- endif %}
+
+      {%- if (in_line_size * out_line_num) >= ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) %}
+
+/*************************************************************
+* Do the rest of FIR
+************************************************************/
+      {% if lea_opt %}
+      lea_fir_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
+      {%- else %}
+      conv_params.length = _FIR_OUTPUT_SIZE_ALIGNED;
+      {%- endif %}
+      {% if in_line_size % 2 == 0 %}
+      lea_src[_FIR_INPUT_SIZE] = 0;
+      lea_src[_FIR_INPUT_SIZE + 1] = 0;
+      {%- endif %}
+
+      for (uint16_t n = _FIR_INPUT_REMAIN_SIZE; n < _FIR_TOTAL_SIZE; n += _FIR_INPUT_SIZE) {
+        conv_flt = lea_flt;
+        {%- if not lea_opt %}
+        conv_params.coeffs = conv_flt;
+        {%- endif %}
+        {%- if stride_row > 1 %}
+        strided_input_addr = tmp_input_addr;
+        {%- endif %}
+
+        /*
+        * Do the FIR on the first row and save the results in lea_dst.
+        * For the rest rows, save the FIR results in lea_tmp and add them to lea_dst.
+        */
+
+        {%- if lea_opt %}
+        {%- if stride_col > 1 %}
+        lea_deinterleave_params->vectorSize = _DEINTERLEAVE_SIZE_ALIGNED;
+        lea_add_params->vectorSize = _DEINTERLEAVE_SIZE_ALIGNED;
+        {%- else %}
+        lea_add_params->vectorSize = _FIR_OUTPUT_SIZE_ALIGNED;
+        {%- endif %}
+
+        {%- else %}
+        {%- if stride_col > 1 %}
+        deinterleave_params.length = _DEINTERLEAVE_SIZE_ALIGNED;
+        add_params.length = _DEINTERLEAVE_SIZE_ALIGNED;
+        {%- else %}
+        add_params.length = _FIR_OUTPUT_SIZE_ALIGNED;
+        {%- endif %}
+        {%- endif %}
+
+        /* send input to LEA RAM */
+        {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
+        input_lea_addr = src_lea_addr;
+        for (uint16_t r = 0; r < _FIR_INPUT_SIZE; r += _INPUT_COL_SIZE) {
+          DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+          {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+          input_lea_addr += input_line_size_pad_offset;
+          {%- else %}
+          input_lea_addr += input_line_size_offset;
+          {%- endif %}
+          strided_input_addr += input_line_strided_size_offset;
+        }
+        {%- else %}
+        DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
+        {%- endif %}
+
+        /* convolution */
+        {%- if stride_col > 1 %}
+        {%- if lea_opt %}
+        new_fir_q15(conv_flt, lea_src, lea_tmp);
+
+        /*
+        * stride
+        * Use lea deinterleave and store it in the lea_src
+        */
+        new_deinterleave_q15(lea_tmp, lea_dst);
+        {%- else %}
+        msp_fir_q15(&conv_params, lea_src, lea_tmp);
+
+        /*
+        * stride
+        * Use lea deinterleave and store it in the lea_src
+        */
+        msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_dst);
+        {%- endif %}
+
+        {%- else %}
+
+        {%- if lea_opt %}
+        new_fir_q15(conv_flt, lea_src, lea_dst);
+        {%- else %}
+        msp_fir_q15(&conv_params, lea_src, lea_dst);
+        {%- endif %}
+        {%- endif %}
+
+        {%- if lea_opt %}
+        conv_flt += tapLength;
+        {%- else %}
+        conv_flt += conv_params.tapLength;
+        {%- endif %}
+        tmp_input_addr += input_line_size_offset;
+
+        for (uint16_t k = 1; k < kernel_row_size; ++k) {
+          {%- if stride_row > 1 %}
+          strided_input_addr = tmp_input_addr;
+          {%- endif %}
+          {%- if not lea_opt %}
+          conv_params.coeffs = conv_flt;
+          {%- endif %}
+
+          /* send input to LEA RAM */
+          {%- if (stride_row > 1) or ((stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0)) %}
+          input_lea_addr = src_lea_addr;
+          for (uint16_t r = 0; r < _FIR_INPUT_SIZE; r += _INPUT_COL_SIZE) {
+            DMA_makeTransfer(strided_input_addr, input_lea_addr, _INPUT_COL_SIZE);
+            {% if (stride_col > 1) and (in_line_size % 2 != 0) and  (stride_col % 2 == 0) %}
+            input_lea_addr += input_line_size_pad_offset;
+            {%- else %}
+            input_lea_addr += input_line_size_offset;
+            {%- endif %}
+            strided_input_addr += input_line_strided_size_offset;
+          }
+          {%- else %}
+          DMA_makeTransfer(tmp_input_addr, input_lea_addr, _FIR_INPUT_SIZE);
+          {%- endif %}
+
+          /* convolution */
+          {%- if lea_opt %}
+          new_fir_q15(conv_flt, lea_src, lea_tmp);
+          {%- else %}
+          msp_fir_q15(&conv_params, lea_src, lea_tmp);
+          {%- endif %}
+
+          {%- if stride_col > 1 %}
+          /*
+          * stride
+          * Use lea deinterleave and store it in the lea_src
+          */
+          {% if lea_opt %}
+          new_deinterleave_q15(lea_tmp, lea_src);
+          {%- else %}
+          msp_deinterleave_q15(&deinterleave_params, lea_tmp, lea_src);
+          {%- endif %}
+          {%- endif %}
+
+          /* accumulate results for a 2D convolution */
+          {%- if stride_col > 1 %}
+          {%- if lea_opt %}
+          new_add_q15(lea_dst, lea_src, lea_dst);
+          {%- else %}
+          msp_add_q15(&add_params, lea_dst, lea_src, lea_dst);
+          {%- endif %}
+
+          {%- else %}
+          {%- if lea_opt %}
+          new_add_q15(lea_dst, lea_tmp, lea_dst);
+          {%- else %}
+          msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+          {%- endif %}
+          {%- endif %}
+
+          {%- if lea_opt %}
+          conv_flt += tapLength;
+          {%- else %}
+          conv_flt += conv_params.tapLength;
+          {%- endif %}
+          tmp_input_addr += input_line_size_offset;
+        }
+
+        /* accumulate results with previous outputs */
+        {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+        lea_skip_pos_before = lea_skip_pos_before_st;
+        lea_skip_pos_after = lea_skip_pos_after_st;
+        {%- else %}
+        lea_skip_addr_before = lea_skip_addr_before_st;
+        lea_skip_addr_after = lea_skip_addr_after_st;
+        {%- endif %}
+        /* skip the garbage values between two lines */
+        for (uint16_t l = _OUTPUT_COL_SIZE; l < _FIR_ADD_OUTPUT_SIZE; l += _OUTPUT_COL_SIZE) {
+          {%- if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
+          {%- for n in range((((in_line_size - flt_col_size) / stride_col) + 1) | round | int) %}
+          lea_dst[lea_skip_pos_after] = lea_dst[lea_skip_pos_before];
+          lea_skip_pos_after++;
+          lea_skip_pos_before++;
+          {%- endfor %}
+
+          lea_skip_pos_before += _FIR_OVERLAP_SIZE;
+          {%- else %}
+
+          DMA_makeTransfer(lea_skip_addr_before, lea_skip_addr_after, _OUTPUT_COL_SIZE);
+          lea_skip_addr_before += lea_skip_addr_before_offset;
+          lea_skip_addr_after += lea_skip_addr_after_offset;
+          {%- endif %}
+        }
+
+        /* send output to LEA RAM */
+        DMA_makeTransfer(tmp_output_addr, tmp_lea_addr, _FIR_ADD_OUTPUT_SIZE);
+
+        {%- if lea_opt %}
+        lea_add_params->vectorSize = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
+        new_add_q15(lea_dst, lea_tmp, lea_dst);
+        {%- else %}
+        add_params.length = _FIR_ADD_OUTPUT_SIZE_ALIGNED;
+        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+        {%- endif %}
+
+        /* bring back output from LEA RAM */
+        DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _FIR_ADD_OUTPUT_SIZE);
+        input_channel_addr += input_offset;
+        tmp_input_addr = input_channel_addr;
+        tmp_output_addr += output_offset;
+      }
+      {%- endif %}
+      input_fram_addr += input_channel_offset;
+    }
+{%- if group == 1 %}
+    output_fram_addr += output_addr_offset;
+  }
+{%- endif %}
+
+  /* add bias and left shift */
+  output_fram_addr = (uintptr_t)(output->data);
+
+  _q15* lea_add = lea_src;
+  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
+  uint16_t add_size = _LEA_ADD_SIZE;
+  {%- endif %}
+  uintptr_t lea_add_addr = (uintptr_t)lea_add;
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    {%- if lea_opt %}
+    set_offset(bias->data[i]);
+    {%- else %}
+    offset_params.offset = bias->data[i];
+    {%- endif %}
+
+    {%- if out_len % 2 != 0 %}
+    /* set the aligned position to be zeros */
+    lea_add[_LEA_REMAIN_SIZE] = 0;
+    {%- endif %}
+
+    {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
+
+    {%- if lea_opt %}
+    lea_offset_params->vectorSize = lea_remain_size_aligned;
+    {%- if qf > 0 %}
+    lea_add_params->vectorSize = lea_remain_size_aligned;
+    {%- endif %}
+    {%- else %}
+    offset_params.length = lea_remain_size_aligned;
+    {%- if qf > 0 %}
+    add_params.length = lea_remain_size_aligned;
+    {%- endif %}
+    {%- endif %}
+
+    DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_remain_size);
+    {% for i in range(qf) %}
+    {%- if lea_opt %}
+    new_add_q15(lea_add, lea_add, lea_add);
+    {%- else %}
+    msp_add_q15(&add_params, lea_add, lea_add, lea_add);
+    {%- endif %}
+    {%- endfor %}
+    {%- if lea_opt %}
+    new_offset_q15(lea_add, lea_add);
+    {%- else %}
+    msp_offset_q15(&offset_params, lea_add, lea_add);
+    {%- endif %}
+
+    DMA_makeTransfer(lea_add_addr, output_fram_addr, lea_remain_size);
+    output_fram_addr += output_remain_size_offset;
+    {%- endif %}
+    {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
+
+    {%- if lea_opt %}
+    lea_offset_params->vectorSize = add_size;
+    {%- if qf > 0 %}
+    lea_add_params->vectorSize = add_size;
+    {%- endif %}
+    {%- else %}
+    offset_params.length = add_size;
+    {%- if qf > 0 %}
+    add_params.length = add_size;
+    {%- endif %}
+    {%- endif %}
+
+    for (uint16_t j = lea_remain_size; j < output_len; j += add_size) {
+      DMA_makeTransfer(output_fram_addr, lea_add_addr, add_size);
+      {% for i in range(qf) %}
+      {%- if lea_opt %}
+      new_add_q15(lea_add, lea_add, lea_add);
+      {%- else %}
+      msp_add_q15(&add_params, lea_add, lea_add, lea_add);
+      {%- endif %}
+      {%- endfor %}
+      {%- if lea_opt %}
+      new_offset_q15(lea_add, lea_add);
+      {%- else %}
+      msp_offset_q15(&offset_params, lea_add, lea_add);
+      {%- endif %}
+
+      DMA_makeTransfer(lea_add_addr, output_fram_addr, add_size);
+      output_fram_addr += output_lea_min_size_offset;
+    }
+    {%- endif %}
+  }
+
+  {%- if lea_opt %}
+  offset_clear();
+  fir_clear();
+  add_clear();
+  {%- if stride_col > 1 %}
+  deinterleave_clear();
+  {%- endif %}
+  {%- endif %}
+}

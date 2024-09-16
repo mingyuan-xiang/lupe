@@ -6,6 +6,7 @@ DSPLIB_DATA(lea_dst, 2) _q15 lea_dst[LEA_DST_SIZE];
 DSPLIB_DATA(lea_tmp, 2) _q15 lea_tmp[LEA_TMP_SIZE];
 DSPLIB_DATA(lea_res, 4) _iq31 lea_res[2];
 
+__ro_hinv uint16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 static int DMA_is_init = 0;
 
