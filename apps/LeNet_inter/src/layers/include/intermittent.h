@@ -6,15 +6,9 @@
 #define CONV_IN_CH 2
 #define CONV_OUT_CN 3
 #define CONV_IO_ROW 4
-#define CONV_K_ROW 5
-#define BUFFER_COMMIT 6
 
-#define DOUBLE_BUFFER_COMPLETE 0 // Complete double buffering. No need for recovery
-#define DOUBLE_BUFFER_TMP 1 // Finish transferring to tmp buffer
-
-#define COMPUTE_REMAIN 0
-#define COMPUTE_REST 1
-#define COMPUTE_EXIT 1
+#define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
+#define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer
 
 #define INTERMITTENT_LeNet_START 0
 #define INTERMITTENT_conv1_Conv_MAIN 1

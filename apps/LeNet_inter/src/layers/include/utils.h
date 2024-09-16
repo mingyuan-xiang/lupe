@@ -29,14 +29,22 @@ extern _iq31 lea_res[];
 #define INTERMITTENT_BUFFER_SIZE 28
 extern __ro_hinv uint16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
+#define WRITE_DOUBLE_BUFFER_W_VAR(var, offset) { \
+    __asm__ __volatile__ ( \
+        "MOVX.W %0, &intermittent_status+%c1\n\t" \
+        : \
+        : "r" (var), "i" (offset) \
+        : "memory" \
+    ) \
+}
 
-#define DOUBLE_BUFFER_TRANSFER(in_addr, out_addr, size, INNER, INNER_INC) { \
-  intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_TMP; \
-  (INNER) += (INNER_INC);
-  DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size); \
-  intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_FINAL; \
-  DMA_makeTransfer(in_addr, out_addr, size); \
-  intermittent_status[BUFFER_COMMIT] = DOUBLE_BUFFER_COMPLETE; \
+#define DOUBLE_BUFFER_TRANSFER(var, offset, in_addr, out_addr, size) {
+  DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size);
+  var = var | DOUBLE_BUFFER_WRITE;
+  WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
+  DMA_makeTransfer(in_addr, out_addr, size);
+  var = var & DOUBLE_BUFFER_COMPLETE;
+  WRITE_DOUBLE_BUFFER_W_VAR(var, offset);
 }
 
 #define GET_MAT_SIZE(mat) ((mat)->strides[0] * (mat)->dims[0])
