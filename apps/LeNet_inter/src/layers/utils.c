@@ -35,6 +35,8 @@ void init_lupe() {
     DMA_initialization(0);
     DMA_is_init = 1;
   }
+
+  intermittent_init();
 }
 
 

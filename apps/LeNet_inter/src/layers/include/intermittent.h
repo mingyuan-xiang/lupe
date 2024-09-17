@@ -7,6 +7,8 @@
 #define COMPUTE_OUT_CH 3
 #define COMPUTE_IO_ROW 4
 #define COMPUTE_IO_COL 5
+#define MAIN_LOOP 6
+#define COUNTER 7
 
 #define GET_OFFSET(x) ((x) * 2)
 
