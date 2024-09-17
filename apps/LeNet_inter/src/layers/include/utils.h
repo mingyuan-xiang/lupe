@@ -38,8 +38,8 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
   ); \
 }
 
-#define DOUBLE_BUFFER_TRANSFER(var, offset, in_addr, out_addr, size) { \
-  int16_t next = var; \
+#define DOUBLE_BUFFER_TRANSFER(val, offset, in_addr, out_addr, size) { \
+  int16_t next = val; \
   DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size); \
   next = next | DOUBLE_BUFFER_WRITE; \
   WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
@@ -48,8 +48,8 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
   WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
 }
 
-#define DOUBLE_BUFFER_ASSIGN(var, offset, in, out) { \
-  int16_t next = var; \
+#define DOUBLE_BUFFER_ASSIGN(val, offset, in, out) { \
+  int16_t next = val; \
   intermittent_buffer[0] = in; \
   next = next | DOUBLE_BUFFER_WRITE; \
   WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
