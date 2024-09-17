@@ -87,13 +87,27 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       intermittent_status[COMPUTE_IO_ROW] = line;
     }
+
     if (intermittent_status[COMPUTE_IO_ROW] >= output_line_num) {
       intermittent_status[COMPUTE_IO_ROW] = 0;
       intermittent_status[COMPUTE_IN_CH]++;
     }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
+      intermittent_status[COMPUTE_IN_CH] = idx;
+    }
+
     if (intermittent_status[COMPUTE_IN_CH] >= in_channels) {
       intermittent_status[COMPUTE_IN_CH] = 0;
       intermittent_status[COMPUTE_OUT_CH]++;
+    }
+
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      intermittent_status[COMPUTE_IN_CH] = intermittent_buffer[0];
+      intermittent_status[COMPUTE_OUT_CH] = idx;
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
@@ -158,13 +172,13 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         }
         input_fram_addr += input_channel_offset;
 
-        intermittent_status[COMPUTE_IO_ROW] = 0;
-        intermittent_status[COMPUTE_IN_CH]++;
+        uint16_t next_j = j + 1;
+        DOUBLE_BUFFER_ASSIGN(next_j, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
       }
       output_fram_addr += output_addr_offset;
 
-      intermittent_status[COMPUTE_IN_CH] = 0;
-      intermittent_status[COMPUTE_OUT_CH]++;
+      uint16_t next_i = i + 1;
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IN_CH]);
     }
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv_BIAS;
@@ -196,6 +210,12 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       intermittent_status[COMPUTE_IN_CH]++;
     }
 
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
+      intermittent_status[COMPUTE_IN_CH] = idx;
+    }
+
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       intermittent_status[COMPUTE_IN_CH] * output_len + \
       intermittent_status[COMPUTE_IO_ROW];
@@ -217,8 +237,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         output_fram_addr += output_remain_size_offset;
       }
 
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_i = i + 1;
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_conv3_Conv_EXIT;
