@@ -37,8 +37,11 @@ uint16_t {{ model_name }}(mat_t* model_in) {
     // msp_send_mat(model_in);
     {%- endif %}
   {%- for layer in layer_list %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer.name }}_MAIN;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer.name }}_PREPARE;
+  case INTERMITTENT_{{ layer.name }}_PREPARE:
   case INTERMITTENT_{{ layer.name }}_MAIN:
+  case INTERMITTENT_{{ layer.name }}_BIAS:
+  case INTERMITTENT_{{ layer.name }}_EXIT:
   /* {{ layer.name }} */
   {%- if layer.has_weights %}
     {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.weight_name }}_meta, &{{ layer.bias_name }}_meta);

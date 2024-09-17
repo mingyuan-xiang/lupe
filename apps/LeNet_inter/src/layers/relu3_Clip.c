@@ -6,7 +6,7 @@
 void relu3_Clip(mat_t* input, mat_t* output) {
   uint16_t size = input->strides[0];
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_relu3_Clip_PREPARE) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_relu3_Clip_MAIN) {
     for (uint16_t i = intermittent_status[COMPUTE_IO_COL]; i < size; ++i) {
       if (input->data[i] > 6144) {
         output->data[i] = 6144;

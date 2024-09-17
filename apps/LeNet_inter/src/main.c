@@ -62,11 +62,11 @@ int main() {
     LeNet_inter(&input_meta);
     stop_intermittent_tests();
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_START;
+    // intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_START;
 
     intermittent_status[COUNTER] += verify();
     if (intermittent_status[COUNTER] != 0) {
-        break;
+      break;
     }
 
     intermittent_status[MAIN_LOOP]++;
@@ -75,7 +75,14 @@ int main() {
   msp_send_printf("Incorrect results: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
 
   if (intermittent_status[COUNTER] != 0) {
-    msp_send_mat(&fc2_Gemm_out_meta);
+    // msp_send_mat(&input_meta);
+    // msp_send_mat(&conv1_Conv_in_meta);
+    // msp_send_mat(&conv1_Conv_out_meta);
+    // msp_send_mat(&fc2_Gemm_out_meta);
+    msp_send_printf("%u", intermittent_status[COMPUTE_CK]);
+    msp_send_printf("%u", intermittent_status[COMPUTE_IO_ROW]);
+    msp_send_printf("%u", intermittent_status[COMPUTE_IN_CH]);
+    msp_send_printf("%u", intermittent_status[COMPUTE_OUT_CH]);
   }
 
   exit();
