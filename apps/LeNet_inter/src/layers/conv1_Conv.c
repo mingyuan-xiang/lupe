@@ -74,55 +74,58 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
   /* Pad the input for (2, 2, 2, 2) */
-  switch (intermittent_status[COMPUTE_PAD]) {
-  case PAD_START:
-    memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
-    intermittent_status[COMPUTE_PAD] = PAD_MAIN;
-  case PAD_MAIN: {
-    uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
-    uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
-    uint16_t input_len_bf = input_line_num * input_line_size_bf;
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_PREPARE) {
+    switch (intermittent_status[COMPUTE_PAD]) {
+    case PAD_START:
+      memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
+      intermittent_status[COMPUTE_PAD] = PAD_MAIN;
+    case PAD_MAIN: {
+      uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
+      uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
+      uint16_t input_len_bf = input_line_num * input_line_size_bf;
 
-    if (intermittent_status[COMPUTE_IO_ROW] >= input_line_num) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
-    }
-
-    _q15* padding_ptr_in = input->data + \
-      intermittent_status[COMPUTE_IN_CH] * input_len_bf + \
-      intermittent_status[COMPUTE_IO_ROW] * input_line_size_bf;
-    _q15* padding_ptr_out = output->data + \
-      intermittent_status[COMPUTE_IN_CH] * input_len + \
-      intermittent_status[COMPUTE_IO_ROW] * input_line_size;
-
-    for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < in_channels; ++i) {
-      padding_ptr_out += input_line_size;
-      padding_ptr_out += input_line_size;
-      for (uint16_t j = intermittent_status[COMPUTE_IO_ROW]; j < input_line_num; ++j) {
-        padding_ptr_out += _PADDING_LEFT;
-        DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
-        padding_ptr_in += input_line_size_bf;
-        padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
-
-        intermittent_status[COMPUTE_IO_ROW]++;
+      if (intermittent_status[COMPUTE_IO_ROW] >= input_line_num) {
+        intermittent_status[COMPUTE_IO_ROW] = 0;
+        intermittent_status[COMPUTE_IN_CH]++;
       }
-      padding_ptr_out += input_line_size;
-      padding_ptr_out += input_line_size;
 
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      _q15* padding_ptr_in = input->data + \
+        intermittent_status[COMPUTE_IN_CH] * input_len_bf + \
+        intermittent_status[COMPUTE_IO_ROW] * input_line_size_bf;
+      _q15* padding_ptr_out = output->data + \
+        intermittent_status[COMPUTE_IN_CH] * input_len + \
+        intermittent_status[COMPUTE_IO_ROW] * input_line_size;
+
+      for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < in_channels; ++i) {
+        padding_ptr_out += input_line_size;
+        padding_ptr_out += input_line_size;
+        for (uint16_t j = intermittent_status[COMPUTE_IO_ROW]; j < input_line_num; ++j) {
+          padding_ptr_out += _PADDING_LEFT;
+          DMA_makeTransfer((uintptr_t)padding_ptr_in, (uintptr_t)padding_ptr_out, input_line_size_bf);
+          padding_ptr_in += input_line_size_bf;
+          padding_ptr_out += (_PADDING_RIGHT + input_line_size_bf);
+
+          intermittent_status[COMPUTE_IO_ROW]++;
+        }
+        padding_ptr_out += input_line_size;
+        padding_ptr_out += input_line_size;
+
+        intermittent_status[COMPUTE_IO_ROW] = 0;
+        intermittent_status[COMPUTE_IN_CH]++;
+      }
+      intermittent_status[COMPUTE_PAD] = PAD_TRANSFER;
     }
-    intermittent_status[COMPUTE_PAD] = PAD_TRANSFER;
-  }
-  case PAD_TRANSFER:
-  DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
-  intermittent_status[COMPUTE_PAD] = PAD_MEMSET;
-  case PAD_MEMSET:
-  memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
-  intermittent_status[COMPUTE_IN_CH] = 0;
-  intermittent_status[COMPUTE_PAD] = PAD_END;
-  default:
-    break;
+    case PAD_TRANSFER:
+    DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
+    intermittent_status[COMPUTE_PAD] = PAD_MEMSET;
+    case PAD_MEMSET:
+    memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
+    intermittent_status[COMPUTE_IN_CH] = 0;
+    intermittent_status[COMPUTE_PAD] = PAD_END;
+    default:
+      break;
+    }
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_MAIN;
   }
   
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_MAIN) {

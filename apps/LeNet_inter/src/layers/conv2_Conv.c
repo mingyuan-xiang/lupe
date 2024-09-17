@@ -69,6 +69,11 @@ void conv2_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE] = 0;
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv2_Conv_PREPARE) {
+    memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv2_Conv_MAIN;
+  }
+
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv2_Conv_MAIN) {
     /* convolution */
     /* Recover loop variables */
