@@ -15,12 +15,14 @@
 #define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
 #define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer
 
+/* PAD_START has to be 0 */
 #define PAD_START 0
 #define PAD_MAIN 1
 #define PAD_TRANSFER 2
 #define PAD_MEMSET 3
 #define PAD_END 4
 
+/* INTERMITTENT_LeNet_START has to be 0 */
 #define INTERMITTENT_LeNet_START 0
 #define INTERMITTENT_conv1_Conv_PREPARE 1
 #define INTERMITTENT_conv1_Conv_MAIN 2
