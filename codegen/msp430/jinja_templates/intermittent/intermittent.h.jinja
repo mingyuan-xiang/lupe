@@ -2,16 +2,22 @@
 #define INTERMITTENT_H
 
 #define COMPUTE_CK 0
-#define CONV_PAD 1
-#define CONV_IN_CH 2
-#define CONV_OUT_CN 3
-#define CONV_IO_ROW 4
-#define CONV_K_ROW 5
-#define BUFFER_COMMIT 6
+#define COMPUTE_PAD 1
+#define COMPUTE_IN_CH 2
+#define COMPUTE_OUT_CH 3
+#define COMPUTE_IO_ROW 4
+#define COMPUTE_IO_COL 5
 
-#define DOUBLE_BUFFER_COMPLETE 0 // Complete double buffering. No need for recovery
-#define DOUBLE_BUFFER_TMP 1 // Start transferring to tmp buffer
-#define DOUBLE_BUFFER_FINAL 2 // Start transferring to output buffer
+#define GET_OFFSET(x) ((x) * 2)
+
+#define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
+#define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer
+
+#define PAD_START 0
+#define PAD_MAIN 1
+#define PAD_TRANSFER 2
+#define PAD_MEMSET 3
+#define PAD_END 4
 
 {%- set inter = namespace(cnt=0) %}
 
@@ -22,6 +28,7 @@
 
 #define INTERMITTENT_{{ model_name }}_START {{ increment_counter() }}
 {%- for layer in layer_list %}
+#define INTERMITTENT_{{ layer }}_PREPARE {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_MAIN {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_BIAS {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_EXIT {{ increment_counter() }}
