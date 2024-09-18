@@ -62,6 +62,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- endfor %}
     intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ model_name }}_END;
   default:
+    break;
   }
 
   /* Get the max score */

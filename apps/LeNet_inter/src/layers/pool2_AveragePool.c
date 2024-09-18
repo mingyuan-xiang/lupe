@@ -17,7 +17,7 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
   int32_t agg;
 
   /* No need for double buffering (for loop indices) as each output is independant */
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool1_AveragePool_PREPARE) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_PREPARE) {
     if (intermittent_status[COMPUTE_IO_COL] > cols) {
       intermittent_status[COMPUTE_IO_COL] = 0;
       intermittent_status[COMPUTE_IO_ROW] += height;
@@ -67,10 +67,10 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
       intermittent_status[COMPUTE_IN_CH]++;
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool1_AveragePool_EXIT;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool2_AveragePool_EXIT;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool1_AveragePool_EXIT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_EXIT) {
     intermittent_status[COMPUTE_IO_COL] = 0;
     intermittent_status[COMPUTE_IO_ROW] = 0;
     intermittent_status[COMPUTE_IN_CH] = 0;

@@ -34,7 +34,7 @@
 
 #include <libmsppoweroff/poweroff.h>
 
-uint16_t LeNet(mat_t* model_in) {
+uint16_t LeNet_inter(mat_t* model_in) {
   switch (intermittent_status[COMPUTE_CK]) {
   case INTERMITTENT_LeNet_START:
     DMA_makeTransfer((uintptr_t)(model_in->data), (uintptr_t)(conv1_Conv_in_meta.data), GET_MAT_SIZE(model_in));
@@ -124,6 +124,7 @@ uint16_t LeNet(mat_t* model_in) {
     fc2_Gemm(&fc2_Gemm_in_meta, &fc2_Gemm_out_meta, &fc2_weight_meta, &fc2_bias_meta);
     intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_END;
   default:
+    break;
   }
 
   /* Get the max score */
