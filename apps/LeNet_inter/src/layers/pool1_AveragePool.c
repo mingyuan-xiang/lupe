@@ -22,9 +22,22 @@ void pool1_AveragePool(mat_t* input, mat_t* output) {
       intermittent_status[COMPUTE_IO_COL] = 0;
       intermittent_status[COMPUTE_IO_ROW]++;
     }
+
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      intermittent_status[COMPUTE_IO_COL] = intermittent_buffer[0];
+      intermittent_status[COMPUTE_IO_ROW] = idx;
+    }
+
     if (intermittent_status[COMPUTE_IO_ROW] > out_rows) {
       intermittent_status[COMPUTE_IO_ROW] = 0;
       intermittent_status[COMPUTE_IN_CH]++;
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
+      intermittent_status[COMPUTE_IN_CH] = idx;
     }
 
     uint16_t ch_offset = intermittent_status[COMPUTE_IN_CH] * in_len + \
@@ -58,12 +71,12 @@ void pool1_AveragePool(mat_t* input, mat_t* output) {
         }
         ch_offset += pool_row_offset;
 
-        intermittent_status[COMPUTE_IO_COL] = 0;
-        intermittent_status[COMPUTE_IO_ROW]++;
+        uint16_t next_r = r + 1;
+        DOUBLE_BUFFER_ASSIGN(next_r, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
       }
 
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_s = s + 1;
+      DOUBLE_BUFFER_ASSIGN(next_s, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_pool1_AveragePool_EXIT;
