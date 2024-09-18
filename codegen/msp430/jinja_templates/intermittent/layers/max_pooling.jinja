@@ -2,6 +2,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
   uint16_t in_ch = input->dims[1];
   uint16_t rows = input->dims[2];
   uint16_t cols = input->dims[3];
+  uint16_t out_rows = output->dims[2];
   uint16_t in_ch_stride = input->strides[1];
   uint16_t in_row_stride = input->strides[2];
   uint16_t out_ch_stride = output->strides[1];
@@ -13,26 +14,56 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
 
   int16_t agg;
 
-  for (uint16_t s = 0; s < in_ch; ++s) {
-    out_r = 0;
-    for (uint16_t r = 0; r < rows; r += height) {
-      out_c = 0;
-      for (uint16_t c = 0; c < cols; c += width) {
-        agg = LUPE_MIN;
-        uint16_t h = r + height;
-        uint16_t w = c + width;
-        for (uint16_t i = r; i < h; ++i) {
-          for (uint16_t j = c; j < w; ++j) {
-            uint16_t offset = s * in_ch_stride + i * in_row_stride + j;
-            int16_t in_data = *(input->data + offset);
-            agg = (agg > in_data ? agg : in_data);
-          }
-        }
-        uint16_t offset = s * out_ch_stride + out_r * out_row_stride + out_c;
-        *(output->data + offset) = agg;
-        ++out_c;
-      }
-      ++out_r;
+  /* No need for double buffering (for loop indices) as each output is independant */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
+    if (intermittent_status[COMPUTE_IO_COL] > cols) {
+      intermittent_status[COMPUTE_IO_COL] = 0;
+      intermittent_status[COMPUTE_IO_ROW] += height;
     }
+
+    if (intermittent_status[COMPUTE_IO_ROW] > rows) {
+      intermittent_status[COMPUTE_IO_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
+    }
+
+    uint16_t out_r = intermittent_status[COMPUTE_IO_ROW] / height;
+    uint16_t out_c = intermittent_status[COMPUTE_IO_COL] / width;
+
+    for (uint16_t s = intermittent_status[COMPUTE_IN_CH]; s < in_ch; ++s) {
+      for (uint16_t r = intermittent_status[COMPUTE_IO_ROW]; r < rows; r += height) {
+        for (uint16_t c = intermittent_status[COMPUTE_IO_COL]; c < cols; c += width) {
+          agg = LUPE_MIN;
+          uint16_t h = r + height;
+          uint16_t w = c + width;
+          for (uint16_t i = r; i < h; ++i) {
+            for (uint16_t j = c; j < w; ++j) {
+              uint16_t offset = s * in_ch_stride + i * in_row_stride + j;
+              int16_t in_data = *(input->data + offset);
+              agg = (agg > in_data ? agg : in_data);
+            }
+          }
+          uint16_t offset = s * out_ch_stride + out_r * out_row_stride + out_c;
+          *(output->data + offset) = agg;
+          ++out_c;
+
+          intermittent_status[COMPUTE_IO_COL] += width;
+        }
+        ++out_r;
+
+        intermittent_status[COMPUTE_IO_COL] = 0;
+        intermittent_status[COMPUTE_IO_ROW] += height;
+      }
+
+      intermittent_status[COMPUTE_IO_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
+    }
+
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+  }
+
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
+    intermittent_status[COMPUTE_IO_COL] = 0;
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH] = 0;
   }
 }

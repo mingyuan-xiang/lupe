@@ -1,14 +1,28 @@
 #include <libmsp/mspbase.h>
 #include <libmspdriver/driverlib.h>
-{%- if add_timer %}
-#include <libmsptimer/timekeeper.h>
-{%- endif %}
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <msp430.h>
 
 #include <include/{{ model_name }}.h>
 #include <buffer/include/input.h>
+#include <buffer/include/output.h>
+#include <buffer/include/buffer.h>
 #include <layers/include/utils.h>
+#include <layers/include/intermittent.h>
+#include <libmsppoweroff/poweroff.h>
+{%- if bounds | length > 1 %}
+#include <librng/rng.h>
+{%- endif %}
+
+/* ACLK cycles (32768 Hz) */
+{%- if bounds | length > 1 %}
+#define LOWER_BOUND {{ bounds[0] }}
+#define UPPER_BOUND {{ bounds[1] }}
+{%- else %}
+#define DELAY {{ bounds[0] }}
+{%- endif %}
+
+#define REPEAT {{ repeat }} 
 
 void init() {
   watchdog_disable();
@@ -21,61 +35,72 @@ void init() {
   gpio_dir_out(1, 1);
   gpio_clear(1, 0);
   gpio_set(1, 1);
-{%- if add_timer %}
-  timers_init();
-{%- endif %}
   init_lupe();
 }
 
 void exit() {
   msp_end_printing();
-{%- if add_timer %}
-  timers_stop();
-{%- endif %}
 }
+{% if verify %}
+uint16_t verify() {
+  uint16_t flag = 0;
+  for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+    if (output_meta.data[i] != {{ last_layer }}_out_meta.data[i]) {
+      flag = 1;
+    }
+  }
+  return flag;
+}
+{%- endif %}
+
+{%- if bounds | length > 1 %}
+uint16_t rand(uint16_t low, uint16_t high) {
+  return prand_range(high - low) + low;
+}
+{%- endif %}
 
 int main() {
   init();
 
-{%- if not calibration %}
-  uint16_t l;
-{%- endif %}
+  for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
+    {%- if bounds | length > 1 %}
+    uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
 
-  msp_send_printf("Test {{ model_name }}\n");
+    start_intermittent_tests(0, delay);
+    {{ model_name }}(&input_meta);
+    stop_intermittent_tests();
+    {%- else %}
 
-{%- if calibration %}
-  {{ model_name }}(&input_meta);
-{%- elif debug %}
-  l = {{ model_name }}(&input_meta);
-  msp_send_printf("Got %u, Expecting: {{ label }}", l);
-{%- else %}
-{% if add_timer %}
-  uint32_t total_time = 0;
-  uint32_t cnt = 0;
-{%- endif %}
+    {%- if bounds[0] > 0 %}
+    start_intermittent_tests(0, DELAY);
+    {{ model_name }}(&input_meta);
+    stop_intermittent_tests();
+    {%- else %}
+    {{ model_name }}(&input_meta);
+    {%- endif %}
 
-  for (uint16_t i = 0; i < {{ dataset_size }}; ++i) {
-    msp_recv_mat(&input_meta);
-{% if add_timer %}
-    start_timer();
-{%- endif %}
-    l = {{ model_name }}(&input_meta);
-{% if add_timer %}
-    uint32_t t = stop_timer();
-    total_time += t;
-{%- endif %}
-{# Send the classification results through UART #}
-    msp_send_printf("%u", l);
-{% if add_timer %}
-    if (cnt == {{ print_freq - 1 }} || i == {{ dataset_size - 1 }}) {
-      msp_send_printf("Running {{ model_name }} ({{ config_name }}) total cycles (32768 Hz) (CNT=%n): %n", cnt + 1, total_time);
-      total_time = 0;
-      cnt = 0;
-    } else {
-      ++cnt;
+    {%- endif %}
+
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ model_name }}_START;
+    {% if verify %}
+    intermittent_status[COUNTER] += verify();
+    if (intermittent_status[COUNTER] != 0) {
+      break;
     }
-{%- endif %}
+    {%- endif %}
+
+    intermittent_status[MAIN_LOOP]++;
   }
-{%- endif %}
+  {% if verify %}
+  msp_send_printf("Incorrect results: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
+
+  if (intermittent_status[COUNTER] != 0) {
+    msp_send_mat(&{{ last_layer }}_out_meta);
+    msp_send_printf("MAIN_LOOP: %u", intermittent_status[MAIN_LOOP]);
+  }
+  {%- else %}
+  msp_send_printf("Finish inference. (repeat: %u)", REPEAT);
+  {%- endif %}
+
   exit();
 }

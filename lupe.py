@@ -108,10 +108,32 @@ def lupe_args():
     )
     par.add_argument(
         "--intermittent", action=argparse.BooleanOptionalAction, default=False,
-        help="Add intermittent-safe support"
+        help="Add intermittent-safe support."
+    )
+    par.add_argument(
+        "--intermittent-repeat", type=int, default=100,
+        help="The number for repeating the experiments."
+    )
+    par.add_argument(
+        "--intermittent-verify", action=argparse.BooleanOptionalAction, default=False,
+        help=("Use software reset to verify the correctness of the computation."
+        "It's not automatic. User need to manually copy the correct"
+        "input output.")
+    )
+    par.add_argument(
+        "--intermittent-bound", nargs='+', type=int, default=[50, 60],
+        help=("Upper and lower bound of software reset cycles for RNG."
+        "If one number is given, we will constantly reset for that cycles.")
     )
 
-    return par.parse_args()
+    args = par.parse_args()
+
+    if len(args.intermittent_bound) > 2:
+        raise ValueError("intermittent-bound only accepts 1 or 2 inputs.")
+    if args.intermittent_bound[0] > args.intermittent_bound[1]:
+        raise ValueError("Lower bound is greater than upper bound for intermittent-bound.")
+
+    return args
 
 def load_opt_config(config):
     """Load the optimization configuration"""
