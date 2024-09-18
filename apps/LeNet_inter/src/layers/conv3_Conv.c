@@ -81,8 +81,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       /* Start transferring to output buffer. Recover from temporary buffer */
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uintptr_t addr = (uintptr_t)(output->data) + \
-        intermittent_status[COMPUTE_OUT_CH] * output_len + \
-        (line - 1) * output_line_size;
+        (intermittent_status[COMPUTE_OUT_CH] * output_len + \
+          (line - 1) * output_line_size) * sizeof(int16_t);
       DMA_makeTransfer(intermittent_buffer_addr, addr, output_line_size);
 
       intermittent_status[COMPUTE_IO_ROW] = line;
@@ -113,8 +113,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
-      intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
 
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
       input_fram_addr = (uintptr_t)(input->data) + \
@@ -124,7 +124,7 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         uintptr_t tmp_output_addr = output_fram_addr + \
           intermittent_status[COMPUTE_IO_ROW] * output_line_size_offset;
         input_channel_addr = input_fram_addr + \
-        intermittent_status[COMPUTE_IO_ROW] * input_line_size_offset;
+          intermittent_status[COMPUTE_IO_ROW] * input_line_size_offset;
 
         /* send kernel to LEA RAM */
         /*
@@ -199,7 +199,7 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         size = add_size;
       }
       uintptr_t addr = (uintptr_t)(output->data) + \
-        intermittent_status[COMPUTE_IN_CH] * output_len + (line - size);
+        (intermittent_status[COMPUTE_IN_CH] * output_len + (line - size)) * sizeof(int16_t);
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
 
       intermittent_status[COMPUTE_IO_ROW] = line;
