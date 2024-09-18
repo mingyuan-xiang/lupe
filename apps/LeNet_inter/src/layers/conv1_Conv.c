@@ -73,6 +73,7 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   lea_src[_INPUT_LINE_SIZE + 1] = 0;
 
   /* Pad the input for (2, 2, 2, 2) */
+  /* No need for double buffering (for loop indices) as each output is independant */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_PREPARE) {
     switch (intermittent_status[COMPUTE_PAD]) {
     case PAD_START:
@@ -143,8 +144,8 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] >= output_line_num) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
@@ -154,8 +155,8 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IN_CH] >= in_channels) {
-      intermittent_status[COMPUTE_IN_CH] = 0;
-      intermittent_status[COMPUTE_OUT_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IN_CH]);
     }
 
     if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
@@ -259,9 +260,10 @@ void conv1_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
+
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;

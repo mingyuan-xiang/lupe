@@ -89,8 +89,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] >= output_line_num) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
@@ -100,8 +100,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IN_CH] >= in_channels) {
-      intermittent_status[COMPUTE_IN_CH] = 0;
-      intermittent_status[COMPUTE_OUT_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IN_CH]);
     }
 
     if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
@@ -206,8 +206,8 @@ void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
