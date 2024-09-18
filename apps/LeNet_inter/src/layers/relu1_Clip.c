@@ -6,6 +6,7 @@
 void relu1_Clip(mat_t* input, mat_t* output) {
   uint16_t size = input->strides[0];
 
+  /* No need to use double buffering for relu as it doesn't matter. */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_relu1_Clip_PREPARE) {
     for (uint16_t i = intermittent_status[COMPUTE_IO_COL]; i < size; ++i) {
       if (input->data[i] > 6144) {

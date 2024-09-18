@@ -11,43 +11,31 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
   uint16_t in_len = input->strides[1];
   uint16_t out_len = output->strides[1];
   uint16_t out_rows = output->dims[2];
-  uint16_t out_cols = output->dims[3];
   uint16_t height = 2;
   uint16_t width = 2;
   uint16_t pool_row_offset = in_row_stride * height;
   int32_t agg;
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_PREPARE) {
-    if (intermittent_status[COMPUTE_IO_COL] > out_cols) {
+  /* No need for double buffering (for loop indices) as each output is independant */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool1_AveragePool_PREPARE) {
+    if (intermittent_status[COMPUTE_IO_COL] > cols) {
       intermittent_status[COMPUTE_IO_COL] = 0;
-      intermittent_status[COMPUTE_IO_ROW]++;
+      intermittent_status[COMPUTE_IO_ROW] += height;
     }
 
-    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_COL] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_IO_ROW] = idx;
-    }
-
-    if (intermittent_status[COMPUTE_IO_ROW] > out_rows) {
+    if (intermittent_status[COMPUTE_IO_ROW] > rows) {
       intermittent_status[COMPUTE_IO_ROW] = 0;
       intermittent_status[COMPUTE_IN_CH]++;
     }
 
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_IN_CH] = idx;
-    }
-
     uint16_t ch_offset = intermittent_status[COMPUTE_IN_CH] * in_len + \
-      intermittent_status[COMPUTE_IO_ROW] * pool_row_offset;
+      intermittent_status[COMPUTE_IO_ROW] * in_row_stride;
     uint16_t out_offset = intermittent_status[COMPUTE_IN_CH] * out_len + \
-      intermittent_status[COMPUTE_IO_ROW] * out_rows + \
-      intermittent_status[COMPUTE_IO_COL];
+      (intermittent_status[COMPUTE_IO_ROW] / height) * out_rows + \
+      (intermittent_status[COMPUTE_IO_COL] / width);
     for (uint16_t s = intermittent_status[COMPUTE_IN_CH]; s < in_ch; ++s) {
       for (uint16_t r = intermittent_status[COMPUTE_IO_ROW]; r < rows; r += height) {
-        uint16_t in_row_offset = ch_offset + intermittent_status[COMPUTE_IO_COL] * width;
+        uint16_t in_row_offset = ch_offset + intermittent_status[COMPUTE_IO_COL];
         for (uint16_t c = intermittent_status[COMPUTE_IO_COL]; c < cols; c += width) {
           agg = 0;
           uint16_t h = r + height;
@@ -67,22 +55,22 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
           ++out_offset;
           in_row_offset += width;
 
-          intermittent_status[COMPUTE_IO_COL]++;
+          intermittent_status[COMPUTE_IO_COL] += width;
         }
         ch_offset += pool_row_offset;
 
-        uint16_t next_r = r + 1;
-        DOUBLE_BUFFER_ASSIGN(next_r, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
+        intermittent_status[COMPUTE_IO_COL] = 0;
+        intermittent_status[COMPUTE_IO_ROW] += height;
       }
 
-      uint16_t next_s = s + 1;
-      DOUBLE_BUFFER_ASSIGN(next_s, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+      intermittent_status[COMPUTE_IO_ROW] = 0;
+      intermittent_status[COMPUTE_IN_CH]++;
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool2_AveragePool_EXIT;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_pool1_AveragePool_EXIT;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_EXIT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool1_AveragePool_EXIT) {
     intermittent_status[COMPUTE_IO_COL] = 0;
     intermittent_status[COMPUTE_IO_ROW] = 0;
     intermittent_status[COMPUTE_IN_CH] = 0;
