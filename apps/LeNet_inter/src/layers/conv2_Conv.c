@@ -217,8 +217,8 @@ void conv2_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
-      intermittent_status[COMPUTE_IN_CH] * output_len + \
-      intermittent_status[COMPUTE_IO_ROW];
+      (intermittent_status[COMPUTE_IN_CH] * output_len + \
+        intermittent_status[COMPUTE_IO_ROW]) * sizeof(int16_t);
 
     for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < out_channels; ++i) {
       offset_params.offset = bias->data[i];
