@@ -17,7 +17,7 @@ void pool2_AveragePool(mat_t* input, mat_t* output) {
   uint16_t pool_row_offset = in_row_stride * height;
   int32_t agg;
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_MAIN) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_pool2_AveragePool_PREPARE) {
     if (intermittent_status[COMPUTE_IO_COL] > out_cols) {
       intermittent_status[COMPUTE_IO_COL] = 0;
       intermittent_status[COMPUTE_IO_ROW]++;
