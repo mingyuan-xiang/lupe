@@ -68,7 +68,7 @@ int main() {
     msp_send_printf("%u", l);
 {% if add_timer %}
     if (cnt == {{ print_freq - 1 }} || i == {{ dataset_size - 1 }}) {
-      msp_send_printf("Running {{ model_name }} ({{ config_name }}) total cycles (32767 Hz) (CNT=%n): %n", cnt + 1, total_time);
+      msp_send_printf("Running {{ model_name }} ({{ config_name }}) total cycles (32768 Hz) (CNT=%n): %n", cnt + 1, total_time);
       total_time = 0;
       cnt = 0;
     } else {

@@ -13,10 +13,11 @@
 #include <libmsppoweroff/poweroff.h>
 #include <librng/rng.h>
 
-#define LOWER_BOUND 100
-#define UPPER_BOUND 5000
+/* ACLK cycles (32768 Hz) */
+#define LOWER_BOUND 10
+#define UPPER_BOUND 500
 
-#define REPEAT 1
+#define REPEAT 100
 
 void init() {
   watchdog_disable();
@@ -58,7 +59,7 @@ int main() {
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
     uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
 
-    start_intermittent_tests_us(delay);
+    start_intermittent_tests(0, delay);
     LeNet_inter(&input_meta);
     stop_intermittent_tests();
 
@@ -76,7 +77,7 @@ int main() {
 
   if (intermittent_status[COUNTER] != 0) {
     msp_send_mat(&fc2_Gemm_out_meta);
-    msp_send_printf("COUNTER: %u", intermittent_status[COUNTER]);
+    msp_send_printf("MAIN_LOOP: %u", intermittent_status[MAIN_LOOP]);
   }
 
   exit();
