@@ -63,14 +63,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       intermittent_status[COMPUTE_IO_COL] = intermittent_buffer[0];
       intermittent_status[COMPUTE_IO_ROW] = size;
     }
-
-    if (intermittent_status[COMPUTE_IO_COL] >= output_size) {
-      uint16_t size = _LEA_SRC_SIZE;
-      if (intermittent_status[COMPUTE_IO_ROW] == 0) {
-        size = lea_input_line_remain_size;
-      }
-      DOUBLE_BUFFER_ASSIGN(size, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
-    }
     {%- endif %}
 
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
@@ -79,6 +71,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       intermittent_status[COMPUTE_IO_COL] = idx;
     }
+    {% if input_size >= lea_src_size %}
+    if (intermittent_status[COMPUTE_IO_COL] >= output_size) {
+      uint16_t size = intermittent_status[COMPUTE_IO_ROW] + _LEA_SRC_SIZE;
+      if (intermittent_status[COMPUTE_IO_ROW] == 0) {
+        size = lea_input_line_remain_size;
+      }
+      DOUBLE_BUFFER_ASSIGN(size, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
+    }
+    {%- endif %}
+
     {% if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
     uint16_t weight_fram_pos = intermittent_status[COMPUTE_IO_COL] * (weight->dims[1]);
     {%- else %}
@@ -154,11 +156,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     for (uint16_t l = intermittent_status[COMPUTE_IO_ROW]; l < input_size; l += _LEA_SRC_SIZE) {
       weight_fram_addr = (uintptr_t)weight->data + (input_fram_addr - ((uintptr_t)input->data));
+      weight_fram_addr += intermittent_status[COMPUTE_IO_COL] * weight_line_offset;
 
       /* send input neurons */
       DMA_makeTransfer(input_fram_addr, (uintptr_t)lea_src, _LEA_SRC_SIZE);
 
-      for (uint16_t i = 0; i < output_size; ++i) {
+      for (uint16_t i = intermittent_status[COMPUTE_IO_COL]; i < output_size; ++i) {
         /* send weight row */
         DMA_makeTransfer(weight_fram_addr, (uintptr_t)lea_tmp, _LEA_SRC_SIZE);
 

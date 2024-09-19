@@ -52,7 +52,7 @@ class MSP430Gen:
         return False, max_buffer_shape, max_buffer_size
 
     def gen(
-        self, model_name, dataset_size, print_freq=100, loc="hi",
+        self, dataset_size, print_freq=100, loc="hi",
         calibration=False, intermittent=False, intermittent_args=None):
         """Generate the code"""
         if intermittent:
