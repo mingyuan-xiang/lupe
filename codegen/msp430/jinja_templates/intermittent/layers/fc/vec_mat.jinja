@@ -53,10 +53,10 @@ static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, 
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t output_size = output->dims[1];
   uint16_t input_size = input->dims[1];
-  uint16_t remain_row_size = _MAT_REMAIN_ROW_SIZE;
   uint16_t block_row_size = _MAT_BLOCK_ROW_SIZE;
   {%- if (input_size % mat_block_row_size) != 0 and (output_size % 2) == 0 %}
   uint16_t remain_block_size = _MAT_REMAIN_BLOCK_SIZE;
+  uint16_t remain_row_size = _MAT_REMAIN_ROW_SIZE;
   {%- endif %}
   uint16_t block_size = _MAT_BLOCK_SIZE;
 
@@ -121,10 +121,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
     }
 
+    {%- if (input_size % mat_block_row_size) != 0 %}
     {% if input_size >= mat_block_row_size %}
     if (intermittent_status[COMPUTE_IO_ROW] == 0) {
     {%- endif %}
-    {%- if (input_size % mat_block_row_size) != 0 %}
     /* add bias first so that we don't need to set the input to 0 */
     {%- if has_adaptive_gen_mem and output_size < adaptive_gen_mem_size %}
     {%- for n in range(output_size) %}
@@ -202,6 +202,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {% if input_size >= mat_block_row_size %}
     }
     {%- endif %}
+
     {%- endif %}
 
     {% if input_size >= mat_block_row_size %}
@@ -211,6 +212,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     input_fram_addr += (remain_row_offset + intermittent_status[COMPUTE_IO_ROW] * block_row_size);
     uintptr_t block_num = (intermittent_status[COMPUTE_IO_ROW] - remain_row_size) / block_row_size;
     weight_fram_addr += (remain_block_offset + block_num * block_offset);
+    {% else %}
+    /* add bias first so that we don't need to set the input to 0 */
+    {%- if has_adaptive_gen_mem and output_size < adaptive_gen_mem_size %}
+    {%- for n in range(output_size) %}
+    lea_dst[{{ loop.index0 }}] = bias->data[{{ loop.index0 }}];
+    {%- endfor %}
+    {%- else %}
+    DMA_makeTransfer((uintptr_t)(bias->data), lea_dst_addr, output_size);
+    {%- endif %}
     {%- endif %}
     {%- if lea_opt %}
     set_vector_matrix_mpy(_MAT_BLOCK_ROW_SIZE_ALIGNED, _OUTPUT_SIZE_ALIGNED);
