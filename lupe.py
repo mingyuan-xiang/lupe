@@ -275,9 +275,18 @@ def _generate(args, mode, graph, config, out_path, dir_name):
     # Print the optimization configurations
     generator.print_config()
 
+
+    intermittent_args = None
+    if args.intermittent:
+        intermittent_args = {
+            "repeat" : args.intermittent_repeat,
+            "bounds" : args.intermittent_bound,
+            "verify" : args.intermittent_verify,
+        }
+
     generator.gen(
         dir_name, args.dataset_size, args.print_freq, calibration=cal,
-        intermittent=args.intermittent
+        intermittent=args.intermittent, intermittent_args=intermittent_args
     )
 
     # Generate the outer Makefile for the maker

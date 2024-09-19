@@ -53,7 +53,7 @@ class MSP430Gen:
 
     def gen(
         self, model_name, dataset_size, print_freq=100, loc="hi",
-        calibration=False, intermittent=False):
+        calibration=False, intermittent=False, intermittent_args=None):
         """Generate the code"""
         if intermittent:
             jinja_dir = os.path.join(JINJA_DIR, 'intermittent')
@@ -66,10 +66,10 @@ class MSP430Gen:
 
         # Generate the main file
         maingen(
-            self.src_dir, model_name, self.opt_config["name"], dataset_size,
+            self.src_dir, self.graph, self.opt_config["name"], dataset_size,
             jinja_dir, print_freq=print_freq, add_timer=self.add_timer,
             debug=self.debug, label=self.debug_input_label,
-            calibration=self.calibration
+            calibration=self.calibration, intermittent_args=intermittent_args
         )
 
         # Generate the model file
