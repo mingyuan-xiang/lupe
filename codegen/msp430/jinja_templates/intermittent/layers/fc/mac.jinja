@@ -65,7 +65,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     if (intermittent_status[COMPUTE_IO_COL] >= output_size) {
-      uint16_t size = lea_src_size;
+      uint16_t size = _LEA_SRC_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] == 0) {
         size = lea_input_line_remain_size;
       }
@@ -126,7 +126,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
       res = __saturated_add_q15(output->data[i], res);
       uint16_t next_i = i + 1;
-      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IO_COL, res, output->data[i])
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IO_COL, res, output->data[i]);
 
       {%- if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
       weight_fram_pos += weight->dims[1];
@@ -141,7 +141,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     {%- endif %}
 
-    {%- if input_size >= lea_src_size %}
+    {% if input_size >= lea_src_size %}
     /* Compute the rest MAC */
     input_fram_addr += intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
     uintptr_t lea_line_offset = _LEA_SRC_SIZE * sizeof(int16_t);
@@ -152,7 +152,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
 
 
-    for (uint16_t l = intermittent_status[COMPUTE_IO_ROW]; l < input_size; l += lea_src_size) {
+    for (uint16_t l = intermittent_status[COMPUTE_IO_ROW]; l < input_size; l += _LEA_SRC_SIZE) {
       weight_fram_addr = (uintptr_t)weight->data + (input_fram_addr - ((uintptr_t)input->data));
 
       /* send input neurons */
@@ -169,15 +169,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
 
         res = (int16_t)(lea_res[0] >> {{ 16 - qf }});
-        res = __saturated_add_q15(output->data[i], res);;
+        res = __saturated_add_q15(output->data[i], res);
         uint16_t next_i = i + 1;
-        DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IO_COL, res, output->data[i])
+        DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IO_COL, res, output->data[i]);
 
         weight_fram_addr += weight_line_offset;
       }
       input_fram_addr += lea_line_offset;
 
-      uint16_t next_l = l + lea_src_size;
+      uint16_t next_l = l + _LEA_SRC_SIZE;
       DOUBLE_BUFFER_ASSIGN(next_l, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
     }
     {%- endif %}
