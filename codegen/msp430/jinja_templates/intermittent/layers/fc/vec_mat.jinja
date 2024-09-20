@@ -65,7 +65,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- if (output_size % 2) != 0 %}
   uintptr_t output_size_offset = output_size * sizeof(int16_t);
   {%- endif %}
-  uintptr_t remain_row_offset = remain_row_size * sizeof(int16_t);
   uintptr_t block_row_offset = block_row_size * sizeof(int16_t);
   uintptr_t remain_block_offset = remain_block_size * sizeof(int16_t);
   uintptr_t block_offset = block_size * sizeof(int16_t);
@@ -195,7 +194,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     /* No need to double buffering as we will always overwrite the output. */
     intermittent_status[COMPUTE_IO_ROW] = remain_row_size;
-
     {% if input_size >= mat_block_row_size %}
     }
     {%- endif %}
@@ -269,6 +267,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DOUBLE_BUFFER_TRANSFER(next_l, COMPUTE_IO_ROW, lea_dst_addr, (uintptr_t)(output->data), output_size);
     }
     {%- endif %}
+
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
