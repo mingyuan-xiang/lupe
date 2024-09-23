@@ -274,7 +274,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- else %}
     memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
     {%- endif %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_MAIN;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_MAIN;
   }
 
   /* convolution */
@@ -338,7 +338,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
       (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
         intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
-    {%- if flt_col_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
     {%- endif %}
@@ -351,7 +351,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[0] * sizeof(int16_t);
-    {%- if flt_col_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_IN_CH] * weight->strides[0];
     {%- endif %}
     {%- endif %}
@@ -586,15 +586,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
   {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_BIAS;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_BIAS;
   }
 
   /* add bias and left shift */
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_BIAS) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_BIAS) {
     _q15* lea_add = lea_src;
-    {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
     uint16_t add_size = _LEA_ADD_SIZE;
-    {%- endif %}
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
 
     {%- if group == 1 %}
@@ -664,7 +662,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
 
       {%- if (global_mem_buffer and (out_len % lea_buffer_size) != 0) or ((not global_mem_buffer) and (out_len % lea_src_size) != 0) %}
+      {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
       if (intermittent_status[COMPUTE_IO_ROW] == 0) {
+      {%- endif %}
         {%- if lea_opt %}
         lea_offset_params->vectorSize = lea_remain_size_aligned;
         {%- if qf > 0 %}
@@ -695,7 +695,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, lea_remain_size);
 
         output_fram_addr += output_remain_size_offset;
+      {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
       }
+      {%- endif %}
       {%- endif %}
 
       {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
@@ -743,10 +745,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_conv1_Conv_EXIT;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv1_Conv_EXIT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
     {%- if lea_opt %}
     offset_clear();
     fir_clear();

@@ -276,18 +276,21 @@ def _generate(args, mode, graph, config, out_path, dir_name):
     generator.print_config()
 
 
-    intermittent_args = None
-    if args.intermittent:
-        intermittent_args = {
-            "repeat" : args.intermittent_repeat,
-            "bounds" : args.intermittent_bound,
-            "verify" : args.intermittent_verify,
-        }
+    if  mode != LupeMode.CALIBRATING:
+        intermittent_args = None
+        if args.intermittent:
+            intermittent_args = {
+                "repeat" : args.intermittent_repeat,
+                "bounds" : args.intermittent_bound,
+                "verify" : args.intermittent_verify,
+            }
 
-    generator.gen(
-        dir_name, args.dataset_size, args.print_freq, calibration=cal,
-        intermittent=args.intermittent, intermittent_args=intermittent_args
-    )
+        generator.gen(
+            args.dataset_size, args.print_freq, calibration=cal,
+            intermittent=args.intermittent, intermittent_args=intermittent_args
+        )
+    else:
+        generator.gen(args.dataset_size, args.print_freq, calibration=cal)
 
     # Generate the outer Makefile for the maker
     template_path = os.path.join(

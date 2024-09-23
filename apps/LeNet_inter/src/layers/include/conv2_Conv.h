@@ -7,6 +7,6 @@
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
 
-void conv2_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias);
+void conv2_Conv(mat_t* input, mat_t* input1, mat_t* output);
 
 #endif
