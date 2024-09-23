@@ -81,6 +81,10 @@ def lupe_args():
         help="Insert printing for input/output into the model"
     )
     par.add_argument(
+        "--debug-random", action=argparse.BooleanOptionalAction, default=False,
+        help="Generate random input for debugging"
+    )
+    par.add_argument(
         "--debug-dataset", choices=[
             "MNIST", "CIFAR10", "vww", "sc", "fashion_mnist"],
         default="MNIST",
@@ -269,7 +273,9 @@ def _generate(args, mode, graph, config, out_path, dir_name):
     )
 
     if mode == LupeMode.DEBUG:
-        input_arr, label = get_input(args.debug_dataset, args.debug_idx)
+        input_arr, label = get_input(
+            args.debug_dataset, args.debug_idx, args.debug_random
+        )
         generator.setup_debug_info(input_arr / (2 ** args.qf), label)
 
     # Print the optimization configurations
