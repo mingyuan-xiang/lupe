@@ -50,7 +50,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- endif -%}
 
   {%- if layer.name in add_buffer_list %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ model_name }}_DMA;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer.name }}_DMA;
   case INTERMITTENT_{{ layer.name }}_DMA:
     DMA_makeTransfer((uintptr_t)({{ layer.name }}_out_meta.data), (uintptr_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), GET_MAT_SIZE(&{{ layer.name }}_out_meta));
   {%- endif %}
