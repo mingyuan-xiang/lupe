@@ -64,6 +64,9 @@ uint16_t rand(uint16_t low, uint16_t high) {
 int main() {
   init();
 
+  uint16_t c = intermittent_status[COUNTER] + 1;
+  VOLATILE_WRITE(c, COUNTER);
+
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
     {%- if bounds | length > 1 %}
     uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
@@ -85,9 +88,7 @@ int main() {
 
     VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START, COMPUTE_CK);
     {% if verify %}
-    uint16_t next_v = verify();
-    VOLATILE_WRITE(next_v, COUNTER);
-    if (intermittent_status[COUNTER] != 0) {
+    if (verify() != 0) {
       break;
     }
     {%- endif %}
@@ -95,16 +96,14 @@ int main() {
     uint16_t next_i = i + 1;
     VOLATILE_WRITE(next_i, MAIN_LOOP);
   }
-  {% if verify %}
-  msp_send_printf("Incorrect results: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
 
-  if (intermittent_status[COUNTER] != 0) {
+  msp_send_printf("Restart times: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
+
+  {% if verify %}
+    msp_send_printf("Got activations for the last layer:");
     msp_send_mat(&{{ last_layer }}_out_meta);
+    msp_send_printf("Expected:");
     msp_send_mat(&output_meta);
-    msp_send_printf("MAIN_LOOP: %u", intermittent_status[MAIN_LOOP]);
-  }
-  {%- else %}
-  msp_send_printf("Finish inference. (repeat: %u)", REPEAT);
   {%- endif %}
 
   exit();
