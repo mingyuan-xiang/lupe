@@ -98,6 +98,7 @@ int main() {
 
   if (intermittent_status[COUNTER] != 0) {
     msp_send_mat(&{{ last_layer }}_out_meta);
+    msp_send_mat(&output_meta);
     msp_send_printf("MAIN_LOOP: %u", intermittent_status[MAIN_LOOP]);
   }
   {%- else %}
