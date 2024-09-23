@@ -35,28 +35,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
   uintptr_t input_1_fram_addr = (uintptr_t)input->data;
   uintptr_t output_fram_addr = (uintptr_t)output->data;
 
-  uintptr_t intermittent_buffer_addr = (uintptr_t)intermittent_buffer;
-
   {% if lea_opt %}
   add_init(MAKE_ALIGN_2(lea_input_line_remain_size));
   {%- else %}
   msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(lea_input_line_remain_size) };
   {%- endif %}
 
+  /* No need for double buffering (for loop indices) as each output is independant */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
-    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
-      /* Start transferring to output buffer. Recover from temporary buffer */
-      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
-      uint16_t size = line;
-      if (size > lea_input_line_remain_size) {
-        size = _LEA_SRC_SIZE;
-      }
-      uintptr_t addr = (uintptr_t)(output->data) + (line - size) * sizeof(int16_t);
+    uintptr_t offset = intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+    input_0_fram_addr += offset;
+    input_1_fram_addr += offset;
+    output_fram_addr += offset;
 
-      DMA_makeTransfer(intermittent_buffer_addr, addr, size);
-
-      intermittent_status[COMPUTE_IO_ROW] = line;
-    }
     {% if (input_size % lea_src_size) != 0 %}
     {%- if input_size >= lea_src_size %}
     if (intermittent_status[COMPUTE_IO_ROW] == 0) {
@@ -77,8 +68,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
       msp_add_q15(&add_params, lea_src, lea_tmp, lea_src);
       {%- endif %}
 
-      uint16_t next_r = lea_input_line_remain_size;
-      DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, (uintptr_t)lea_src, output_fram_addr, lea_input_line_remain_size);
+      DMA_makeTransfer((uintptr_t)lea_src, output_fram_addr, lea_input_line_remain_size);
+      VOLATILE_WRITE(lea_input_line_remain_size, COMPUTE_IO_ROW);
 
       input_0_fram_addr += lea_input_line_remain_size_offset;
       input_1_fram_addr += lea_input_line_remain_size_offset;
@@ -105,14 +96,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
       msp_add_q15(&add_params, lea_src, lea_tmp, lea_src);
       {%- endif %}
 
-      uint16_t next_r = l + _LEA_SRC_SIZE;
-      DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, (uintptr_t)lea_src, output_fram_addr, _LEA_SRC_SIZE);
+      DMA_makeTransfer((uintptr_t)lea_src, output_fram_addr, _LEA_SRC_SIZE);
+      uint16_t next_l = l + _LEA_SRC_SIZE;
+      VOLATILE_WRITE(next_l, COMPUTE_IO_ROW);
 
       input_0_fram_addr += lea_line_size_offset;
       input_1_fram_addr += lea_line_size_offset;
       output_fram_addr += lea_line_size_offset;
     }
     {%- endif %}
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {

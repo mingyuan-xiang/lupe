@@ -83,15 +83,17 @@ int main() {
 
     {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ model_name }}_START;
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START, COMPUTE_CK);
     {% if verify %}
-    intermittent_status[COUNTER] += verify();
+    uint16_t next_v = verify();
+    VOLATILE_WRITE(next_v, COUNTER);
     if (intermittent_status[COUNTER] != 0) {
       break;
     }
     {%- endif %}
 
-    intermittent_status[MAIN_LOOP]++;
+    uint16_t next_i = i + 1;
+    VOLATILE_WRITE(next_i, MAIN_LOOP);
   }
   {% if verify %}
   msp_send_printf("Incorrect results: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);

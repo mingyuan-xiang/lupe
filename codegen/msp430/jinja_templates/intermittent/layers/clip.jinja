@@ -12,10 +12,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
         output->data[i] = input->data[i];
       }
 
-      intermittent_status[COMPUTE_IO_COL]++;
+      uint16_t next_i = i + 1;
+      VOLATILE_WRITE(next_i, COMPUTE_IO_COL);
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {

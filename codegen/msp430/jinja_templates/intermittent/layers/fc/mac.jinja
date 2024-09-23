@@ -53,23 +53,22 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     DMA_makeTransfer((uintptr_t)(bias->data), (uintptr_t)(output->data), output_size);
     {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_MAIN;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_MAIN, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
     {%- if input_size >= lea_src_size %}
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       uint16_t size = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_COL] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_IO_ROW] = size;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_COL);
+      VOLATILE_WRITE(size, COMPUTE_IO_ROW);
     }
-    {%- endif %}
-
+    {% endif %}
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
       output->data[idx - 1] = intermittent_buffer[0];
 
-      intermittent_status[COMPUTE_IO_COL] = idx;
+      VOLATILE_WRITE(idx, COMPUTE_IO_COL);
     }
     {% if input_size >= lea_src_size %}
     if (intermittent_status[COMPUTE_IO_COL] >= output_size) {
@@ -80,7 +79,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DOUBLE_BUFFER_ASSIGN(size, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
     }
     {%- endif %}
-
     {% if has_adaptive_gen_mem and (input_size % lea_src_size) < adaptive_gen_mem_size %}
     uint16_t weight_fram_pos = intermittent_status[COMPUTE_IO_COL] * (weight->dims[1]);
     {%- else %}
@@ -142,7 +140,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
     {%- endif %}
     {%- endif %}
-
     {% if input_size >= lea_src_size %}
     /* Compute the rest MAC */
     input_fram_addr += intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
@@ -152,7 +149,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- else %}
     mac_params.length = MAKE_ALIGN_2(_LEA_SRC_SIZE);
     {%- endif %}
-
 
     for (uint16_t l = intermittent_status[COMPUTE_IO_ROW]; l < input_size; l += _LEA_SRC_SIZE) {
       weight_fram_addr = (uintptr_t)weight->data + (input_fram_addr - ((uintptr_t)input->data));
@@ -185,7 +181,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
     {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {

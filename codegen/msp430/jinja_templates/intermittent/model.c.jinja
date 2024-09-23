@@ -37,7 +37,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
     // msp_send_mat(model_in);
     {%- endif %}
   {%- for layer in layer_list %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer.name }}_PREPARE;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_PREPARE, COMPUTE_CK);
   case INTERMITTENT_{{ layer.name }}_PREPARE:
   case INTERMITTENT_{{ layer.name }}_MAIN:
   case INTERMITTENT_{{ layer.name }}_BIAS:
@@ -50,7 +50,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   {%- endif -%}
 
   {%- if layer.name in add_buffer_list %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer.name }}_DMA;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_DMA, COMPUTE_CK);
   case INTERMITTENT_{{ layer.name }}_DMA:
     DMA_makeTransfer((uintptr_t)({{ layer.name }}_out_meta.data), (uintptr_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), GET_MAT_SIZE(&{{ layer.name }}_out_meta));
   {%- endif %}
@@ -60,7 +60,7 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   // msp_send_mat(&{{ layer.name }}_out_meta);
   {%- endif %}
   {%- endfor %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ model_name }}_END;
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_END, COMPUTE_CK);
   default:
     break;
   }

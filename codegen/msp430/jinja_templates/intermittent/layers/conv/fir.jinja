@@ -208,15 +208,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- else %}
       memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
       {%- endif %}
-      intermittent_status[COMPUTE_PAD] = PAD_MAIN;
+      VOLATILE_WRITE(PAD_MAIN, COMPUTE_PAD);
     case PAD_MAIN: {
       uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
       uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
       uint16_t input_len_bf = input_line_num * input_line_size_bf;
 
       if (intermittent_status[COMPUTE_IO_ROW] >= input_line_num) {
-        intermittent_status[COMPUTE_IO_ROW] = 0;
-        intermittent_status[COMPUTE_IN_CH]++;
+        VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+        uint16_t next_i = intermittent_status[COMPUTE_IN_CH] + 1;
+        VOLATILE_WRITE(next_i, COMPUTE_IN_CH);
       }
 
       _q15* padding_ptr_in = input->data + \
@@ -252,18 +253,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         padding_ptr_out += input_line_size;
         {%- endfor %}
 
-        intermittent_status[COMPUTE_IO_ROW] = 0;
-        intermittent_status[COMPUTE_IN_CH]++;
+        VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+        uint16_t next_i = i + 1;
+        VOLATILE_WRITE(next_i, COMPUTE_IN_CH);
       }
 
-      intermittent_status[COMPUTE_PAD] = PAD_TRANSFER;
+      VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_PAD);
     }
     case PAD_TRANSFER:
       DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
-      intermittent_status[COMPUTE_PAD] = PAD_MEMSET;
+      VOLATILE_WRITE(PAD_MEMSET, COMPUTE_PAD);
     case PAD_MEMSET:
-      intermittent_status[COMPUTE_IN_CH] = 0;
-      intermittent_status[COMPUTE_PAD] = PAD_END;
+      VOLATILE_WRITE(0, COMPUTE_IN_CH);
+      VOLATILE_WRITE(PAD_END, COMPUTE_PAD);
     default:
       break;
     }
@@ -274,7 +276,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- else %}
     memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
     {%- endif %}
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_MAIN;
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_MAIN, COMPUTE_CK);
   }
 
   /* convolution */
@@ -302,8 +305,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DMA_makeTransfer(intermittent_buffer_addr, addr, output_line_size);
       {%- endif %}
 
-
-      intermittent_status[COMPUTE_IO_ROW] = line;
+      VOLATILE_WRITE(line, COMPUTE_IO_ROW);
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] >= output_line_num) {
@@ -313,8 +315,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_IN_CH] = idx;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
     {% if group == 1 %}
     if (intermittent_status[COMPUTE_IN_CH] >= in_channels) {
@@ -324,8 +326,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IN_CH] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_OUT_CH] = idx;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IN_CH);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
     }
     {%- endif %}
 
@@ -359,8 +361,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
     output_fram_pos = intermittent_status[COMPUTE_IN_CH] * output_len;
     {%- endif %}
-
-  {%- if group == 1 %}
+  {% if group == 1 %}
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
   {%- else %}
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
@@ -375,6 +376,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_fram_addr = (uintptr_t)(input->data) + \
         intermittent_status[COMPUTE_IN_CH] * input_channel_offset;
       {%- endif %}
+
       for (uint16_t j = intermittent_status[COMPUTE_IN_CH]; j < in_channels; ++j) {
         {%- if group == 1 %}
         {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
@@ -542,21 +544,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           intermittent_buffer[{{ loop.index0 }}] = lea_dst[{{ loop.index0 }}];
           {%- endfor %}
           next_l = next_l | DOUBLE_BUFFER_WRITE;
+          VOLATILE_WRITE(next_l, COMPUTE_IO_ROW);
           {%- for n in range(out_line_size) %}
           output->data[tmp_output_pos] = lea_dst[{{ loop.index0 }}];
           tmp_output_pos++;
           {%- endfor %}
-          WRITE_DOUBLE_BUFFER_W_VAR(next_l, COMPUTE_IO_ROW);
           next_l = next_l & DOUBLE_BUFFER_COMPLETE;
-          WRITE_DOUBLE_BUFFER_W_VAR(next_l, COMPUTE_IO_ROW);
+          VOLATILE_WRITE(next_l, COMPUTE_IO_ROW);
 
           {%- else %}
-          /* bring back output from LEA RAM */
           uint16_t next_l = l + 1;
           DOUBLE_BUFFER_TRANSFER(next_l, COMPUTE_IO_ROW, output_lea_addr, tmp_output_addr, output_line_size);
           {%- endif %}
-
-          {%- if (not has_adaptive_gen_mem) or (out_line_size >= adaptive_gen_mem_size) %}
+          {% if (not has_adaptive_gen_mem) or (out_line_size >= adaptive_gen_mem_size) %}
           tmp_output_addr += output_line_size_offset;
           {%- endif %}
 
@@ -597,7 +597,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
   {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_BIAS;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_BIAS, COMPUTE_CK);
   }
 
   /* add bias and left shift */
@@ -628,7 +628,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
 
-      intermittent_status[COMPUTE_IO_ROW] = line;
+      VOLATILE_WRITE(line, COMPUTE_IO_ROW);
     }
 
     {%- if group == 1 %}
@@ -639,8 +639,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_IN_CH] = idx;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
@@ -656,8 +656,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      intermittent_status[COMPUTE_IO_ROW] = intermittent_buffer[0];
-      intermittent_status[COMPUTE_OUT_CH] = idx;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
@@ -746,17 +746,16 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         output_fram_addr += output_lea_min_size_offset;
       }
       {%- endif %}
-
-    {%- if group == 1 %}
-    uint16_t next_i = i + 1;
-    DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
-    {%- else %}
-    uint16_t next_i = i + 1;
-    DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
-    {%- endif %}
+      {% if group == 1 %}
+      uint16_t next_i = i + 1;
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+      {%- else %}
+      uint16_t next_i = i + 1;
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+      {%- endif %}
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {

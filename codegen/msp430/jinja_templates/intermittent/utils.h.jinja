@@ -31,7 +31,7 @@
 
 extern __ro_nv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
-#define WRITE_DOUBLE_BUFFER_W_VAR(var, offset) { \
+#define VOLATILE_WRITE(var, offset) { \
   __asm__ __volatile__ ( \
       "MOVX.W %0, &intermittent_status+%c1\n\t" \
       : \
@@ -44,20 +44,20 @@ extern __ro_nv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
   int16_t next = val; \
   DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size); \
   next = next | DOUBLE_BUFFER_WRITE; \
-  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  VOLATILE_WRITE(next, offset); \
   DMA_makeTransfer(in_addr, out_addr, size); \
   next = next & DOUBLE_BUFFER_COMPLETE; \
-  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  VOLATILE_WRITE(next, offset); \
 }
 
 #define DOUBLE_BUFFER_ASSIGN(val, offset, in, out) { \
   int16_t next = val; \
   intermittent_buffer[0] = in; \
   next = next | DOUBLE_BUFFER_WRITE; \
-  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  VOLATILE_WRITE(next, offset); \
   out = in; \
   next = next & DOUBLE_BUFFER_COMPLETE; \
-  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  VOLATILE_WRITE(next, offset); \
 }
 
 {% if global_mem_buffer %}

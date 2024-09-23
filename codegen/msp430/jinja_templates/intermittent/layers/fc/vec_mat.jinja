@@ -102,7 +102,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DMA_makeTransfer((uintptr_t)intermittent_buffer, (uintptr_t)(output->data), output_size);
       {%- endif %}
 
-      intermittent_status[COMPUTE_IO_ROW] = line;
+      VOLATILE_WRITE(line, COMPUTE_IO_ROW);
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] > 0) {
@@ -193,7 +193,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
 
     /* No need to double buffering as we will always overwrite the output. */
-    intermittent_status[COMPUTE_IO_ROW] = remain_row_size;
+    VOLATILE_WRITE(remain_row_size, COMPUTE_IO_ROW);
     {% if input_size >= mat_block_row_size %}
     }
     {%- endif %}
@@ -268,7 +268,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
     {%- endif %}
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {

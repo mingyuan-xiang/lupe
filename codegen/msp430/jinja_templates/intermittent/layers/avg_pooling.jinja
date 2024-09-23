@@ -14,13 +14,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
   /* No need for double buffering (for loop indices) as each output is independant */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
     if (intermittent_status[COMPUTE_IO_COL] > cols) {
-      intermittent_status[COMPUTE_IO_COL] = 0;
-      intermittent_status[COMPUTE_IO_ROW] += height;
+      VOLATILE_WRITE(0, COMPUTE_IO_COL);
+      uint16_t next_r = intermittent_status[COMPUTE_IO_ROW] + height;
+      VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
     }
 
     if (intermittent_status[COMPUTE_IO_ROW] > rows) {
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      uint16_t next_s = intermittent_status[COMPUTE_IN_CH] + 1;
+      VOLATILE_WRITE(next_s, COMPUTE_IN_CH);
     }
 
     uint16_t ch_offset = intermittent_status[COMPUTE_IN_CH] * in_len + \
@@ -50,19 +52,22 @@ void {{ layer_name }}(mat_t* input, mat_t* output) {
           ++out_offset;
           in_row_offset += width;
 
-          intermittent_status[COMPUTE_IO_COL] += width;
+          uint16_t next_c = c + width;
+          VOLATILE_WRITE(next_c, COMPUTE_IO_COL);
         }
         ch_offset += pool_row_offset;
 
-        intermittent_status[COMPUTE_IO_COL] = 0;
-        intermittent_status[COMPUTE_IO_ROW] += height;
+        VOLATILE_WRITE(0, COMPUTE_IO_COL);
+        uint16_t next_r = r + height;
+        VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
       }
 
-      intermittent_status[COMPUTE_IO_ROW] = 0;
-      intermittent_status[COMPUTE_IN_CH]++;
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      uint16_t next_s = s + 1;
+      VOLATILE_WRITE(next_s, COMPUTE_IN_CH);
     }
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_{{ layer_name }}_EXIT;
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
   }
 
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
