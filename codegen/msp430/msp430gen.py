@@ -108,10 +108,15 @@ class MSP430Gen:
         if not os.path.exists(buffer_dir):
             os.makedirs(buffer_dir)
             os.makedirs(os.path.join(buffer_dir, "include"))
+
+        intermittent_verify = False
+        if intermittent_args is not None:
+            intermittent_verify = intermittent_args["verify"]
+
         arrgen(
             buffer_dir, self.graph, max_shape, self.qf, loc=loc,
             debug_input=self.debug_input, calibration=self.calibration,
-            intermittent_verify=intermittent_args["verify"]
+            intermittent_verify=intermittent_verify
         )
 
         # Generate the layer code
@@ -129,7 +134,7 @@ class MSP430Gen:
         makefilegen(
             self.code_dir, self.graph, has_extra_buffer, self.opt_config,
             self.calibration, jinja_dir,
-            intermittent_verify=intermittent_args["verify"]
+            intermittent_verify=intermittent_verify
         )
 
         if intermittent:
