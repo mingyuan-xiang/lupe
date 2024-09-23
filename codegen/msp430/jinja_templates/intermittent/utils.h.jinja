@@ -4,21 +4,61 @@
 #include <libfixedAbstract/fixed.h>
 #include <libmspdriver/driverlib.h>
 #include <libmatAbstract/mat.h>
+#include <libmsp/nv.h>
+#include <libmsppoweroff/poweroff.h>
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
+#include <layers/include/intermittent.h>
+
 {% if global_mem_buffer %}
 #define LEA_SIZE {{ lea_size }}
+/* As long as the size is smaller than LEA buffer size, we are good. */
+#define INTERMITTENT_BUFFER_SIZE LEA_SIZE
 {%- else %}
 #define LEA_FLT_SIZE {{ lea_size }}
 #define LEA_SRC_SIZE {{ lea_size }}
 #define LEA_DST_SIZE {{ lea_size }}
 #define LEA_TMP_SIZE {{ lea_size }}
+/* As long as the size is smaller than LEA buffer size, we are good. */
+#define INTERMITTENT_BUFFER_SIZE (LEA_FLT_SIZE + LEA_SRC_SIZE + LEA_DST_SIZE + LEA_TMP_SIZE)
 {%- endif %}
 
 #define LUPE_MIN 0x8000
 #define LUPE_Q15_MAX 32766 // 2^15 - 2
 
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
+
+
+extern __ro_nv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
+
+#define WRITE_DOUBLE_BUFFER_W_VAR(var, offset) { \
+  __asm__ __volatile__ ( \
+      "MOVX.W %0, &intermittent_status+%c1\n\t" \
+      : \
+      : "r" (var), "i" (GET_OFFSET(offset)) \
+      : "memory" \
+  ); \
+}
+
+#define DOUBLE_BUFFER_TRANSFER(val, offset, in_addr, out_addr, size) { \
+  int16_t next = val; \
+  DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size); \
+  next = next | DOUBLE_BUFFER_WRITE; \
+  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  DMA_makeTransfer(in_addr, out_addr, size); \
+  next = next & DOUBLE_BUFFER_COMPLETE; \
+  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+}
+
+#define DOUBLE_BUFFER_ASSIGN(val, offset, in, out) { \
+  int16_t next = val; \
+  intermittent_buffer[0] = in; \
+  next = next | DOUBLE_BUFFER_WRITE; \
+  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+  out = in; \
+  next = next & DOUBLE_BUFFER_COMPLETE; \
+  WRITE_DOUBLE_BUFFER_W_VAR(next, offset); \
+}
 
 {% if global_mem_buffer %}
 extern _q15 lea_buffer[];

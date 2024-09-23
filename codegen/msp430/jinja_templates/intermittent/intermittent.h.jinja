@@ -7,17 +7,22 @@
 #define COMPUTE_OUT_CH 3
 #define COMPUTE_IO_ROW 4
 #define COMPUTE_IO_COL 5
+#define MAIN_LOOP 6
+#define COUNTER 7
 
 #define GET_OFFSET(x) ((x) * 2)
 
 #define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
 #define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer
 
+/* PAD_START has to be 0 */
 #define PAD_START 0
 #define PAD_MAIN 1
 #define PAD_TRANSFER 2
 #define PAD_MEMSET 3
 #define PAD_END 4
+
+/* INTERMITTENT_LeNet_START has to be 0 */
 
 {%- set inter = namespace(cnt=0) %}
 

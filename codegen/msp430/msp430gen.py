@@ -111,6 +111,7 @@ class MSP430Gen:
         arrgen(
             buffer_dir, self.graph, max_shape, self.qf, loc=loc,
             debug_input=self.debug_input, calibration=self.calibration,
+            intermittent_verify=intermittent_args["verify"]
         )
 
         # Generate the layer code
@@ -127,7 +128,8 @@ class MSP430Gen:
         # Generate the makefile
         makefilegen(
             self.code_dir, self.graph, has_extra_buffer, self.opt_config,
-            self.calibration, jinja_dir
+            self.calibration, jinja_dir,
+            intermittent_verify=intermittent_args["verify"]
         )
 
         if intermittent:

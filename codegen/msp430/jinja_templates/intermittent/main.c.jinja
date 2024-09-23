@@ -5,7 +5,9 @@
 
 #include <include/{{ model_name }}.h>
 #include <buffer/include/input.h>
+{%- if verify %}
 #include <buffer/include/output.h>
+{%- endif %}
 #include <buffer/include/buffer.h>
 #include <layers/include/utils.h>
 #include <layers/include/intermittent.h>

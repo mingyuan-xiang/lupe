@@ -58,6 +58,33 @@ def _inputgen(
         os.path.join(code_dir, input_file_name + ".c")
     )
 
+def _outputgen(code_dir, graph, loc="hi"):
+    """Generate the input files"""
+    last_layer = graph.get_hidden_layers()[-1]
+    shape = graph.node_list[last_layer].output_size
+
+    data = Matrix('output', np.zeros(shape), False, loc=loc)
+
+    file_name = 'output'
+
+    # Generate header file
+    h_code = gen_header_includes(file_name)
+    h_code += gen_header_data(data) + "\n"
+    h_code += "#endif\n"
+    save(
+        h_code,
+        os.path.join(code_dir, "include", file_name + ".h")
+    )
+
+    # Generate C file
+    c_code = gen_c("buffer", file_name)
+    c_code += gen_c_data_struct(data, None)
+    c_code += gen_c_data(data, False)
+    save(
+        c_code,
+        os.path.join(code_dir, file_name + ".c")
+    )
+
 def _extra_buffergen(code_dir, size, loc="hi"):
     """Generate the extra buffer files"""
     shape = list(size)
@@ -193,9 +220,11 @@ def _buffergen(code_dir, graph, loc="hi"):
     )
 
 def arrgen(code_dir, graph, size, qf, loc="hi", debug_input=None,
-    calibration=False):
+    calibration=False, intermittent_verify=False):
     """Generate the pre-allocated arrays"""
     _inputgen(code_dir, graph, qf, loc, debug_input, calibration)
+    if intermittent_verify:
+        _outputgen(code_dir, graph, loc)
     _buffergen(code_dir, graph, loc)
     if len(graph.add_buffer_list) > 0:
         _add_buffergen(code_dir, graph, loc)

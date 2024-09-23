@@ -8,8 +8,8 @@ import os
 
 from jinja2 import Template
 
-def makefilegen(code_dir, graph, has_extra_buffer, opt_config,
-        calibration, jinja_dir):
+def makefilegen(code_dir, graph, has_extra_buffer, opt_config, calibration,
+    jinja_dir, intermittent_verify=False):
     """Generate the Makefile using jinja template"""
     template_path = os.path.join(jinja_dir, "makefile.jinja")
 
@@ -35,6 +35,7 @@ def makefilegen(code_dir, graph, has_extra_buffer, opt_config,
         "has_extra_buffer" : has_extra_buffer,
         "has_add_buffer" : False,
         "adaptive_gen_mem" : opt_config["adaptive_gen_mem"],
+        "verify" : intermittent_verify,
     }
 
     if len(graph.add_buffer_list) > 0:
