@@ -29,7 +29,7 @@
 #define MAKE_ALIGN_2(s) ((s) + ((s) & 0x1))
 
 
-extern __ro_nv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
+extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 #define VOLATILE_WRITE(var, offset) { \
   __asm__ __volatile__ ( \

@@ -88,9 +88,7 @@ static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q1
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
-  {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) or (group == 1) %}
   uint16_t output_len = output->strides[1];
-  {%- endif %}
   uint16_t input_len = input->strides[1];
   uint16_t kernel_row_size = _KERNEL_ROW_SIZE;
   uint16_t kernel_col_size = _KERNEL_COL_SIZE;
@@ -110,9 +108,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t input_channel_addr = input_fram_addr;
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
   uintptr_t output_lea_addr = dst_lea_addr;
-  {%- if group == 1 %}
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
-  {%- endif %}
 
   int16_t* conv_flt = lea_flt;
   uint16_t input_line_size = input->dims[3];
@@ -199,6 +195,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* No need for double buffering (for loop indices) as each output is independant */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
+    {%- if dma_opt %}
+    uintptr_t output_fram_addr = (uintptr_t)(output->data);
+    {%- endif %}
     {%- if padding %}
     /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
     switch (intermittent_status[COMPUTE_PAD]) {
@@ -332,35 +331,36 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
 
     {%- if group == 1 %}
-    uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
-      intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
     output_fram_pos = intermittent_status[COMPUTE_OUT_CH] * output_len;
+    {%- else %}
+    uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
+      intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
     {%- endif %}
-    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
-        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
     {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+    {%- else %}
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
     {%- endif %}
 
     {%- else %}
-    uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
-      intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
     output_fram_pos = intermittent_status[COMPUTE_IN_CH] * output_len;
+    {%- else %}
+    uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
+      intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
     {%- endif %}
-    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      intermittent_status[COMPUTE_IN_CH] * weight->strides[0] * sizeof(int16_t);
     {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_IN_CH] * weight->strides[0];
+    {%- else %}
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      intermittent_status[COMPUTE_IN_CH] * weight->strides[0] * sizeof(int16_t);
     {%- endif %}
     {%- endif %}
 
-    {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
-    output_fram_pos = intermittent_status[COMPUTE_IN_CH] * output_len;
-    {%- endif %}
   {% if group == 1 %}
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
   {%- else %}

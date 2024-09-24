@@ -1,6 +1,6 @@
 #include <layers/include/utils.h>
 
-__ro_nv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
+__ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 {% if global_mem_buffer %}
 DSPLIB_DATA(lea_buffer, 2) _q15 lea_buffer[LEA_SIZE];
