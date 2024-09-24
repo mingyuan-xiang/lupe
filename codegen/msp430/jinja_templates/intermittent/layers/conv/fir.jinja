@@ -337,7 +337,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
     {%- endif %}
-    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and ((flt_col_size % 2 != 0 and flt_col_size < adaptive_gen_mem_size) or (flt_col_size % 2 == 0 and flt_len < adaptive_gen_mem_size)) %}
     flt_fram_pos = intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
     {%- else %}
@@ -346,14 +346,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
     {%- endif %}
 
-    {%- else %}
+    {%- else %} {# if group != 1 #}
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
     output_fram_pos = intermittent_status[COMPUTE_IN_CH] * output_len;
     {%- else %}
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
     {%- endif %}
-    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+    {%- if has_adaptive_gen_mem and ((flt_col_size % 2 != 0 and flt_col_size < adaptive_gen_mem_size) or (flt_col_size % 2 == 0 and flt_len < adaptive_gen_mem_size)) %}
     flt_fram_pos = intermittent_status[COMPUTE_IN_CH] * weight->strides[0];
     {%- else %}
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
@@ -365,9 +365,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
   {%- else %}
     {%- if has_adaptive_gen_mem and out_line_size < adaptive_gen_mem_size %}
-    uint16_t tmp_output_pos = output_fram_pos;
+    uint16_t tmp_output_pos = output_fram_pos + \
+      intermittent_status[COMPUTE_IO_ROW] * output_line_size;
     {%- else %}
-    uintptr_t tmp_output_addr = output_fram_addr;
+    uintptr_t tmp_output_addr = output_fram_addr + \
+      intermittent_status[COMPUTE_IO_ROW] * output_line_size_offset;
     {%- endif %}
   {%- endif %}
       {%- if has_adaptive_gen_mem and in_line_size < adaptive_gen_mem_size %}

@@ -162,7 +162,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   {%- if has_adaptive_gen_mem %}
   uint16_t s;
-  {%- if flt_col_size < adaptive_gen_mem_size %}
+  {%- if (flt_col_size < adaptive_gen_mem_size) or (flt_len < adaptive_gen_mem_size) %}
   uint16_t flt_lea_pos = 0;
   uint16_t flt_fram_pos = 0;
   {%- endif %}
