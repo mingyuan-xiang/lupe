@@ -8,9 +8,9 @@
 #include <libdsp/DSPLib.h>
 
 {% if has_weights -%}
-void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias);
+void {%if hifram%} __attribute__((section(".upper.text"))){%endif%} {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias);
 {%- else -%}
-void {{ layer_name }}(mat_t* input, mat_t* output);
+void {%if hifram%} __attribute__((section(".upper.text"))){%endif%} {{ layer_name }}(mat_t* input, mat_t* output);
 {%- endif %}
 
 #endif

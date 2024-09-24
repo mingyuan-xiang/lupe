@@ -111,6 +111,10 @@ def lupe_args():
         help="UART port for calibration"
     )
     par.add_argument(
+        "--hifram-func", type=int, default=0,
+        help="Number of functions to be put on the HIFRAM"
+    )
+    par.add_argument(
         "--intermittent", action=argparse.BooleanOptionalAction, default=False,
         help="Add intermittent-safe support."
     )
@@ -294,10 +298,14 @@ def _generate(args, mode, graph, config, out_path, dir_name):
 
         generator.gen(
             args.dataset_size, args.print_freq, calibration=cal,
-            intermittent=args.intermittent, intermittent_args=intermittent_args
+            intermittent=args.intermittent, intermittent_args=intermittent_args,
+            hifram_func=args.hifram_func
         )
     else:
-        generator.gen(args.dataset_size, args.print_freq, calibration=cal)
+        generator.gen(
+            args.dataset_size, args.print_freq, calibration=cal,
+            hifram_func=args.hifram_func
+        )
 
     # Generate the outer Makefile for the maker
     template_path = os.path.join(

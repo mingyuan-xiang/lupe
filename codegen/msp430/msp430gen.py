@@ -52,8 +52,8 @@ class MSP430Gen:
         return False, max_buffer_shape, max_buffer_size
 
     def gen(
-        self, dataset_size, print_freq=100, loc="hi",
-        calibration=False, intermittent=False, intermittent_args=None):
+        self, dataset_size, print_freq=100, loc="hi", calibration=False,
+        intermittent=False, intermittent_args=None, hifram_func=0):
         """Generate the code"""
         if intermittent:
             jinja_dir = os.path.join(JINJA_DIR, 'intermittent')
@@ -127,7 +127,7 @@ class MSP430Gen:
         utilsgen(layer_dir, self.opt_config, flt_sizes, self.qf, jinja_dir)
         layergen(
             layer_dir, self.graph, self.opt_config, self.qf,
-            self.debug, self.calibration, jinja_dir
+            self.debug, self.calibration, jinja_dir, hifram_func
         )
 
         # Generate the makefile
