@@ -115,7 +115,7 @@ def lupe_args():
         help="Add intermittent-safe support."
     )
     par.add_argument(
-        "--intermittent-repeat", type=int, default=100,
+        "--intermittent-repeat", type=int, default=1,
         help="The number for repeating the experiments."
     )
     par.add_argument(
@@ -125,7 +125,7 @@ def lupe_args():
         "input output.")
     )
     par.add_argument(
-        "--intermittent-bound", nargs='+', type=int, default=[50, 60],
+        "--intermittent-bound", nargs='+', type=int, default=[328],
         help=("Upper and lower bound of software reset cycles for RNG."
         "If one number is given, we will constantly reset for that cycles.")
     )
@@ -134,7 +134,8 @@ def lupe_args():
 
     if len(args.intermittent_bound) > 2:
         raise ValueError("intermittent-bound only accepts 1 or 2 inputs.")
-    if args.intermittent_bound[0] > args.intermittent_bound[1]:
+    if (len(args.intermittent_bound) == 2 and
+        args.intermittent_bound[0] > args.intermittent_bound[1]):
         raise ValueError("Lower bound is greater than upper bound for intermittent-bound.")
 
     return args
