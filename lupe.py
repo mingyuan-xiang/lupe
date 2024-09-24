@@ -277,11 +277,13 @@ def _generate(args, mode, graph, config, out_path, dir_name):
         calibration=cal
     )
 
-    if mode == LupeMode.DEBUG:
+    if mode == LupeMode.DEBUG or args.debug_random:
         input_arr, label = get_input(
             args.debug_dataset, args.debug_idx, args.debug_random
         )
-        generator.setup_debug_info(input_arr / (2 ** args.qf), label)
+        generator.setup_debug_info(
+            input_arr / (2 ** args.qf), label, args.debug
+        )
 
     # Print the optimization configurations
     generator.print_config()

@@ -7,13 +7,13 @@
 #include <buffer/include/input.h>
 {%- if verify %}
 #include <buffer/include/output.h>
+#include <libmsppoweroff/poweroff.h>
+#include <librng/rng.h>
 {%- endif %}
 #include <buffer/include/buffer.h>
 #include <layers/include/utils.h>
 #include <layers/include/intermittent.h>
-#include <libmsppoweroff/poweroff.h>
 {%- if bounds | length > 1 %}
-#include <librng/rng.h>
 {%- endif %}
 
 /* ACLK cycles (32768 Hz) */
@@ -33,10 +33,6 @@ void init() {
   gpio_clear_interrupts();
   clock_init();
   uartio_open(0);
-  gpio_dir_out(1, 0);
-  gpio_dir_out(1, 1);
-  gpio_clear(1, 0);
-  gpio_set(1, 1);
   init_lupe();
 }
 

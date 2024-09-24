@@ -181,6 +181,7 @@ apps/*
 !apps/inter_blink
 !apps/inter_conv
 !apps/memcpy
+!apps/external_timer
 !apps/conv_bench
 !apps/fir_mac_cpu_bench
 !apps/fir_mac_bench

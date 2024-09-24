@@ -144,8 +144,8 @@ class MSP430Gen:
         """Print the configuration"""
         pprint.pprint(dict(self.opt_config.items()))
 
-    def setup_debug_info(self, input_arr, label):
+    def setup_debug_info(self, input_arr, label, debug):
         """Set up input array and label"""
-        self.debug = True
+        self.debug = debug
         self.debug_input = input_arr
         self.debug_input_label = label

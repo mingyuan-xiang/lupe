@@ -17,10 +17,6 @@ void init() {
   gpio_clear_interrupts();
   clock_init();
   uartio_open(0);
-  gpio_dir_out(1, 0);
-  gpio_dir_out(1, 1);
-  gpio_clear(1, 0);
-  gpio_set(1, 1);
 {%- if add_timer %}
   timers_init();
 {%- endif %}

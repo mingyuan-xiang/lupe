@@ -1,5 +1,9 @@
 #include <layers/include/utils.h>
 
+__ro_nv uint16_t magic_num;
+
+__ro_nv uint16_t intermittent_status[INTERMITTENT_STATUS_SIZE];
+
 __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 {% if global_mem_buffer %}
@@ -62,6 +66,11 @@ void init_lupe() {
   }
 {%- endif %}
     DMA_is_init = 1;
+  }
+
+  if (magic_num != MAGIC_NUMBER) {
+    magic_num = MAGIC_NUMBER;
+    memset(intermittent_status, 0, INTERMITTENT_STATUS_SIZE * sizeof(uint16_t)); 
   }
 }
 {% if lea_opt %}
