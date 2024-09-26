@@ -9,9 +9,11 @@ import pyvww
 sys.path.append("models/dataset")
 from speech_commands import SpeechCommands
 
-def get_input(dataset, idx, random=False):
+def get_input(dataset, idx, random=False, seed=0):
     """Return the {idx} input image(data) in a numpy array"""
     if random:
+        torch.manual_seed(seed)
+
         if dataset.lower() == 'mnist':
             dummy_input = torch.randn(1, 1, 28, 28)
         elif dataset.lower() == 'cifar10':

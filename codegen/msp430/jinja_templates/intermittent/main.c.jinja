@@ -94,12 +94,11 @@ int main() {
   }
 
   msp_send_printf("Restart times: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
-
   {% if verify %}
-    msp_send_printf("Got activations for the last layer:");
-    msp_send_mat(&{{ last_layer }}_out_meta);
-    msp_send_printf("Expected:");
-    msp_send_mat(&output_meta);
+  msp_send_printf("Got activations for the last layer:");
+  msp_send_mat(&{{ last_layer }}_out_meta);
+  msp_send_printf("Expected:");
+  msp_send_mat(&output_meta);
   {%- endif %}
 
   exit();

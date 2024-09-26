@@ -71,7 +71,7 @@ class Convolution2D(LupeLayer):
 
     def _get_acceleration(self):
         if self._acceleration is None:
-            return "fir"
+            return "enhanced_mac"
         else:
             if self.group != 1 and self._acceleration == "enhanced_mac":
                 raise NotImplementedError(
@@ -259,6 +259,15 @@ class Convolution2D(LupeLayer):
 
         sizes = self._get_size(opt_config, acceleration)
         lea_src_size, lea_flt_size, lea_tmp_size, lea_dst_size = sizes
+
+        if "intermittent" in path and acceleration == "mac":
+            raise NotImplementedError(
+                "Regular mac for depth-wise convolution is not completed as "
+                "we need to tune the size of atomic unit that runs continuous. "
+                "The process of automatic tuning is not trivial. However, we "
+                "don't need to deal with this right now as using mac to do "
+                "depth-wise convolution performs worse than batched-fir."
+            )
 
         if self.has_padding:
             if self.kernel_shape[-1] == 1:

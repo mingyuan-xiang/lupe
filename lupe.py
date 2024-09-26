@@ -85,6 +85,10 @@ def lupe_args():
         help="Generate random input for debugging"
     )
     par.add_argument(
+        "--debug-random-seed", type=int, default=0,
+        help="Seed for random input"
+    )
+    par.add_argument(
         "--debug-dataset", choices=[
             "MNIST", "CIFAR10", "vww", "sc", "fashion_mnist"],
         default="MNIST",
@@ -279,7 +283,8 @@ def _generate(args, mode, graph, config, out_path, dir_name):
 
     if mode == LupeMode.DEBUG or args.debug_random:
         input_arr, label = get_input(
-            args.debug_dataset, args.debug_idx, args.debug_random
+            args.debug_dataset, args.debug_idx, args.debug_random,
+            args.debug_random_seed
         )
         generator.setup_debug_info(
             input_arr / (2 ** args.qf), label, args.debug

@@ -200,14 +200,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     {%- if padding %}
     /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
-    switch (intermittent_status[COMPUTE_PAD]) {
+    switch (intermittent_status[COMPUTE_SWITCH]) {
     case PAD_START:
       {%- if dma_opt %}
       DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
       {%- else %}
       memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
       {%- endif %}
-      VOLATILE_WRITE(PAD_MAIN, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_MAIN, COMPUTE_SWITCH);
     case PAD_MAIN: {
       uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
       uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
@@ -257,14 +257,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         VOLATILE_WRITE(next_i, COMPUTE_IN_CH);
       }
 
-      VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_SWITCH);
     }
     case PAD_TRANSFER:
       DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
-      VOLATILE_WRITE(PAD_MEMSET, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_MEMSET, COMPUTE_SWITCH);
     case PAD_MEMSET:
       VOLATILE_WRITE(0, COMPUTE_IN_CH);
-      VOLATILE_WRITE(PAD_END, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_END, COMPUTE_SWITCH);
     default:
       break;
     }
@@ -769,7 +769,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     deinterleave_clear();
     {%- endif %}
     {%- endif %}
-    intermittent_status[COMPUTE_PAD] = PAD_START;
+    intermittent_status[COMPUTE_SWITCH] = PAD_START;
     intermittent_status[COMPUTE_IO_ROW] = 0;
     intermittent_status[COMPUTE_IN_CH] = 0;
     intermittent_status[COMPUTE_OUT_CH] = 0;

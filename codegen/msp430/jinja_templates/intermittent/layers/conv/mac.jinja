@@ -75,14 +75,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t kernel_col_size = _KERNEL_COL_SIZE;
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
-  uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
   uintptr_t flt_addr_offset = _FLT_LEN * sizeof(int16_t);
   uintptr_t flt_channel_offset = weight->strides[0] * sizeof(int16_t);
   uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
   uintptr_t input_fram_addr = (uintptr_t)(input->data);
   uintptr_t input_channel_addr = input_fram_addr;
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
-  uintptr_t output_fram_addr = (uintptr_t)(output->data);
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
 
   uint16_t input_line_size = input->dims[3];
@@ -140,8 +138,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t zero = 0;
   {%- endif %}
 
-  {%- if padding %}
-
   uintptr_t intermittent_buffer_addr = (uintptr_t)intermittent_buffer;
 
   /* No need for double buffering (for loop indices) as each output is independant */
@@ -151,14 +147,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
     {%- if padding %}
     /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
-    switch (intermittent_status[COMPUTE_PAD]) {
+    switch (intermittent_status[COMPUTE_SWITCH]) {
     case PAD_START:
       {%- if dma_opt %}
       DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
       {%- else %}
       memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
       {%- endif %}
-      VOLATILE_WRITE(PAD_MAIN, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_MAIN, COMPUTE_SWITCH);
     case PAD_MAIN: {
       uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
       uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
@@ -208,14 +204,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         VOLATILE_WRITE(next_i, COMPUTE_IN_CH);
       }
 
-      VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_SWITCH);
     }
     case PAD_TRANSFER:
       DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
-      VOLATILE_WRITE(PAD_MEMSET, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_MEMSET, COMPUTE_SWITCH);
     case PAD_MEMSET:
       VOLATILE_WRITE(0, COMPUTE_IN_CH);
-      VOLATILE_WRITE(PAD_END, COMPUTE_PAD);
+      VOLATILE_WRITE(PAD_END, COMPUTE_SWITCH);
     default:
       break;
     }
@@ -231,236 +227,20 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   }
 
   /* convolution */
-{%- if group != 1 %}
-  {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-  uint16_t output_channel_pos = 0;
-  {%- endif %}
-  uintptr_t output_channel_addr = output_fram_addr;
-{%- endif %}
-  for (uint16_t i = 0; i < in_channels; ++i) {
-{%- if group == 1 %}
-    {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-    uint16_t output_channel_pos = 0;
-    {%- endif %}
-    uintptr_t output_channel_addr = output_fram_addr;
-{%- endif %}
-    uintptr_t flt_tmp_addr = flt_fram_addr;
-    uint16_t tmp_input_addr_offset = sizeof(int16_t) * _STRIDE_COL_SIZE;
-
-    /* assemble input to a matrix in mac_buffer */
-    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-    uint16_t mac_buffer_pos = 0;
-    input_channel_pos = input_fram_pos;
-    {%- else %}
-    uintptr_t mac_buffer_addr = (uintptr_t)lupe_buffer_meta.data;
-    input_channel_addr = input_fram_addr;
-    {%- endif %}
-    for (uint16_t m = 0; m < output_line_num; ++m) {
-      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-      uint16_t tmp_input_pos = input_channel_pos;
-      {%- else %}
-      uintptr_t tmp_input_addr = input_channel_addr;
-      {%- endif %}
-      for (uint16_t n = 0; n < output_line_size; ++n) {
-        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-        uint16_t tmp_input_row_pos = tmp_input_pos;
-        {%- else %}
-        uintptr_t tmp_input_row_addr = tmp_input_addr;
-        {%- endif %}
-        for (uint16_t k = 0; k < kernel_row_size; ++k) {
-          {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-          s = tmp_input_row_pos;
-          {%- for n in range(flt_col_size) %}
-          lupe_buffer_meta.data[mac_buffer_pos] = input->data[s];
-          s++;
-          mac_buffer_pos++;
-          {%- endfor %}
-
-          tmp_input_row_pos += input_line_size;
-          {%- else %}
-          DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
-
-          tmp_input_row_addr += input_line_size_offset;
-          mac_buffer_addr += flt_addr_col_offset;
-          {%- endif %}
-        }
-        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-        tmp_input_pos += _STRIDE_COL_SIZE;
-        {%- else %}
-        tmp_input_addr += tmp_input_addr_offset;
-        {%- endif %}
-      }
-      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-      input_channel_pos += input_line_strided_size;
-      {%- else %}
-      input_channel_addr += input_line_size_strided_offset;
-      {%- endif %}
-    }
-{% if group == 1 %}
-    for (uint16_t j = 0; j < out_channels; ++j) {
-{%- endif %}
-      uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data;
-      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-      uint16_t tmp_output_pos = output_channel_pos;
-      {%- endif %}
-      uintptr_t tmp_output_addr = output_channel_addr;
-
-      /*
-       * send kernel to LEA RAM
-       * assume (lea_flt size >= flt_len + 1)
-       */
-      DMA_makeTransfer(flt_tmp_addr, flt_lea_addr, _FLT_LEN);
-
-      /*
-       * The LEA array might be smaller than ouput matrix size, so we need to
-       * the computation mutiple times.
-       */
-      {%- if (out_len % lea_dst_size) != 0 %}
-      for (uint16_t l = 0; l < lea_remain_size; ++l) {
-        DMA_makeTransfer(mac_input_addr, src_lea_addr, _FLT_LEN);
-        {%- if lea_opt %}
-        new_mac_q15(lea_src, lea_flt);
-        {%- else %}
-        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
-        {%- endif %}
-        {%- if group == 1 %}
-        lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
-        {%- else %}
-        lea_dst[l] = (int16_t)(lea_res[0] >> 16);
-        {%- endif %}
-
-        mac_input_addr += flt_addr_offset;
-      }
-
-      {%- if lea_opt %}
-      lea_add_params->vectorSize = lea_remain_size_aligned;
-      {%- else %}
-      add_params.length = lea_remain_size_aligned;
-      {%- endif %}
-
-      {%- if group == 1 %}
-
-      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-      s = tmp_output_pos;
-      {%- for n in range(out_len % lea_dst_size) %}
-      lea_dst[{{ loop.index0 }}] = output->data[s];
-      s++;
-      {%- endfor %}
-
-      {%- else %}
-      DMA_makeTransfer(tmp_output_addr, dst_lea_addr, lea_remain_size);
-      {%- endif %}
-
-      {%- if lea_opt %}
-      new_add_q15(lea_dst, lea_tmp, lea_dst);
-      {%- else %}
-      msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
-      {%- endif %}
-
-      {%- endif %}
-
-      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-      dst_pos = tmp_output_pos;
-      {%- for n in range(out_len % lea_dst_size) %}
-      output->data[dst_pos] = lea_dst[{{ loop.index0 }}];
-      dst_pos++;
-      {%- endfor %}
-
-      {%- else %}
-      DMA_makeTransfer(dst_lea_addr, tmp_output_addr, lea_remain_size);
-      {%- endif %}
-
-      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-      tmp_output_pos += lea_remain_size;
-      {%- endif %}
-      tmp_output_addr += output_remain_size_offset;
-      {%- endif %}
-
-      {%- if out_len >= lea_dst_size %}
-      {%- if lea_opt %}
-      lea_add_params->vectorSize = _LEA_ADD_SIZE;
-      {%- else %}
-      add_params.length = _LEA_ADD_SIZE;
-      {%- endif %}
-
-      for (uint16_t m = lea_remain_size; m < output_len; m += _LEA_ADD_SIZE) {
-        for (uint16_t l = 0; l < _LEA_ADD_SIZE; ++l) {
-          DMA_makeTransfer(mac_input_addr, src_lea_addr, _FLT_LEN);
-          {%- if lea_opt %}
-          new_mac_q15(lea_src, lea_flt);
-          {%- else %}
-          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
-          {%- endif %}
-
-          {%- if group == 1 %}
-          lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
-          {%- else %}
-          lea_dst[l] = (int16_t)(lea_res[0] >> 16);
-          {%- endif %}
-
-          mac_input_addr += flt_addr_offset;
-        }
-
-        {%- if group == 1 %}
-
-        DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _LEA_ADD_SIZE);
-        {%- if lea_opt %}
-        new_add_q15(lea_dst, lea_tmp, lea_dst);
-        {%- else %}
-        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
-        {%- endif %}
-
-        {%- endif %}
-
-        DMA_makeTransfer(dst_lea_addr, tmp_output_addr, _LEA_ADD_SIZE);
-
-        tmp_output_addr += output_lea_min_size_offset;
-        {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-        tmp_output_pos += _LEA_ADD_SIZE;
-        {%- endif %}
-      }
-      {%- endif %}
-
-      flt_tmp_addr += flt_channel_offset;
-      output_channel_addr += output_addr_offset;
-      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
-      output_channel_pos += output_len;
-      {%- endif %}
-{%- if group == 1 %}
-    }
-{%- endif %}
-    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-    input_fram_pos += input_len;
-    {%- else %}
-    input_fram_addr += input_channel_offset;
-    {%- endif %}
-    flt_fram_addr += flt_addr_offset;
-  }
-
-  /* add bias and left shift */
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_BIAS) {
-    _q15* lea_add = lea_src;
-    uint16_t add_size = _LEA_ADD_SIZE;
-    uintptr_t lea_add_addr = (uintptr_t)lea_add;
-
-    {%- if group == 1 %}
-    /* Recover loop variables. We use COMPUTE_IN_CH as it will be zero when the start of this */
-    {%- else %}
-    /* Recover loop variables. We use COMPUTE_OUT_CH as it will be zero when the start of this */
-    {%- endif %}
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
+    /* TODO: recover here */
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
-      /* Start transferring to output buffer. Recover from temporary buffer */
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uint16_t size = line;
       if (size > lea_remain_size) {
-        size = add_size;
+        size = _LEA_ADD_SIZE;
       }
       {%- if group == 1 %}
       uintptr_t addr = (uintptr_t)(output->data) + \
-        (intermittent_status[COMPUTE_IN_CH] * output_len + (line - size)) * sizeof(int16_t);
+        (intermittent_status[COMPUTE_OUT_CH] * output_len + (line - size)) * sizeof(int16_t);
       {%- else %}
       uintptr_t addr = (uintptr_t)(output->data) + \
-        (intermittent_status[COMPUTE_OUT_CH] * output_len + (line - size)) * sizeof(int16_t);
+        (intermittent_status[COMPUTE_IN_CH] * output_len + (line - size)) * sizeof(int16_t);
       {%- endif %}
 
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
@@ -469,6 +249,28 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     }
 
     {%- if group == 1 %}
+    if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
+      uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+    }
+
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+
+    if (intermittent_status[COMPUTE_OUT_CH] >= output_len) {
+      uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_OUT_CH]);
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_OUT_CH);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+    {%- else %}
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
@@ -479,13 +281,285 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
       VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
+    {%- endif %}
 
-    uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
-      (intermittent_status[COMPUTE_IN_CH] * output_len + \
-        intermittent_status[COMPUTE_IO_ROW]) * sizeof(int16_t);
 
-    for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < out_channels; ++i) {
-    {%- else %}
+    input_fram_addr = (uintptr_t)(input->data) + \
+      intermittent_status[COMPUTE_IN_CH] * input_channel_offset;
+    uintptr_t output_fram_addr = (uintptr_t)(output->data);
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      intermittent_status[COMPUTE_IN_CH] * flt_addr_offset;
+  {%- if group != 1 %}
+    {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+    uint16_t output_channel_pos = intermittent_status[COMPUTE_IN_CH] * output_len;
+    {%- endif %}
+    uintptr_t output_channel_addr = output_fram_addr + \
+      intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
+  {%- endif %}
+    for (uint16_t i = intermittent_status[COMPUTE_IN_CH]; i < in_channels; ++i) {
+  {%- if group == 1 %}
+      {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+      uint16_t output_channel_pos = intermittent_status[COMPUTE_OUT_CH] * output_len;
+      {%- endif %}
+      uintptr_t output_channel_addr = output_fram_addr + \
+        intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
+  {%- endif %}
+      {%- if group == 1 %}
+      uintptr_t flt_tmp_addr = flt_fram_addr + \
+        intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
+      {%- else %}
+      uintptr_t flt_tmp_addr = flt_fram_addr;
+      {%- endif %}
+      uint16_t tmp_input_addr_offset = sizeof(int16_t) * _STRIDE_COL_SIZE;
+
+      {%- if group == 1 %}
+      if (intermittent_status[COMPUTE_OUT_CH] == 0) {
+      {%- endif %}
+        /* assemble input to a matrix in mac_buffer (only do this for the first time for every input channel) */
+        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+        uint16_t mac_buffer_pos = 0;
+        input_channel_pos = input_fram_pos;
+        {%- else %}
+        uintptr_t mac_buffer_addr = (uintptr_t)lupe_buffer_meta.data;
+        input_channel_addr = input_fram_addr;
+        {%- endif %}
+        for (uint16_t m = 0; m < output_line_num; ++m) {
+          {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+          uint16_t tmp_input_pos = input_channel_pos;
+          {%- else %}
+          uintptr_t tmp_input_addr = input_channel_addr;
+          {%- endif %}
+          for (uint16_t n = 0; n < output_line_size; ++n) {
+            {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+            uint16_t tmp_input_row_pos = tmp_input_pos;
+            {%- else %}
+            uintptr_t tmp_input_row_addr = tmp_input_addr;
+            {%- endif %}
+            for (uint16_t k = 0; k < kernel_row_size; ++k) {
+              {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+              s = tmp_input_row_pos;
+              {%- for n in range(flt_col_size) %}
+              lupe_buffer_meta.data[mac_buffer_pos] = input->data[s];
+              s++;
+              mac_buffer_pos++;
+              {%- endfor %}
+
+              tmp_input_row_pos += input_line_size;
+              {%- else %}
+              DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
+
+              tmp_input_row_addr += input_line_size_offset;
+              mac_buffer_addr += flt_addr_col_offset;
+              {%- endif %}
+            }
+            {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+            tmp_input_pos += _STRIDE_COL_SIZE;
+            {%- else %}
+            tmp_input_addr += tmp_input_addr_offset;
+            {%- endif %}
+          }
+          {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+          input_channel_pos += input_line_strided_size;
+          {%- else %}
+          input_channel_addr += input_line_size_strided_offset;
+          {%- endif %}
+        }
+      {%- if group == 1 %}
+      }
+      {%- endif %}
+  {% if group == 1 %}
+      for (uint16_t j = intermittent_status[COMPUTE_OUT_CH]; j < out_channels; ++j) {
+  {%- endif %}
+        uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data + \
+          (intermittent_status[COMPUTE_IO_ROW] + intermittent_status[COMPUTE_IO_COL]) * flt_addr_offset;
+        {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+        uint16_t tmp_output_pos = output_channel_pos + intermittent_status[COMPUTE_IO_ROW];
+        {%- endif %}
+        uintptr_t tmp_output_addr = output_channel_addr + \
+          intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+
+        /*
+         * send kernel to LEA RAM
+         * assume (lea_flt size >= flt_len + 1)
+         */
+        DMA_makeTransfer(flt_tmp_addr, flt_lea_addr, _FLT_LEN);
+
+        /*
+         * The LEA array might be smaller than ouput matrix size, so we need to
+         * the computation mutiple times.
+         */
+        {%- if (out_len % lea_dst_size) != 0 %}
+        {%- if out_len >= lea_dst_size %}
+        if (intermittent_status[COMPUTE_IO_ROW] == 0) {
+        {%- endif %}
+        for (uint16_t l = 0; l < lea_remain_size; ++l) {
+          DMA_makeTransfer(mac_input_addr, src_lea_addr, _FLT_LEN);
+          {%- if lea_opt %}
+          new_mac_q15(lea_src, lea_flt);
+          {%- else %}
+          msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+          {%- endif %}
+          {%- if group == 1 %}
+          lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
+          {%- else %}
+          lea_dst[l] = (int16_t)(lea_res[0] >> 16);
+          {%- endif %}
+
+          mac_input_addr += flt_addr_offset;
+        }
+
+        {%- if lea_opt %}
+        lea_add_params->vectorSize = lea_remain_size_aligned;
+        {%- else %}
+        add_params.length = lea_remain_size_aligned;
+        {%- endif %}
+
+        {%- if group == 1 %}
+
+        {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+        s = tmp_output_pos;
+        {%- for n in range(out_len % lea_dst_size) %}
+        lea_dst[{{ loop.index0 }}] = output->data[s];
+        s++;
+        {%- endfor %}
+
+        {%- else %}
+        DMA_makeTransfer(tmp_output_addr, dst_lea_addr, lea_remain_size);
+        {%- endif %}
+
+        {%- if lea_opt %}
+        new_add_q15(lea_dst, lea_tmp, lea_dst);
+        {%- else %}
+        msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+        {%- endif %}
+
+        {%- endif %}
+
+        uint16_t next_r = lea_remain_size;
+        {% if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+        {%- for n in range(out_len % lea_dst_size) %}
+        intermittent_buffer[{{ loop.index0 }}] = lea_dst[{{ loop.index0 }}];
+        {%- endfor %}
+        next_r = next_r | DOUBLE_BUFFER_WRITE;
+        VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
+        dst_pos = tmp_output_pos;
+        {%- for n in range(out_len % lea_dst_size) %}
+        output->data[dst_pos] = lea_dst[{{ loop.index0 }}];
+        dst_pos++;
+        {%- endfor %}
+        next_r = next_r & DOUBLE_BUFFER_COMPLETE;
+        VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
+
+        {%- else %}
+        DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, dst_lea_addr, tmp_output_addr, lea_remain_size);
+        {%- endif %}
+
+        {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+        tmp_output_pos += lea_remain_size;
+        {%- endif %}
+        tmp_output_addr += output_remain_size_offset;
+        {%- endif %}
+        {%- if out_len >= lea_dst_size %}
+        }
+        {%- endif %}
+        {% if out_len >= lea_dst_size %}
+        {%- if lea_opt %}
+        lea_add_params->vectorSize = _LEA_ADD_SIZE;
+        {%- else %}
+        add_params.length = _LEA_ADD_SIZE;
+        {%- endif %}
+
+        for (uint16_t m = intermittent_status[COMPUTE_IO_ROW]; m < output_len; m += _LEA_ADD_SIZE) {
+          for (uint16_t l = 0; l < _LEA_ADD_SIZE; ++l) {
+            DMA_makeTransfer(mac_input_addr, src_lea_addr, _FLT_LEN);
+            {%- if lea_opt %}
+            new_mac_q15(lea_src, lea_flt);
+            {%- else %}
+            msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+            {%- endif %}
+
+            {%- if group == 1 %}
+            lea_tmp[l] = (int16_t)(lea_res[0] >> 16);
+            {%- else %}
+            lea_dst[l] = (int16_t)(lea_res[0] >> 16);
+            {%- endif %}
+
+            mac_input_addr += flt_addr_offset;
+          }
+
+          {%- if group == 1 %}
+
+          DMA_makeTransfer(tmp_output_addr, dst_lea_addr, _LEA_ADD_SIZE);
+          {%- if lea_opt %}
+          new_add_q15(lea_dst, lea_tmp, lea_dst);
+          {%- else %}
+          msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
+          {%- endif %}
+
+          {%- endif %}
+
+          uint16_t next_r = m + _LEA_ADD_SIZE;
+          DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, dst_lea_addr, tmp_output_addr, _LEA_ADD_SIZE);
+
+          tmp_output_addr += output_lea_min_size_offset;
+          {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+          tmp_output_pos += _LEA_ADD_SIZE;
+          {%- endif %}
+        }
+        {%- endif %}
+
+        {%- if group == 1 %}
+        flt_tmp_addr += flt_channel_offset;
+        {%- endif %}
+        output_channel_addr += output_addr_offset;
+        {%- if has_adaptive_gen_mem and (out_len % lea_dst_size) < adaptive_gen_mem_size %}
+        output_channel_pos += output_len;
+        {%- endif %}
+  {%- if group == 1 %}
+        uint16_t next_j = j + 1;
+        DOUBLE_BUFFER_ASSIGN(next_j, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+      }
+  {%- endif %}
+      {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+      input_fram_pos += input_len;
+      {%- else %}
+      input_fram_addr += input_channel_offset;
+      {%- endif %}
+      flt_fram_addr += flt_addr_offset;
+
+      uint16_t next_i = i + 1;
+      {%- if group == 1 %}
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_OUT_CH]);
+      {%- else %}
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+      {%- endif %}
+    }
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_BIAS, COMPUTE_CK);
+  }
+
+  /* add bias and left shift */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_BIAS) {
+    _q15* lea_add = lea_src;
+    uint16_t add_size = _LEA_BIAS_ADD_SIZE;
+    uintptr_t lea_add_addr = (uintptr_t)lea_add;
+
+    /* Recover loop variables. We use COMPUTE_OUT_CH as it will be zero when the start of this */
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+      /* Start transferring to output buffer. Recover from temporary buffer */
+      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      uint16_t size = line;
+      if (size > lea_bias_remain_size) {
+        size = add_size;
+      }
+      uintptr_t addr = (uintptr_t)(output->data) + \
+        (intermittent_status[COMPUTE_OUT_CH] * output_len + (line - size)) * sizeof(int16_t);
+
+      DMA_makeTransfer(intermittent_buffer_addr, addr, size);
+
+      VOLATILE_WRITE(line, COMPUTE_IO_ROW);
+    }
+
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
@@ -502,7 +576,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         intermittent_status[COMPUTE_IO_ROW]) * sizeof(int16_t);
 
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
-    {%- endif %}
       {%- if lea_opt %}
       set_offset(bias->data[i]);
       {%- else %}
@@ -514,18 +587,18 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       if (intermittent_status[COMPUTE_IO_ROW] == 0) {
       {%- endif %}
         {%- if lea_opt %}
-        lea_offset_params->vectorSize = lea_remain_size_aligned;
+        lea_offset_params->vectorSize = lea_remain_bias_size_aligned;
         {%- if qf > 0 %}
-        lea_add_params->vectorSize = lea_remain_size_aligned;
+        lea_add_params->vectorSize = lea_remain_bias_size_aligned;
         {%- endif %}
         {%- else %}
-        offset_params.length = lea_remain_size_aligned;
+        offset_params.length = lea_remain_bias_size_aligned;
         {%- if qf > 0 %}
-        add_params.length = lea_remain_size_aligned;
+        add_params.length = lea_remain_bias_size_aligned;
         {%- endif %}
         {%- endif %}
 
-        DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_remain_size);
+        DMA_makeTransfer(output_fram_addr, lea_add_addr, lea_bias_remain_size);
         {% for i in range(qf) %}
         {%- if lea_opt %}
         new_add_q15(lea_add, lea_add, lea_add);
@@ -539,10 +612,10 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         msp_offset_q15(&offset_params, lea_add, lea_add);
         {%- endif %}
 
-        uint16_t next_r = lea_remain_size;
-        DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, lea_remain_size);
+        uint16_t next_r = lea_bias_remain_size;
+        DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, lea_bias_remain_size);
 
-        output_fram_addr += output_remain_size_offset;
+        output_fram_addr += output_bias_remain_size_offset;
       {%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) %}
       }
       {%- endif %}
@@ -580,16 +653,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         uint16_t next_r = j + add_size;
         DOUBLE_BUFFER_TRANSFER(next_r, COMPUTE_IO_ROW, lea_add_addr, output_fram_addr, add_size);
 
-        output_fram_addr += output_lea_min_size_offset;
+        output_fram_addr += output_lea_bias_min_size_offset;
       }
       {%- endif %}
-      {% if group == 1 %}
-      uint16_t next_i = i + 1;
-      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
-      {%- else %}
       uint16_t next_i = i + 1;
       DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
-      {%- endif %}
     }
 
     VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
@@ -604,7 +672,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     deinterleave_clear();
     {%- endif %}
     {%- endif %}
-    intermittent_status[COMPUTE_PAD] = PAD_START;
+    intermittent_status[COMPUTE_SWITCH] = PAD_START;
+    intermittent_status[COMPUTE_IO_COL] = 0;
     intermittent_status[COMPUTE_IO_ROW] = 0;
     intermittent_status[COMPUTE_IN_CH] = 0;
     intermittent_status[COMPUTE_OUT_CH] = 0;
