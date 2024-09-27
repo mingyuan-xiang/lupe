@@ -232,13 +232,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     default:
       break;
     }
-    {%- endif %} 
-
     {%- if dma_opt %}
     DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(output));
     {%- else %}
     memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
     {%- endif %}
+    {%- endif %} 
 
     VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
     VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_MAIN, COMPUTE_CK);
@@ -261,19 +260,27 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
       }
 
+      {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
+      uint16_t size = _LEA_REMAIN_SIZE;
+      if (intermittent_status[COMPUTE_IN_CH] != 0) {
+        size = _LEA_SRC_SIZE;
+      }
+      {%- else %}
+      uint16_t size = _LEA_SRC_SIZE;
+      {%- endif %}
+
       if (intermittent_status[COMPUTE_OUT_CH] >= out_channels) {
-        VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
+        VOLATILE_WRITE(0, COMPUTE_OUT_CH);
+        uint16_t next_l = intermittent_status[COMPUTE_IN_CH] + size;
+        DOUBLE_BUFFER_ASSIGN(next_l, COMPUTE_IN_CH, MAC_PREPARE, intermittent_status[COMPUTE_SWITCH]);
       } else {
-        {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
-        uint16_t size = _LEA_REMAIN_SIZE;
-        if (intermittent_status[COMPUTE_IN_CH] != 0) {
-          size = _LEA_SRC_SIZE;
-        }
-        {%- else %}
-        uint16_t size = _LEA_SRC_SIZE;
-        {%- endif %}
         DMA_makeTransfer(intermittent_mac_buffer_addr, lea_src_addr, size);
       }
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] >= _MAC_LEN) {
+      uint16_t next_idx = intermittent_status[COMPUTE_IO_COL] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IO_COL, 0, intermittent_status[COMPUTE_IN_CH]);
     }
 
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
