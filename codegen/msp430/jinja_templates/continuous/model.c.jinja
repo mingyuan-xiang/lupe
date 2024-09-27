@@ -84,6 +84,8 @@ uint16_t {{ model_name }}(mat_t* model_in) {
   // msp_send_mat(&{{ layer.name }}_out_meta);
   {%- endif %}
   {%- endfor %}
+
+  msp_send_mat(&{{ last_layer }}_out_meta);
 {#- classification #}
   /* Get the max score */
   uint16_t max = 0;

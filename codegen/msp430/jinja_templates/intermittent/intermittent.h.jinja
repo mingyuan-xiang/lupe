@@ -25,10 +25,9 @@
 #define PAD_MAIN {{ sw_increment_counter() }}
 #define PAD_TRANSFER {{ sw_increment_counter() }}
 #define PAD_MEMSET {{ sw_increment_counter() }}
-#define PAD_END {{ sw.cnt }}
-#define MAC_START {{ sw_increment_counter() }}
-#define MAC_ADD {{ sw_increment_counter() }}
-#define MAC_UPDATE {{ sw_increment_counter() }}
+#define PAD_END {{ sw_increment_counter() }}
+#define MAC_PREPARE {{ sw_increment_counter() }}
+#define MAC_COMPUTE {{ sw_increment_counter() }}
 #define MAC_END {{ sw_increment_counter() }}
 
 /* INTERMITTENT_LeNet_START has to be 0 */
