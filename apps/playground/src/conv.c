@@ -104,9 +104,14 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     lea_flt[lea_reset_pos] = 0;
     lea_reset_pos += (kernel_col_size + 1);
   }
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_LeNet_i_START) {
+    memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
+
+    VOLATILE_WRITE(INTERMITTENT_conv2_Conv_MAIN, COMPUTE_CK);
+  }
 
   /* convolution */
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_LeNet_i_START) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv2_Conv_MAIN) {
     /* Recover loop variables */
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
@@ -114,7 +119,7 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       uintptr_t offset = 0;
       if (line > _FIR_INPUT_REMAIN_SIZE) {
         size = _FIR_ADD_OUTPUT_SIZE;
-        offset = output_remain_offset + ((line - _FIR_INPUT_REMAIN_SIZE) / _FIR_INPUT_SIZE) * output_offset;
+        offset = output_remain_offset + ((line - _FIR_INPUT_SIZE) / _FIR_INPUT_SIZE) * output_offset;
       }
       uintptr_t addr = intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
 

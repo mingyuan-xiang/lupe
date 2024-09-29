@@ -16,9 +16,9 @@
 
 /* ACLK cycles (32768 Hz) */
 #define LOWER_BOUND 1
-#define UPPER_BOUND 10
+#define UPPER_BOUND 20
 
-#define REPEAT 1
+#define REPEAT 1000
 
 void init() {
   watchdog_disable();
