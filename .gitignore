@@ -188,6 +188,7 @@ apps/*
 !apps/fir_mac_bench_lupe
 !apps/lea_op_bench
 !apps/LeNet_inter
+!apps/playground
 
 # calibration folder
 calibration/*

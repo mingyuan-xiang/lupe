@@ -245,12 +245,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* convolution */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
-
     if (intermittent_status[COMPUTE_SWITCH] == MAC_COMPUTE) {
       if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
         uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
@@ -260,22 +254,26 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
       }
 
-      {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
-      uint16_t size = _LEA_REMAIN_SIZE;
-      if (intermittent_status[COMPUTE_IN_CH] != 0) {
-        size = _LEA_SRC_SIZE;
-      }
-      {%- else %}
-      uint16_t size = _LEA_SRC_SIZE;
-      {%- endif %}
-
       if (intermittent_status[COMPUTE_OUT_CH] >= out_channels) {
-        VOLATILE_WRITE(0, COMPUTE_OUT_CH);
-        uint16_t next_l = intermittent_status[COMPUTE_IN_CH] + size;
-        DOUBLE_BUFFER_ASSIGN(next_l, COMPUTE_IN_CH, MAC_PREPARE, intermittent_status[COMPUTE_SWITCH]);
+        VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
       } else {
+        {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
+        uint16_t size = _LEA_REMAIN_SIZE;
+        if (intermittent_status[COMPUTE_IN_CH] != 0) {
+          size = _LEA_SRC_SIZE;
+        }
+        {%- else %}
+        uint16_t size = _LEA_SRC_SIZE;
+        {%- endif %}
+
         DMA_makeTransfer(intermittent_mac_buffer_addr, lea_src_addr, size);
       }
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
 
     if (intermittent_status[COMPUTE_IN_CH] >= _MAC_LEN) {
@@ -474,7 +472,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- endif %}
         for (uint16_t l = intermittent_status[COMPUTE_IN_CH]; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
           uintptr_t flt_mac_addr = flt_tmp_addr + intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
-          tmp_out_pos =  out_pos + intermittent_status[COMPUTE_OUT_CH] * output_len;
+          tmp_out_pos = out_pos + intermittent_status[COMPUTE_OUT_CH] * output_len;
           {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
           mac_buffer_pos = 0;
           {%- else %}
@@ -534,6 +532,8 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
               flt_mac_addr += flt_channel_offset;
               tmp_out_pos += output_len;
             }
+
+            VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
           }
           case MAC_END:
             flt_tmp_addr += flt_channel_src_offset;
