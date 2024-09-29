@@ -16,9 +16,9 @@
 
 /* ACLK cycles (32768 Hz) */
 #define LOWER_BOUND 1
-#define UPPER_BOUND 5
+#define UPPER_BOUND 100
 
-#define REPEAT 1000
+#define REPEAT 1
 
 void init() {
   watchdog_disable();
@@ -62,7 +62,7 @@ int main() {
     stop_intermittent_tests();
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
-    conv(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
+    conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
     intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
     
     if (verify() != 0) {
@@ -76,7 +76,6 @@ int main() {
   msp_send_printf("Restart times: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
   msp_send_printf("output_meta.strides[0]: %u", output_meta.strides[0]);
   
-    msp_send_mat(&output_meta);
   if (verify() != 0) {
     msp_send_printf("Got activations for the last layer:");
     msp_send_mat(&output_meta);
