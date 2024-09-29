@@ -458,19 +458,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         {%- else %}
         mac_params.length = lea_mac_size_aligned;
         {%- endif %}
-        {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
-        uint16_t input_pos = (_LEA_REMAIN_SIZE_CHANNEL_CNT + \
-          _LEA_SRC_SIZE_CHANNEL_CNT * (intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE)) * input_len;
-        {%- else %}
-        uint16_t input_pos = _LEA_SRC_SIZE_CHANNEL_CNT * (
-          intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE) * input_len;
-        {%- endif %}
-        {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
-        uint16_t tmp_channel_pos = tmp_input_pos + input_pos;
-        {%- else %}
-        uintptr_t tmp_channel_addr = tmp_input_addr + input_pos * sizeof(int16_t);
-        {%- endif %}
         for (uint16_t l = intermittent_status[COMPUTE_IN_CH]; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
+          {%- if (in_ch_flt_len % (lea_src_size - (lea_src_size % flt_len))) != 0 %}
+          uint16_t input_pos = (_LEA_REMAIN_SIZE_CHANNEL_CNT + \
+            _LEA_SRC_SIZE_CHANNEL_CNT * (intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE)) * input_len;
+          {%- else %}
+          uint16_t input_pos = _LEA_SRC_SIZE_CHANNEL_CNT * (
+            intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE) * input_len;
+          {%- endif %}
+          {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+          uint16_t tmp_channel_pos = tmp_input_pos + input_pos;
+          {%- else %}
+          uintptr_t tmp_channel_addr = tmp_input_addr + input_pos * sizeof(int16_t);
+          {%- endif %}
           uintptr_t flt_mac_addr = flt_tmp_addr + intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
           tmp_out_pos = out_pos + intermittent_status[COMPUTE_OUT_CH] * output_len;
           {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}

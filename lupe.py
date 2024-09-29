@@ -133,8 +133,7 @@ def lupe_args():
         "input output.")
     )
     par.add_argument(
-        "--intermittent-bound", nargs='+', type=int, default=[100],
-        # "--intermittent-bound", nargs='+', type=int, default=[328],
+        "--intermittent-bound", nargs='+', type=int, default=[328],
         help=("Upper and lower bound of software reset cycles for RNG."
         "If one number is given, we will constantly reset for that cycles.")
     )

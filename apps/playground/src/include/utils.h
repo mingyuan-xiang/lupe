@@ -10,10 +10,10 @@
 #include <include/intermittent.h>
 
 
-#define LEA_FLT_SIZE 100
-#define LEA_SRC_SIZE 100
-#define LEA_DST_SIZE 100
-#define LEA_TMP_SIZE 100
+#define LEA_FLT_SIZE 200
+#define LEA_SRC_SIZE 200
+#define LEA_DST_SIZE 200
+#define LEA_TMP_SIZE 200
 /* As long as the size is smaller than LEA buffer size, we are good. */
 #define INTERMITTENT_BUFFER_SIZE (LEA_FLT_SIZE + LEA_SRC_SIZE + LEA_DST_SIZE + LEA_TMP_SIZE)
 

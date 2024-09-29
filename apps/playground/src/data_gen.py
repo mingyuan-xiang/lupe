@@ -31,12 +31,19 @@ def gen(name, num):
         f.write(c_code)
 
 
-num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(1, 6, 14, 14))
+num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(1, 16, 5, 5))
+# num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(1, 6, 14, 14))
 gen('input', num)
-out_shape = (1, 16, 10, 10)
+# out_ch = 16
+# out_shape = (1, out_ch, 10, 10)
+out_ch = 120
+out_shape = (1, out_ch, 1, 1)
 num = np.zeros(out_shape)
 gen('output_exp', num)
 num = np.zeros(out_shape)
 gen('output', num)
-num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(16, 6, 5, 5))
+# num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(16, 6, 5, 5))
+num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(120, 16, 5, 5))
 gen('weight', num)
+num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(1, out_ch))
+gen('bias', num)

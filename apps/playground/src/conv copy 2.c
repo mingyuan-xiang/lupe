@@ -28,7 +28,7 @@
 #define _STRIDE_COL_OFFSET (_STRIDE_COL_SIZE * sizeof(int16_t))
 
 
-void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+void conv3_Conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t out_channels = output->dims[1];
   uint16_t output_len = output->strides[1];
   uint16_t input_len = input->strides[1];
@@ -74,8 +74,6 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* convolution */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_MAIN) {
-    uintptr_t input_offset = 0;
-
     if (intermittent_status[COMPUTE_SWITCH] == MAC_COMPUTE) {
       if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
         uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
@@ -89,8 +87,8 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
       } else {
         uint16_t size = _LEA_SRC_SIZE;
+
         DMA_makeTransfer(intermittent_mac_buffer_addr, lea_src_addr, size);
-        input_offset = input_channel_offset * _LEA_SRC_SIZE_CHANNEL_CNT;
       }
     }
 
@@ -134,6 +132,61 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         uintptr_t mac_buffer_addr = lea_src_addr;
         uintptr_t flt_tmp_addr = flt_fram_addr + intermittent_status[COMPUTE_IN_CH] * sizeof(int16_t);
 
+  /*************************************************************
+  * Do the reminder of MAC first
+  ************************************************************/
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          uintptr_t tmp_channel_addr = tmp_input_addr;
+          uintptr_t flt_mac_addr = flt_tmp_addr + intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
+
+          switch (intermittent_status[COMPUTE_SWITCH]) {
+          case MAC_PREPARE: {
+            /* assemble input to a matrix in mac_buffer */
+            for (uint16_t i = 0; i < _LEA_SRC_SIZE_CHANNEL_CNT; ++i) {
+              uintptr_t tmp_input_row_addr = tmp_channel_addr;
+              for (uint16_t k = 0; k < kernel_row_size; ++k) {
+                DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
+
+                tmp_input_row_addr += input_line_size_offset;
+                mac_buffer_addr += flt_addr_col_offset;
+              }
+              tmp_channel_addr += input_channel_offset;
+            }
+
+            DMA_makeTransfer(lea_src_addr, intermittent_mac_buffer_addr, mac_size)
+            VOLATILE_WRITE(MAC_COMPUTE, COMPUTE_SWITCH);
+          }
+          case MAC_COMPUTE: {
+            tmp_out_pos = out_pos + intermittent_status[COMPUTE_OUT_CH] * output_len;
+            mac_size = _LEA_SRC_SIZE;
+            mac_params.length = lea_mac_size_aligned;
+            for (uint16_t j = intermittent_status[COMPUTE_OUT_CH]; j < out_channels; ++j) {
+              DMA_makeTransfer(flt_mac_addr, flt_lea_addr, mac_size);
+              
+              msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+
+              int16_t mac_out = (int16_t)(lea_res[0] >> 16);
+              uint16_t next_j = j + 1;
+              DOUBLE_BUFFER_ASSIGN(next_j, COMPUTE_OUT_CH, mac_out, output->data[tmp_out_pos]);
+
+              flt_mac_addr += flt_channel_offset;
+              tmp_out_pos += output_len;
+            }
+
+            VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
+          }
+          case MAC_END:
+            flt_tmp_addr += flt_channel_src_offset;
+            
+            VOLATILE_WRITE(0, COMPUTE_OUT_CH);
+          }
+          DOUBLE_BUFFER_ASSIGN(_LEA_SRC_SIZE, COMPUTE_IN_CH, MAC_PREPARE, intermittent_status[COMPUTE_SWITCH]);
+        }
+
+  /*************************************************************
+  * Do the rest of MAC
+  ************************************************************/
+
         mac_size = _LEA_SRC_SIZE;
         mac_params.length = lea_mac_size_aligned;
         uint16_t input_pos = _LEA_SRC_SIZE_CHANNEL_CNT * (
@@ -162,7 +215,6 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             VOLATILE_WRITE(MAC_COMPUTE, COMPUTE_SWITCH);
           }
           case MAC_COMPUTE: {
-
             for (uint16_t j = intermittent_status[COMPUTE_OUT_CH]; j < out_channels; ++j) {
               DMA_makeTransfer(flt_mac_addr, flt_lea_addr, mac_size);
               

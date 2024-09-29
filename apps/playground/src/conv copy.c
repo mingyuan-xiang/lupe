@@ -11,7 +11,7 @@
 #define _FLT_LEN (_KERNEL_ROW_SIZE * _KERNEL_COL_SIZE)
 #define __LEA_SRC_SIZE 100
 #define _LEA_SRC_SIZE (__LEA_SRC_SIZE - (__LEA_SRC_SIZE % _FLT_LEN))
-#define _IN_CHANNEL_NUM 16
+#define _IN_CHANNEL_NUM 6
 #define _MAC_LEN (_FLT_LEN * _IN_CHANNEL_NUM)
 #define _LEA_REMAIN_SIZE (_MAC_LEN % _LEA_SRC_SIZE)
 #define _LEA_REMAIN_SIZE_CHANNEL_CNT (_LEA_REMAIN_SIZE / _FLT_LEN)
@@ -19,10 +19,10 @@
 
 #define _LEA_ADD_SIZE 100
 
-#define _LEA_ADD_REMAIN_SIZE (1 % _LEA_ADD_SIZE)
+#define _LEA_ADD_REMAIN_SIZE (100 % _LEA_ADD_SIZE)
 
 
-#define _INPUT_LINE_SIZE 5
+#define _INPUT_LINE_SIZE 14
 #define _STRIDE_ROW_SIZE 1
 #define _STRIDE_COL_SIZE 1
 #define _STRIDE_COL_OFFSET (_STRIDE_COL_SIZE * sizeof(int16_t))
@@ -37,7 +37,8 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uintptr_t flt_lea_addr = (uintptr_t)lea_flt;
   uintptr_t flt_fram_addr = (uintptr_t)(weight->data);
-  uintptr_t mac_size = _LEA_SRC_SIZE;
+  uintptr_t mac_size = _LEA_REMAIN_SIZE;
+  uintptr_t flt_channel_remain_offset = _LEA_REMAIN_SIZE * sizeof(int16_t);
   uintptr_t flt_channel_src_offset = _LEA_SRC_SIZE * sizeof(int16_t);
   uintptr_t flt_channel_offset = weight->strides[0] * sizeof(int16_t);
   uintptr_t flt_addr_col_offset = kernel_col_size * sizeof(int16_t);
@@ -56,9 +57,9 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t input_line_size_strided_offset = input_line_strided_size * sizeof(int16_t);
 
   uint16_t lea_remain_size = _LEA_ADD_REMAIN_SIZE;
-  uintptr_t output_remain_size_offset = lea_remain_size * sizeof(int16_t);
+  uintptr_t output_lea_min_size_offset = _LEA_ADD_SIZE * sizeof(int16_t);
   uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
-  msp_mac_q15_params mac_params = { .length = lea_mac_size_aligned };
+  msp_mac_q15_params mac_params = { .length = lea_mac_remain_size_aligned };
   msp_add_q15_params add_params = { .length = lea_remain_size_aligned };
   msp_offset_q15_params offset_params = { .length = lea_remain_size_aligned, .offset = 0 };
 
@@ -67,15 +68,13 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* No need for double buffering (for loop indices) as each output is independant */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_LeNet_i_START) { 
-
+    memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
     VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
-    VOLATILE_WRITE(INTERMITTENT_conv3_Conv_MAIN, COMPUTE_CK);
+    VOLATILE_WRITE(INTERMITTENT_conv2_Conv_MAIN, COMPUTE_CK);
   }
 
   /* convolution */
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_MAIN) {
-    uintptr_t input_offset = 0;
-
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv2_Conv_MAIN) {
     if (intermittent_status[COMPUTE_SWITCH] == MAC_COMPUTE) {
       if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
         uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
@@ -88,9 +87,12 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       if (intermittent_status[COMPUTE_OUT_CH] >= out_channels) {
         VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
       } else {
-        uint16_t size = _LEA_SRC_SIZE;
+        uint16_t size = _LEA_REMAIN_SIZE;
+        if (intermittent_status[COMPUTE_IN_CH] != 0) {
+          size = _LEA_SRC_SIZE;
+        }
+
         DMA_makeTransfer(intermittent_mac_buffer_addr, lea_src_addr, size);
-        input_offset = input_channel_offset * _LEA_SRC_SIZE_CHANNEL_CNT;
       }
     }
 
@@ -134,10 +136,65 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         uintptr_t mac_buffer_addr = lea_src_addr;
         uintptr_t flt_tmp_addr = flt_fram_addr + intermittent_status[COMPUTE_IN_CH] * sizeof(int16_t);
 
+  /*************************************************************
+  * Do the reminder of MAC first
+  ************************************************************/
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          uintptr_t tmp_channel_addr = tmp_input_addr;
+          uintptr_t flt_mac_addr = flt_tmp_addr + intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
+
+          switch (intermittent_status[COMPUTE_SWITCH]) {
+          case MAC_PREPARE: {
+            /* assemble input to a matrix in mac_buffer */
+            for (uint16_t i = 0; i < _LEA_REMAIN_SIZE_CHANNEL_CNT; ++i) {
+              uintptr_t tmp_input_row_addr = tmp_channel_addr;
+              for (uint16_t k = 0; k < kernel_row_size; ++k) {
+                DMA_makeTransfer(tmp_input_row_addr, mac_buffer_addr, kernel_col_size);
+
+                tmp_input_row_addr += input_line_size_offset;
+                mac_buffer_addr += flt_addr_col_offset;
+              }
+              tmp_channel_addr += input_channel_offset;
+            }
+
+            DMA_makeTransfer(lea_src_addr, intermittent_mac_buffer_addr, mac_size)
+            VOLATILE_WRITE(MAC_COMPUTE, COMPUTE_SWITCH);
+          }
+          case MAC_COMPUTE: {
+            tmp_out_pos = out_pos + intermittent_status[COMPUTE_OUT_CH] * output_len;
+            mac_size = _LEA_REMAIN_SIZE;
+            mac_params.length = lea_mac_remain_size_aligned;
+            for (uint16_t j = intermittent_status[COMPUTE_OUT_CH]; j < out_channels; ++j) {
+              DMA_makeTransfer(flt_mac_addr, flt_lea_addr, mac_size);
+              
+              msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+
+              int16_t mac_out = (int16_t)(lea_res[0] >> 16);
+              uint16_t next_j = j + 1;
+              DOUBLE_BUFFER_ASSIGN(next_j, COMPUTE_OUT_CH, mac_out, output->data[tmp_out_pos]);
+
+              flt_mac_addr += flt_channel_offset;
+              tmp_out_pos += output_len;
+            }
+
+            VOLATILE_WRITE(MAC_END, COMPUTE_SWITCH);
+          }
+          case MAC_END:
+            flt_tmp_addr += flt_channel_remain_offset;
+            VOLATILE_WRITE(0, COMPUTE_OUT_CH);
+          }
+          DOUBLE_BUFFER_ASSIGN(_LEA_REMAIN_SIZE, COMPUTE_IN_CH, MAC_PREPARE, intermittent_status[COMPUTE_SWITCH]);
+        //  intermittent_status[COMPUTE_IN_CH] = _LEA_REMAIN_SIZE;
+        }
+
+  /*************************************************************
+  * Do the rest of MAC
+  ************************************************************/
+
         mac_size = _LEA_SRC_SIZE;
         mac_params.length = lea_mac_size_aligned;
-        uint16_t input_pos = _LEA_SRC_SIZE_CHANNEL_CNT * (
-          intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE) * input_len;
+        uint16_t input_pos = (_LEA_REMAIN_SIZE_CHANNEL_CNT + \
+          _LEA_SRC_SIZE_CHANNEL_CNT * (intermittent_status[COMPUTE_IN_CH] / _LEA_SRC_SIZE)) * input_len;
         uintptr_t tmp_channel_addr = tmp_input_addr + input_pos * sizeof(int16_t);
         for (uint16_t l = intermittent_status[COMPUTE_IN_CH]; l < _MAC_LEN; l += _LEA_SRC_SIZE) {
           uintptr_t flt_mac_addr = flt_tmp_addr + intermittent_status[COMPUTE_OUT_CH] * flt_channel_offset;
@@ -162,7 +219,6 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             VOLATILE_WRITE(MAC_COMPUTE, COMPUTE_SWITCH);
           }
           case MAC_COMPUTE: {
-
             for (uint16_t j = intermittent_status[COMPUTE_OUT_CH]; j < out_channels; ++j) {
               DMA_makeTransfer(flt_mac_addr, flt_lea_addr, mac_size);
               
@@ -199,10 +255,10 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_fram_addr += input_line_size_strided_offset;
     }
 
-    VOLATILE_WRITE(INTERMITTENT_conv3_Conv_EXIT, COMPUTE_CK);
+    VOLATILE_WRITE(INTERMITTENT_conv2_Conv_EXIT, COMPUTE_CK);
   }
 
-  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv3_Conv_EXIT) {
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_conv2_Conv_EXIT) {
     intermittent_status[COMPUTE_SWITCH] = PAD_START;
     intermittent_status[COMPUTE_IO_COL] = 0;
     intermittent_status[COMPUTE_IO_ROW] = 0;

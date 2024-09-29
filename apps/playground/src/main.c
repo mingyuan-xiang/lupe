@@ -7,6 +7,7 @@
 #include <include/output.h>
 #include <include/output_exp.h>
 #include <include/weight.h>
+#include <include/bias.h>
 #include <include/intermittent.h>
 #include <include/utils.h>
 #include <include/conv.h>
@@ -14,9 +15,10 @@
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define DELAY 100
+#define LOWER_BOUND 1
+#define UPPER_BOUND 5
 
-#define REPEAT 1 
+#define REPEAT 1000
 
 void init() {
   watchdog_disable();
@@ -34,13 +36,17 @@ void exit() {
 
 uint16_t verify() {
   uint16_t flag = 0;
-  for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+  for (uint16_t i = 0; i < output_meta.strides[0]; ++i) {
     if (output_meta.data[i] != output_exp_meta.data[i]) {
       flag = 1;
       break;
     }
   }
   return flag;
+}
+
+uint16_t rand(uint16_t low, uint16_t high) {
+  return prand_range(high - low) + low;
 }
 
 int main() {
@@ -50,11 +56,14 @@ int main() {
   VOLATILE_WRITE(c, COUNTER);
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
-    start_intermittent_tests(0, DELAY);
-    conv(&input_meta, &output_meta, &weight_meta);
+    uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
+    start_intermittent_tests(0, UPPER_BOUND);
+    conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
-    conv(&input_meta, &output_exp_meta, &weight_meta);
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
+    conv(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
     
     if (verify() != 0) {
       break;
@@ -65,11 +74,15 @@ int main() {
   }
 
   msp_send_printf("Restart times: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
+  msp_send_printf("output_meta.strides[0]: %u", output_meta.strides[0]);
   
-  msp_send_printf("Got activations for the last layer:");
-  msp_send_mat(&output_meta);
-  msp_send_printf("Expected:");
-  msp_send_mat(&output_exp_meta);
+    msp_send_mat(&output_meta);
+  if (verify() != 0) {
+    msp_send_printf("Got activations for the last layer:");
+    msp_send_mat(&output_meta);
+    msp_send_printf("Expected:");
+    msp_send_mat(&output_exp_meta);
+  }
 
   exit();
 }
