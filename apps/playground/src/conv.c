@@ -123,6 +123,16 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       VOLATILE_WRITE(line, COMPUTE_IO_ROW);
     }
 
+    if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
+      uint16_t size = _FIR_OUTPUT_REMAIN_SIZE;
+      if (intermittent_status[COMPUTE_IO_ROW] > 0) {
+        size = _FIR_OUTPUT_SIZE;
+      }
+      DMA_makeTransfer(intermittent_buffer_addr, intermittent_fir_buffer_addr, size);
+      VOLATILE_WRITE(idx, COMPUTE_IO_COL);
+    }
+
     if (intermittent_status[COMPUTE_IO_COL] > 0) {
       uint16_t size = _FIR_OUTPUT_REMAIN_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
@@ -214,8 +224,10 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             msp_fir_q15(&conv_params, lea_src, lea_dst);
 
             /* save results */
-            DMA_makeTransfer(dst_lea_addr, intermittent_fir_buffer_addr, _FIR_OUTPUT_REMAIN_SIZE);
-            VOLATILE_WRITE(1, COMPUTE_IO_COL);
+            DOUBLE_BUFFER_TRANSFER(
+              1, COMPUTE_IO_COL, dst_lea_addr, intermittent_fir_buffer_addr,
+              _FIR_OUTPUT_REMAIN_SIZE
+            );
 
             tmp_input_addr += input_line_size_offset;
           }
@@ -233,9 +245,11 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
 
             /* save results */
-            DMA_makeTransfer(dst_lea_addr, intermittent_fir_buffer_addr, _FIR_OUTPUT_REMAIN_SIZE);
             uint16_t next_k = k + 1;
-            VOLATILE_WRITE(next_k, COMPUTE_IO_COL);
+            DOUBLE_BUFFER_TRANSFER(
+              next_k, COMPUTE_IO_COL, dst_lea_addr, intermittent_fir_buffer_addr,
+              _FIR_OUTPUT_REMAIN_SIZE
+            );
 
             tmp_input_addr += input_line_size_offset;
           }
@@ -293,8 +307,11 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             msp_fir_q15(&conv_params, lea_src, lea_dst);
 
             /* save results */
-            DMA_makeTransfer(dst_lea_addr, intermittent_fir_buffer_addr, _FIR_OUTPUT_SIZE);
-            VOLATILE_WRITE(1, COMPUTE_IO_COL);
+            DOUBLE_BUFFER_TRANSFER(
+              1, COMPUTE_IO_COL, dst_lea_addr, intermittent_fir_buffer_addr,
+              _FIR_OUTPUT_SIZE
+            );
+
 
             tmp_input_addr += input_line_size_offset;
           }
@@ -312,9 +329,11 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
             msp_add_q15(&add_params, lea_dst, lea_tmp, lea_dst);
 
             /* save results */
-            DMA_makeTransfer(dst_lea_addr, intermittent_fir_buffer_addr, _FIR_OUTPUT_SIZE);
             uint16_t next_k = k + 1;
-            VOLATILE_WRITE(next_k, COMPUTE_IO_COL);
+            DOUBLE_BUFFER_TRANSFER(
+              next_k, COMPUTE_IO_COL, dst_lea_addr, intermittent_fir_buffer_addr,
+              _FIR_OUTPUT_SIZE
+            );
 
             tmp_input_addr += input_line_size_offset;
           }

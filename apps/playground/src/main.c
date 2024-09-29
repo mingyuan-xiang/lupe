@@ -16,7 +16,7 @@
 
 /* ACLK cycles (32768 Hz) */
 #define LOWER_BOUND 1
-#define UPPER_BOUND 100
+#define UPPER_BOUND 10
 
 #define REPEAT 1
 
