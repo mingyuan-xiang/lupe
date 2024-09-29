@@ -1,7 +1,6 @@
-#include <layers/include/utils.h>
-#include <layers/include/conv2_Conv.h>
-#include <buffer/include/buffer.h>
-#include <layers/include/intermittent.h>
+#include <include/utils.h>
+#include <include/conv.h>
+#include <include/intermittent.h>
 
 /*
  * _LEA_SRC_SIZE will always be mutiple of _FLT_LEN

@@ -7,7 +7,7 @@
 #include <libmsp/nv.h>
 #include <stdint.h>
 #include <libdsp/DSPLib.h>
-#include <layers/include/intermittent.h>
+#include <include/intermittent.h>
 
 
 #define LEA_FLT_SIZE 100

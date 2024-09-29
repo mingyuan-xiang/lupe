@@ -1,4 +1,4 @@
-#include <layers/include/utils.h>
+#include <include/utils.h>
 
 __ro_nv uint16_t magic_num;
 
