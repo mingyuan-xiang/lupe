@@ -339,9 +339,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         offset = output_remain_offset + ((line - _FIR_INPUT_SIZE) / _FIR_INPUT_SIZE) * output_offset;
       }
       {% if group == 1 %}
-      uintptr_t addr = intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
+      uintptr_t addr = (uintptr_t)(output->data) + \
+        intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
       {%- else %}
-      uintptr_t addr = intermittent_status[COMPUTE_IN_CH] * output_addr_offset + offset;
+      uintptr_t addr = (uintptr_t)(output->data) + \
+        intermittent_status[COMPUTE_IN_CH] * output_addr_offset + offset;
       {%- endif %}
 
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
