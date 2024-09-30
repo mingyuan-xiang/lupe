@@ -123,9 +123,7 @@ static inline __attribute__((always_inline)) void new_deinterleave_q15(const _q1
 void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uint16_t in_channels = input->dims[1];
   uint16_t out_channels = output->dims[1];
-{%- if (global_mem_buffer and out_len >= lea_buffer_size) or ((not global_mem_buffer) and out_len >= lea_src_size) or (group == 1) %}
   uint16_t output_len = output->strides[1];
-{%- endif %}
   uint16_t input_len = input->strides[1];
   uint16_t kernel_row_size = _KERNEL_ROW_SIZE;
   uint16_t kernel_col_size = _KERNEL_COL_SIZE;
@@ -143,9 +141,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   uintptr_t input_fram_addr = (uintptr_t)(input->data);
   uintptr_t input_channel_addr = input_fram_addr;
   uintptr_t input_channel_offset = input_len * sizeof(int16_t);
-{%- if group == 1 %}
   uintptr_t output_addr_offset = output_len * sizeof(int16_t);
-{%- endif %}
   {% if has_adaptive_gen_mem and (((in_line_size - flt_col_size) / stride_col) + 1) < adaptive_gen_mem_size %}
   uint16_t lea_skip_pos_before_st = _OUTPUT_COL_SIZE + _FIR_OVERLAP_SIZE;
   uint16_t lea_skip_pos_before = lea_skip_pos_before_st;
@@ -342,7 +338,11 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         size = _FIR_ADD_OUTPUT_SIZE;
         offset = output_remain_offset + ((line - _FIR_INPUT_SIZE) / _FIR_INPUT_SIZE) * output_offset;
       }
+      {% if group == 1 %}
       uintptr_t addr = intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
+      {%- else %}
+      uintptr_t addr = intermittent_status[COMPUTE_IN_CH] * output_addr_offset + offset;
+      {%- endif %}
 
       DMA_makeTransfer(intermittent_buffer_addr, addr, size);
       intermittent_status[COMPUTE_IO_COL] = 0;
@@ -405,20 +405,38 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       output_addr_offset * intermittent_status[COMPUTE_OUT_CH];
-    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
-        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
+    {%- if flt_col_size % 2 != 0 %}
     {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+    {%- else %}
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
+    {%- endif %}
+
+    {%- else %} {# flt_col_size % 2 == 0 #}
+
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
     {%- endif %}
     {%- else %}
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       output_addr_offset * intermittent_status[COMPUTE_IN_CH];
-    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
-      intermittent_status[COMPUTE_IN_CH] * weight->strides[1] * sizeof(int16_t);
+    {%- if flt_col_size % 2 != 0 %}
     {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
     flt_fram_pos = intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+    {%- else %}
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      intermittent_status[COMPUTE_IN_CH] * weight->strides[1] * sizeof(int16_t);
+    {%- endif %}
+
+    {%- else %} {# flt_col_size % 2 == 0 #}
+
+    uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
+      (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+        intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
     {%- endif %}
     {%- endif %}
   {% if group == 1 %}
