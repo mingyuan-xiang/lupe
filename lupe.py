@@ -133,7 +133,7 @@ def lupe_args():
         "input output.")
     )
     par.add_argument(
-        "--intermittent-bound", nargs='+', type=int, default=[328],
+        "--intermittent-bound", nargs='+', type=int, default=[1000],
         help=("Upper and lower bound of software reset cycles for RNG."
         "If one number is given, we will constantly reset for that cycles.")
     )
@@ -171,7 +171,7 @@ def parse_opt_config(opt_config, name):
         if opt_config["global_mem_buffer"]:
             opt_config["lea_size"] = 1600
         else:
-            opt_config["lea_size"] = 100
+            opt_config["lea_size"] = 400
 
     if opt_config["lea_size"] % 2:
         raise ValueError("lea_size has to be multiple of 2")
