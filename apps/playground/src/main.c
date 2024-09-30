@@ -11,14 +11,14 @@
 #include <include/intermittent.h>
 #include <include/utils.h>
 #include <include/conv.h>
+#include <include/conv_exp.h>
 #include <libmsppoweroff/poweroff.h>
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define LOWER_BOUND 1
-#define UPPER_BOUND 20
+#define DELAY 1000
 
-#define REPEAT 1000
+#define REPEAT 1
 
 void init() {
   watchdog_disable();
@@ -56,14 +56,13 @@ int main() {
   VOLATILE_WRITE(c, COUNTER);
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
-    uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
-    start_intermittent_tests(0, UPPER_BOUND);
+    start_intermittent_tests(0, rand(500, 1000));
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
     conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_LeNet_i_START;
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
     
     if (verify() != 0) {
       break;
