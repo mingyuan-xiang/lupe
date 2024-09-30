@@ -19,7 +19,7 @@
 /* ACLK cycles (32768 Hz) */
 #define DELAY 328
 
-#define REPEAT 100
+#define REPEAT 10
 
 void init() {
   watchdog_disable();
@@ -36,14 +36,12 @@ void exit() {
 }
 
 uint16_t verify() {
-  uint16_t flag = 0;
   for (uint16_t i = 0; i < output_meta.strides[0]; ++i) {
     if (output_meta.data[i] != output_exp_meta.data[i]) {
-      flag = 1;
-      break;
+      return 1;
     }
   }
-  return flag;
+  return 0;
 }
 
 uint16_t rand(uint16_t low, uint16_t high) {
@@ -58,7 +56,7 @@ int main() {
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
     if (intermittent_status[COMPUTE_CK] == INTERMITTENT_DS_CNN_inter_START) {
-      DMA_makeTransfer(image_meta.data, input_meta.data, GET_MAT_SIZE(&image_meta));
+      DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), GET_MAT_SIZE(&image_meta));
     }
 
     start_intermittent_tests(0, rand(200, 300));
@@ -66,12 +64,14 @@ int main() {
     stop_intermittent_tests();
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
-    DMA_makeTransfer(image_meta.data, input_meta.data, GET_MAT_SIZE(&image_meta));
+    DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), GET_MAT_SIZE(&image_meta));
     conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
     intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
     
     if (verify() != 0) {
       break;
+    } else {
+      memset(log, 0, LOG_SIZE * sizeof(uint16_t));
     }
 
     uint16_t next_i = i + 1;
@@ -97,7 +97,7 @@ int main() {
       }
     }
 
-    for (int16_t i = 0; i < log[0]; i += 2) {
+    for (int16_t i = 1; i < log[0]; i += 2) {
       msp_send_printf("COMPUTE_IO_ROW: %i, COMPUTE_OUT_CH: %i", log[i], log[i+1]);
     }
 

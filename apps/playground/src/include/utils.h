@@ -33,7 +33,7 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 #define LOG_SIZE 1000
 extern __ro_hinv int16_t log[LOG_SIZE];
 #define LOG(i) { \
-  log[log[0]] = i; \
+  log[log[0] + 1] = i; \
   log[0]++; \
 }
 
