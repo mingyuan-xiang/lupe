@@ -408,11 +408,18 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
       (intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
         intermittent_status[COMPUTE_IN_CH] * weight->strides[1]) * sizeof(int16_t);
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+    flt_fram_pos = intermittent_status[COMPUTE_OUT_CH] * weight->strides[0] + \
+      intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+    {%- endif %}
     {%- else %}
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \
       output_addr_offset * intermittent_status[COMPUTE_IN_CH];
     uintptr_t flt_fram_addr = (uintptr_t)(weight->data) + \
       intermittent_status[COMPUTE_IN_CH] * weight->strides[1] * sizeof(int16_t);
+    {%- if has_adaptive_gen_mem and flt_col_size < adaptive_gen_mem_size %}
+    flt_fram_pos = intermittent_status[COMPUTE_IN_CH] * weight->strides[1];
+    {%- endif %}
     {%- endif %}
   {% if group == 1 %}
     for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
