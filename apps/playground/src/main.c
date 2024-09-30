@@ -4,6 +4,7 @@
 #include <msp430.h>
 
 #include <include/input.h>
+#include <include/image.h>
 #include <include/output.h>
 #include <include/output_exp.h>
 #include <include/weight.h>
@@ -16,9 +17,9 @@
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define DELAY 1000
+#define DELAY 328
 
-#define REPEAT 1
+#define REPEAT 100
 
 void init() {
   watchdog_disable();
@@ -56,11 +57,16 @@ int main() {
   VOLATILE_WRITE(c, COUNTER);
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
-    start_intermittent_tests(0, rand(500, 1000));
+    if (intermittent_status[COMPUTE_CK] == INTERMITTENT_DS_CNN_inter_START) {
+      DMA_makeTransfer(image_meta.data, input_meta.data, GET_MAT_SIZE(&image_meta));
+    }
+
+    start_intermittent_tests(0, rand(200, 300));
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
+    DMA_makeTransfer(image_meta.data, input_meta.data, GET_MAT_SIZE(&image_meta));
     conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
     intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
     
@@ -76,10 +82,29 @@ int main() {
   msp_send_printf("output_meta.strides[0]: %u", output_meta.strides[0]);
   
   if (verify() != 0) {
-    msp_send_printf("Got activations for the last layer:");
-    msp_send_mat(&output_meta);
-    msp_send_printf("Expected:");
-    msp_send_mat(&output_exp_meta);
+    uint16_t cnt = 0;
+    for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+      for (uint16_t j = 0; j < output_meta.dims[2]; ++j) {
+        for (uint16_t k = 0; k < output_meta.dims[3]; ++k) {
+          if (output_meta.data[cnt] != output_exp_meta.data[cnt]) {
+            msp_send_printf(
+              "(1, %u, %u, %u): got: %i, expected: %i", i, j, k,
+              output_meta.data[cnt], output_exp_meta.data[cnt]
+            );
+          }
+          cnt++;
+        }
+      }
+    }
+
+    for (int16_t i = 0; i < log[0]; i += 2) {
+      msp_send_printf("COMPUTE_IO_ROW: %i, COMPUTE_OUT_CH: %i", log[i], log[i+1]);
+    }
+
+    // msp_send_printf("Got activations for the last layer:");
+    // msp_send_mat(&output_meta);
+    // msp_send_printf("Expected:");
+    // msp_send_mat(&output_exp_meta);
   }
 
   exit();
