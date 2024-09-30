@@ -128,7 +128,7 @@ python scripts/run_experiments.py --model <model name> --dataset <dataset> --qf 
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
 + q4.11 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (80.69%)
-+ For intermittent-safe support, it cannot fit, so I have to put 20 layer functions on the HIFRAM (`--hifram-func 10`)
++ (bottom-up implementation) For intermittent-safe support, it cannot fit, so I have to put 10 layer functions on the HIFRAM (`--hifram-func 10`)
 
 ## DS-CNN
 
