@@ -351,6 +351,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
+      {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
       {%- if stride_col > 1 %}
       uint16_t size = _DEINTERLEAVE_REMAIN_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
@@ -362,11 +363,15 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         size = _FIR_OUTPUT_SIZE;
       }
       {%- endif %}
+      {%- else %} {# _DEINTERLEAVE_REMAIN_SIZE == 0 or _FIR_OUTPUT_REMAIN_SIZE == 0 #}
+      uint16_t size = {% if stride_col > 1 -%}_DEINTERLEAVE_SIZE{%- else -%}_FIR_OUTPUT_SIZE{%- endif -%};
+      {%- endif %}
       DMA_makeTransfer(intermittent_buffer_addr, intermittent_fir_buffer_addr, size);
       VOLATILE_WRITE(idx, COMPUTE_IO_COL);
     }
 
     if (intermittent_status[COMPUTE_IO_COL] > 0) {
+      {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
       {%- if stride_col > 1 %}
       uint16_t size = _DEINTERLEAVE_REMAIN_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
@@ -377,6 +382,9 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
         size = _FIR_OUTPUT_SIZE;
       }
+      {%- endif %}
+      {%- else %} {# _DEINTERLEAVE_REMAIN_SIZE == 0 or _FIR_OUTPUT_REMAIN_SIZE == 0 #}
+      uint16_t size = {% if stride_col > 1 -%}_DEINTERLEAVE_SIZE{%- else -%}_FIR_OUTPUT_SIZE{%- endif -%};
       {%- endif %}
       DMA_makeTransfer(intermittent_fir_buffer_addr, dst_lea_addr, size);
     }
