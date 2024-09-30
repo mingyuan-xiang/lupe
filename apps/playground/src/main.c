@@ -71,7 +71,7 @@ int main() {
     if (verify() != 0) {
       break;
     } else {
-      memset(log, 0, LOG_SIZE * sizeof(uint16_t));
+      log[0] = 0;
     }
 
     uint16_t next_i = i + 1;
