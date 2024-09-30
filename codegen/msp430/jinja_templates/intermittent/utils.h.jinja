@@ -64,6 +64,21 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
   VOLATILE_WRITE(next, offset); \
 }
 
+/*
+ * Reset a variable and transfer data with double buffer.
+ * This is helpful for batched-FIR.
+ */
+#define DOUBLE_BUFFER_TRANSFER_WITH_VAR_RESET(val, offset, var, in_addr, out_addr, size) { \
+  int16_t next = val; \
+  DMA_makeTransfer(in_addr, (uintptr_t)intermittent_buffer, size); \
+  next = next | DOUBLE_BUFFER_WRITE; \
+  VOLATILE_WRITE(next, offset); \
+  var = 0; \
+  DMA_makeTransfer(in_addr, out_addr, size); \
+  next = next & DOUBLE_BUFFER_COMPLETE; \
+  VOLATILE_WRITE(next, offset); \
+}
+
 {% if global_mem_buffer %}
 extern _q15 lea_buffer[];
 {%- else %}
