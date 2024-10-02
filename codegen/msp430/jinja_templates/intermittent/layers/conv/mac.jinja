@@ -229,6 +229,26 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   /* convolution */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
     /* TODO: recover here */
+    {%- if group == 1 %}
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_OUT_CH);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+    {%- else %}
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+    {%- endif %}
+
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uint16_t size = line;
@@ -254,33 +274,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
-    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
-    }
-
-    if (intermittent_status[COMPUTE_OUT_CH] >= output_len) {
+    if (intermittent_status[COMPUTE_OUT_CH] >= out_channels) {
       uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_OUT_CH]);
     }
 
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_OUT_CH);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
     {%- else %}
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
     }
 
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
     {%- endif %}
 
 
@@ -545,6 +549,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
 
     /* Recover loop variables. We use COMPUTE_OUT_CH as it will be zero when the start of this */
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       /* Start transferring to output buffer. Recover from temporary buffer */
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
@@ -563,12 +573,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
-    }
-
-    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \

@@ -244,6 +244,24 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* convolution */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+
+    if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IN_CH);
+      VOLATILE_WRITE(idx, COMPUTE_IO_COL);
+    }
+
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_COL);
+      VOLATILE_WRITE(idx, COMPUTE_IO_ROW);
+    }
+
     if (intermittent_status[COMPUTE_SWITCH] == MAC_COMPUTE) {
       if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
         uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
@@ -269,32 +287,14 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       }
     }
 
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
-
     if (intermittent_status[COMPUTE_IN_CH] >= _MAC_LEN) {
       uint16_t next_idx = intermittent_status[COMPUTE_IO_COL] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IO_COL, 0, intermittent_status[COMPUTE_IN_CH]);
     }
 
-    if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IN_CH);
-      VOLATILE_WRITE(idx, COMPUTE_IO_COL);
-    }
-
     if (intermittent_status[COMPUTE_IO_COL] >= output_line_size) {
       uint16_t next_idx = intermittent_status[COMPUTE_IO_ROW] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IO_ROW, 0, intermittent_status[COMPUTE_IO_COL]);
-    }
-
-    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_COL);
-      VOLATILE_WRITE(idx, COMPUTE_IO_ROW);
     }
 
     uint16_t out_pos = intermittent_status[COMPUTE_IO_ROW] * output_line_size + \
@@ -605,6 +605,12 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
 
     /* Recover loop variables. We use COMPUTE_IN_CH as it will be zero when the start of this */
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_COL);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+
     if (intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_WRITE) {
       /* Start transferring to output buffer. Recover from temporary buffer */
       uint16_t line = intermittent_status[COMPUTE_IO_COL] & DOUBLE_BUFFER_COMPLETE;
@@ -623,12 +629,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     if (intermittent_status[COMPUTE_IO_COL] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
       DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_IN_CH, 0, intermittent_status[COMPUTE_IO_COL]);
-    }
-
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_COL);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
 
     uintptr_t output_fram_addr = (uintptr_t)(output->data) + \

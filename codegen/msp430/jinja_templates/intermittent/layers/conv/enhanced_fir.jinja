@@ -330,6 +330,19 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   /* convolution */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
     /* Recover loop variables */
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+    {% if group == 1 %}
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IN_CH);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+    {%- endif %}
+
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
       uint16_t size = _FIR_ADD_OUTPUT_REMAIN_SIZE;
@@ -371,19 +384,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       DMA_makeTransfer(intermittent_buffer_addr, intermittent_fir_buffer_addr, size);
       VOLATILE_WRITE(idx, COMPUTE_IO_COL);
     }
-
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
-    {% if group == 1 %}
-    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IN_CH);
-      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
-    }
-    {%- endif %}
 
     if (intermittent_status[COMPUTE_IO_COL] > 0) {
       {%- if (in_line_size * out_line_num) % ((lea_src_size - (flt_col_size % 2) * 2) - ((lea_src_size - (flt_col_size % 2) * 2) % in_line_size)) != 0 %}
@@ -1029,8 +1029,20 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     _q15* lea_add = lea_src;
     uint16_t add_size = _LEA_ADD_SIZE;
     uintptr_t lea_add_addr = (uintptr_t)lea_add;
-
-    {%- if group == 1 %}
+    {% if group == 1 %}
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+    {%- else %}
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+    {%- endif %}
+    {% if group == 1 %}
     /* Recover loop variables. We use COMPUTE_IN_CH as it will be zero when the start of this */
     {%- else %}
     /* Recover loop variables. We use COMPUTE_OUT_CH as it will be zero when the start of this */
@@ -1054,19 +1066,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       VOLATILE_WRITE(line, COMPUTE_IO_ROW);
     }
-    {% if group == 1 %}
-    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
-    }
-    {%- else %}
-    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
-      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
-      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
-      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
-    }
-    {%- endif %}
     {% if group == 1 %}
     if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
       uint16_t next_idx = intermittent_status[COMPUTE_IN_CH] + 1;
