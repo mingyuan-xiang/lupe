@@ -13,37 +13,68 @@ from matrixgen import (
     gen_c, gen_c_data_struct, gen_c_data
 )
 
-def gen(name, num):
+def mul(t):
+    result = 1
+    for num in t:
+        result *= num
+
+    return result
+
+
+
+def gen(name, shape, a_shape, is_random):
     file_name = name
+
 
     h_code = gen_header_includes(file_name)
     c_code = '#include <' + 'include/' + file_name + '.h>\n\n'
 
-    mat = Matrix(name, num, False, loc='hi')
-    h_code += gen_header_data(mat)
+    if is_random:
+        num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=a_shape)
+    else:
+        num = np.zeros(a_shape)
+
+    if shape == a_shape:
+        mat = Matrix(name, num, False, loc='hi')
+
+        h_code += gen_header_data(mat)
+        c_code += gen_c_data_struct(mat, None)
+        c_code += gen_c_data(mat, False)
+    else:
+        data_mat = Matrix(name + '_data', num, False, loc='hi')
+        mat = Matrix(name, np.zeros(shape), False, loc='hi')
+
+        h_code += gen_header_data(mat)
+        h_code += gen_header_data(data_mat)
+        c_code += gen_c_data_struct(mat, name + '_data')
+        c_code += gen_c_data_struct(data_mat, None)
+        c_code += gen_c_data(data_mat, False)
+
     h_code += "#endif\n"
-    c_code += gen_c_data_struct(mat, None)
-    c_code += gen_c_data(mat, False)
 
     with open(file_dir + '/include/' + file_name + '.h', "w", encoding="utf-8") as f:
         f.write(h_code)
     with open(file_dir + '/' + file_name + '.c', "w", encoding="utf-8") as f:
         f.write(c_code)
 
-pad = 1
-in_shape = (1, 1, 51, 14)
+k = 1
+pad = 0
+in_shape = (1, 24, 3, 3)
+out_shape = (1, 160, 3, 3)
 image_shape = (in_shape[0], in_shape[1], in_shape[2] - 2 * pad, in_shape[3] - 2 * pad)
-num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=image_shape)
-gen('image', num)
-num = np.zeros(in_shape)
-gen('input', num)
-out_shape = (1, 64, 21, 6)
-out_ch = out_shape[1]
-num = np.zeros(out_shape)
-gen('output_exp', num)
-num = np.zeros(out_shape)
-gen('output', num)
-num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(64, 1, 10, 4))
-gen('weight', num)
-num = np.random.uniform(low=-1000.0/32767, high=1000.0/32767,  size=(1, out_ch))
-gen('bias', num)
+weight_shape = (out_shape[1], in_shape[1], k, k)
+bias_shape = (1, out_shape[1])
+
+
+image_shape = (in_shape[0], in_shape[1], in_shape[2] - 2 * pad, in_shape[3] - 2 * pad)
+image_shape = (in_shape[0], in_shape[1], in_shape[2] - 2 * pad, in_shape[3] - 2 * pad)
+image_shape = (in_shape[0], in_shape[1], in_shape[2] - 2 * pad, in_shape[3] - 2 * pad)
+
+actual_shape = in_shape if mul(in_shape) > mul(out_shape) else out_shape
+
+gen('image', image_shape, image_shape, True)
+gen('input', in_shape, actual_shape, True)
+gen('output', out_shape, actual_shape, False)
+gen('output_exp', out_shape, actual_shape, False)
+gen('weight', weight_shape, weight_shape, True)
+gen('bias', bias_shape, bias_shape, True)

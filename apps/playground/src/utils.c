@@ -1,6 +1,6 @@
 #include <include/utils.h>
 
-__ro_nv uint16_t magic_num;
+__ro_nv uint16_t magic_num = 0;
 
 __ro_nv uint16_t intermittent_status[INTERMITTENT_STATUS_SIZE];
 

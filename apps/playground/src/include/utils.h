@@ -10,10 +10,10 @@
 #include <include/intermittent.h>
 
 
-#define LEA_FLT_SIZE 100
-#define LEA_SRC_SIZE 100
-#define LEA_DST_SIZE 100
-#define LEA_TMP_SIZE 100
+#define LEA_FLT_SIZE 400
+#define LEA_SRC_SIZE 400
+#define LEA_DST_SIZE 400
+#define LEA_TMP_SIZE 400
 /* As long as the size is smaller than LEA buffer size, we are good. */
 #define INTERMITTENT_BUFFER_SIZE (LEA_FLT_SIZE + LEA_SRC_SIZE + LEA_DST_SIZE + LEA_TMP_SIZE)
 
@@ -30,7 +30,7 @@ extern __ro_nv uint16_t intermittent_status[];
 
 extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
-#define LOG_SIZE 1000
+#define LOG_SIZE 5000
 extern __ro_hinv int16_t log[LOG_SIZE];
 #define LOG(i) { \
   log[log[0] + 1] = i; \

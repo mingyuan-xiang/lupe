@@ -36,12 +36,7 @@ void exit() {
 }
 
 uint16_t verify() {
-  for (uint16_t i = 0; i < output_meta.strides[0]; ++i) {
-    if (output_meta.data[i] != output_exp_meta.data[i]) {
-      return 1;
-    }
-  }
-  return 0;
+  return memcmp(output_meta.data, output_exp_meta.data, output_meta.strides[0]*sizeof(int16_t));
 }
 
 uint16_t rand(uint16_t low, uint16_t high) {
@@ -55,23 +50,23 @@ int main() {
   VOLATILE_WRITE(c, COUNTER);
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
-    if (intermittent_status[COMPUTE_CK] == INTERMITTENT_DS_CNN_inter_START) {
-      DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), GET_MAT_SIZE(&image_meta));
+    if (intermittent_status[COMPUTE_CK] == INTERMITTENT_MobileNetV2_inter_START) {
+      DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
     }
 
-    start_intermittent_tests(0, rand(200, 300));
+    start_intermittent_tests(0, rand(1, 30));
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
-    DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), GET_MAT_SIZE(&image_meta));
-    conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
-    intermittent_status[COMPUTE_CK] = INTERMITTENT_DS_CNN_inter_START;
-    
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_MobileNetV2_inter_START;
+    DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
+    conv(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
+    intermittent_status[COMPUTE_CK] = INTERMITTENT_MobileNetV2_inter_START;
+
     if (verify() != 0) {
       break;
     } else {
-      log[0] = 0;
+      memset(log, 0, sizeof(int16_t)*LOG_SIZE);
     }
 
     uint16_t next_i = i + 1;
@@ -97,8 +92,11 @@ int main() {
       }
     }
 
-    for (int16_t i = 1; i < log[0]; i += 2) {
-      msp_send_printf("COMPUTE_IO_ROW: %i, COMPUTE_OUT_CH: %i", log[i], log[i+1]);
+    for (int16_t i = 1; i < log[0]; i += 4) {
+      msp_send_printf(
+        "COMPUTE_IO_COL: %i, COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i, COMPUTE_OUT_CH: %i",
+        log[i], log[i+1], log[i+2], log[i+3]
+      );
     }
 
     // msp_send_printf("Got activations for the last layer:");
