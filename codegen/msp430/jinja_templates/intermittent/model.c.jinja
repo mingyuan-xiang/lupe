@@ -3,10 +3,6 @@
 #include <libmsp/mspbase.h>
 #include <libmspdriver/driverlib.h>
 #include <msp430.h>
-{%- if debug %}
-#include <libmspsyncioutils/mspsyncioutils.h>
-#include <libmsptimer/timekeeper.h>
-{%- endif %}
 
 #include <include/{{ model_name }}.h>
 #include <buffer/include/buffer.h>
@@ -29,12 +25,34 @@
 
 uint16_t {{ model_name }}(mat_t* model_in) {
   switch (intermittent_status[COMPUTE_CK]) {
-  case INTERMITTENT_{{ model_name }}_START:
-    DMA_makeTransfer((uintptr_t)(model_in->data), (uintptr_t)({{ layer_list[0].name }}_in_meta.data), GET_MAT_SIZE(model_in));
-    {%- if debug %}
-    msp_send_printf("\n============== Input ==============\n");
-    // msp_send_mat(model_in);
-    {%- endif %}
+  case INTERMITTENT_{{ model_name }}_START_TRANSFER: {
+    uint16_t total_size = GET_MAT_SIZE(model_in);
+    uint16_t remain_size = total_size % MAX_DMA_SIZE;
+    uintptr_t in_addr = (uintptr_t)(model_in->data) + \
+      intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+    uintptr_t out_addr = (uintptr_t)({{ layer_list[0].name }}_in_meta.data) + \
+      intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+    uintptr_t remain_offset = remain_size * sizeof(int16_t);
+    uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t);
+
+    if (intermittent_status[COMPUTE_IO_ROW] == 0) {
+      DMA_makeTransfer(in_addr, out_addr, remain_size);
+      VOLATILE_WRITE(remain_size, COMPUTE_IO_ROW);
+      in_addr += remain_offset;
+      out_addr += remain_offset;
+    }
+
+    for (uint16_t i = intermittent_status[COMPUTE_IO_ROW]; i < total_size; i += MAX_DMA_SIZE) {
+      DMA_makeTransfer(in_addr, out_addr, MAX_DMA_SIZE);
+      uint16_t next_i = i + MAX_DMA_SIZE;
+      VOLATILE_WRITE(next_i, COMPUTE_IO_ROW);
+      in_addr += offset;
+      out_addr += offset;
+    }
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START_CLEANUP, COMPUTE_CK);
+  }
+  case INTERMITTENT_{{ model_name }}_START_CLEANUP:
+    VOLATILE_WRITE(0, COMPUTE_IO_ROW);
   {%- for layer in layer_list %}
     VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_PREPARE, COMPUTE_CK);
   case INTERMITTENT_{{ layer.name }}_PREPARE:
@@ -52,11 +70,6 @@ uint16_t {{ model_name }}(mat_t* model_in) {
     VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_DMA, COMPUTE_CK);
   case INTERMITTENT_{{ layer.name }}_DMA:
     DMA_makeTransfer((uintptr_t)({{ layer.name }}_out_meta.data), (uintptr_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), GET_MAT_SIZE(&{{ layer.name }}_out_meta));
-  {%- endif %}
-
-  {%- if debug %}
-    msp_send_printf("\n============== Output of {{ layer.name }} ==============\n");
-  // msp_send_mat(&{{ layer.name }}_out_meta);
   {%- endif %}
   {%- endfor %}
     VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_END, COMPUTE_CK);

@@ -140,7 +140,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   uintptr_t intermittent_buffer_addr = (uintptr_t)intermittent_buffer;
 
-  /* No need for double buffering (for loop indices) as each output is independant */
+  /* No need for double buffering (for loop indices) as each output is independent */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
     {%- if dma_opt %}
     uintptr_t output_fram_addr = (uintptr_t)(output->data);

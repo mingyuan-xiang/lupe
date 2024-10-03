@@ -57,11 +57,12 @@ def gen(name, shape, a_shape, is_random):
     with open(file_dir + '/' + file_name + '.c', "w", encoding="utf-8") as f:
         f.write(c_code)
 
-k = 1
-pad = 0
-in_shape = (1, 24, 3, 3)
-out_shape = (1, 160, 3, 3)
+k = 3
+pad = 1
+in_shape = (1, 3, 82, 82)
+out_shape = (1, 8, 40, 40)
 image_shape = (in_shape[0], in_shape[1], in_shape[2] - 2 * pad, in_shape[3] - 2 * pad)
+# weight_shape = (out_shape[1], 1, k, k)
 weight_shape = (out_shape[1], in_shape[1], k, k)
 bias_shape = (1, out_shape[1])
 

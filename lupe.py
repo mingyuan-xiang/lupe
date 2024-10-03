@@ -119,11 +119,15 @@ def lupe_args():
         help="Number of functions to be put on the HIFRAM"
     )
     par.add_argument(
+        "--max-dma-size", type=int, default=10000,
+        help="Maximum DMA size (used for intermittent computing)"
+    )
+    par.add_argument(
         "--intermittent", action=argparse.BooleanOptionalAction, default=False,
         help="Add intermittent-safe support."
     )
     par.add_argument(
-        "--intermittent-repeat", type=int, default=1,
+        "--intermittent-repeat", type=int, default=10,
         help="The number for repeating the experiments."
     )
     par.add_argument(
@@ -304,14 +308,14 @@ def _generate(args, mode, graph, config, out_path, dir_name):
             }
 
         generator.gen(
-            args.dataset_size, args.print_freq, calibration=cal,
-            intermittent=args.intermittent, intermittent_args=intermittent_args,
-            hifram_func=args.hifram_func
+            args.dataset_size, args.max_dma_size, args.print_freq,
+            calibration=cal, intermittent=args.intermittent,
+            intermittent_args=intermittent_args, hifram_func=args.hifram_func
         )
     else:
         generator.gen(
-            args.dataset_size, args.print_freq, calibration=cal,
-            hifram_func=args.hifram_func
+            args.dataset_size, args.max_dma_size, args.print_freq,
+            calibration=cal, hifram_func=args.hifram_func
         )
 
     # Generate the outer Makefile for the maker

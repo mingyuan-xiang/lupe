@@ -4,7 +4,7 @@ import os
 
 from .helpers import jinja_gen
 
-def utilsgen(code_dir, opt_config, flt_sizes, qf, jinja_dir):
+def utilsgen(code_dir, opt_config, flt_sizes, qf, jinja_dir, max_dma_size):
     """Generates common helper functions for each layer
     
     Args:
@@ -24,6 +24,7 @@ def utilsgen(code_dir, opt_config, flt_sizes, qf, jinja_dir):
     # utils header
     header_template_path = os.path.join(jinja_dir, "utils.h.jinja")
     header_params = {
+        "max_dma_size" : max_dma_size,
         "dma_opt": opt_config["dma_opt"],
         "lea_size" : opt_config["lea_size"],
         "lea_opt" : opt_config["lea_opt"],

@@ -82,7 +82,7 @@ int main() {
 
     {%- endif %}
 
-    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START, COMPUTE_CK);
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START_TRANSFER, COMPUTE_CK);
     {% if verify %}
     if (verify() != 0) {
       break;

@@ -8,4 +8,6 @@
 
 extern __ro_hinv _q15 output[];
 extern __ro_hinv mat_t output_meta;
+extern __ro_hinv _q15 output_data[];
+extern __ro_hinv mat_t output_data_meta;
 #endif

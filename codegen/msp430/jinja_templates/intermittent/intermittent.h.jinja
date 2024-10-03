@@ -25,6 +25,7 @@
 #define PAD_MAIN {{ sw_increment_counter() }}
 #define PAD_TRANSFER {{ sw_increment_counter() }}
 #define PAD_MEMSET {{ sw_increment_counter() }}
+#define PAD_ST_RESET {{ sw_increment_counter() }}
 #define PAD_END {{ sw_increment_counter() }}
 #define MAC_PREPARE {{ sw_increment_counter() }}
 #define MAC_COMPUTE {{ sw_increment_counter() }}
@@ -38,7 +39,8 @@
     {%- set inter.cnt = inter.cnt + 1 -%}
 {%- endmacro %}
 
-#define INTERMITTENT_{{ model_name }}_START {{ increment_counter() }}
+#define INTERMITTENT_{{ model_name }}_START_TRANSFER {{ increment_counter() }}
+#define INTERMITTENT_{{ model_name }}_START_CLEANUP {{ increment_counter() }}
 {%- for layer in layer_list %}
 #define INTERMITTENT_{{ layer }}_PREPARE {{ increment_counter() }}
 #define INTERMITTENT_{{ layer }}_MAIN {{ increment_counter() }}
