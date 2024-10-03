@@ -158,20 +158,17 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
   /* No need for double buffering (for loop indices) as each output is independent */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
-    {%- if dma_opt %}
+    {%- if dma_opt or padding %}
     uintptr_t output_fram_addr = (uintptr_t)(output->data);
     {%- endif %}
-    {%- if padding %}
-    /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
     switch (intermittent_status[COMPUTE_SWITCH]) {
-    case PAD_START:
-      {%- if dma_opt %}
-      DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(input));
-      {%- else %}
-      memset(output->data, 0, GET_MAT_SIZE(input)*sizeof(int16_t));
-      {%- endif %}
+    case PAD_START: {
+    {%- if padding %}
+      LARGE_MEMSET(output->data, GET_MAT_SIZE(input), COMPUTE_IO_COL);
       VOLATILE_WRITE(PAD_MAIN, COMPUTE_SWITCH);
+    }
     case PAD_MAIN: {
+    /* Pad the input for ({{ padding["left"] }}, {{ padding["right"] }}, {{ padding["top"] }}, {{ padding["bottom"] }}) */
       uint16_t input_line_num = input->dims[2] - _PADDING_TOP - _PADDING_BOTTOM;
       uint16_t input_line_size_bf = input->dims[3] - _PADDING_RIGHT - _PADDING_LEFT;
       uint16_t input_len_bf = input_line_num * input_line_size_bf;
@@ -222,23 +219,55 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
       VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_SWITCH);
     }
-    case PAD_TRANSFER:
+    case PAD_TRANSFER: {
+      uint16_t total_size = GET_MAT_SIZE(input);
+      uint16_t remain_size = total_size % MAX_DMA_SIZE;
+      uintptr_t in_addr = output_fram_addr + \
+        intermittent_status[COMPUTE_OUT_CH] * sizeof(int16_t);
+      uintptr_t out_addr = input_fram_addr + \
+        intermittent_status[COMPUTE_OUT_CH] * sizeof(int16_t);
+      uintptr_t remain_offset = remain_size * sizeof(int16_t);
+      uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t);
+
+      if (intermittent_status[COMPUTE_OUT_CH] == 0) {
+        DMA_makeTransfer(in_addr, out_addr, remain_size);
+        VOLATILE_WRITE(remain_size, COMPUTE_OUT_CH);
+        in_addr += remain_offset;
+        out_addr += remain_offset;
+      }
+
+      for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < total_size; i += MAX_DMA_SIZE) {
+        DMA_makeTransfer(in_addr, out_addr, MAX_DMA_SIZE);
+        uint16_t next_i = i + MAX_DMA_SIZE;
+        VOLATILE_WRITE(next_i, COMPUTE_OUT_CH);
+        in_addr += offset;
+        out_addr += offset;
+      }
+
       DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
       VOLATILE_WRITE(PAD_MEMSET, COMPUTE_SWITCH);
+    }
     case PAD_MEMSET:
+      /* intermittent_status[COMPUTE_IO_ROW] should be zero right now */
+      LARGE_MEMSET(output->data, GET_MAT_SIZE(output), COMPUTE_IO_ROW);
+      VOLATILE_WRITE(PAD_ST_RESET, COMPUTE_SWITCH);
+    case PAD_ST_RESET:
+      VOLATILE_WRITE(0, COMPUTE_IO_COL);
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
       VOLATILE_WRITE(0, COMPUTE_IN_CH);
+      VOLATILE_WRITE(0, COMPUTE_OUT_CH);
+    {%- else %} {# not padding #}
+      LARGE_MEMSET(output->data, GET_MAT_SIZE(output), COMPUTE_IO_COL);
+      VOLATILE_WRITE(PAD_ST_RESET, COMPUTE_SWITCH);
+    }
+    case PAD_ST_RESET:
+      VOLATILE_WRITE(0, COMPUTE_IO_COL);
+    {%- endif %} 
       VOLATILE_WRITE(PAD_END, COMPUTE_SWITCH);
     default:
       break;
     }
-    {%- if dma_opt %}
-    DMA_setWord(output_fram_addr, zero, GET_MAT_SIZE(output));
-    {%- else %}
-    memset(output->data, 0, GET_MAT_SIZE(output)*sizeof(int16_t));
-    {%- endif %}
-    {%- endif %} 
 
-    VOLATILE_WRITE(MAC_PREPARE, COMPUTE_SWITCH);
     VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_MAIN, COMPUTE_CK);
   }
 
