@@ -201,7 +201,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     switch (intermittent_status[COMPUTE_SWITCH]) {
     case PAD_START: {
     {%- if padding %}
-      LARGE_MEMSET(output->data, GET_MAT_SIZE(input), COMPUTE_IO_COL);
+      large_memset(output->data, GET_MAT_SIZE(input), COMPUTE_IO_COL);
       VOLATILE_WRITE(PAD_MAIN, COMPUTE_SWITCH);
     }
     case PAD_MAIN: {
@@ -257,36 +257,13 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       VOLATILE_WRITE(PAD_TRANSFER, COMPUTE_SWITCH);
     }
     case PAD_TRANSFER: {
-      uint16_t total_size = GET_MAT_SIZE(input);
-      uint16_t remain_size = total_size % MAX_DMA_SIZE;
-      uintptr_t in_addr = output_fram_addr + \
-        intermittent_status[COMPUTE_OUT_CH] * sizeof(int16_t);
-      uintptr_t out_addr = input_fram_addr + \
-        intermittent_status[COMPUTE_OUT_CH] * sizeof(int16_t);
-      uintptr_t remain_offset = remain_size * sizeof(int16_t);
-      uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t);
+      large_dma(output_fram_addr, input_fram_addr, GET_MAT_SIZE(input), COMPUTE_OUT_CH);
 
-      if (intermittent_status[COMPUTE_OUT_CH] == 0) {
-        DMA_makeTransfer(in_addr, out_addr, remain_size);
-        VOLATILE_WRITE(remain_size, COMPUTE_OUT_CH);
-        in_addr += remain_offset;
-        out_addr += remain_offset;
-      }
-
-      for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < total_size; i += MAX_DMA_SIZE) {
-        DMA_makeTransfer(in_addr, out_addr, MAX_DMA_SIZE);
-        uint16_t next_i = i + MAX_DMA_SIZE;
-        VOLATILE_WRITE(next_i, COMPUTE_OUT_CH);
-        in_addr += offset;
-        out_addr += offset;
-      }
-
-      DMA_makeTransfer((uintptr_t)(output->data), input_fram_addr, GET_MAT_SIZE(input));
       VOLATILE_WRITE(PAD_MEMSET, COMPUTE_SWITCH);
     }
     case PAD_MEMSET:
       /* intermittent_status[COMPUTE_IO_ROW] should be zero right now */
-      LARGE_MEMSET(output->data, GET_MAT_SIZE(output), COMPUTE_IO_ROW);
+      large_memset(output->data, GET_MAT_SIZE(output), COMPUTE_IO_ROW);
       VOLATILE_WRITE(PAD_ST_RESET, COMPUTE_SWITCH);
     case PAD_ST_RESET:
       VOLATILE_WRITE(0, COMPUTE_IO_COL);
@@ -294,7 +271,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       VOLATILE_WRITE(0, COMPUTE_IN_CH);
       VOLATILE_WRITE(0, COMPUTE_OUT_CH);
     {%- else %} {# not padding #}
-      LARGE_MEMSET(output->data, GET_MAT_SIZE(output), COMPUTE_IO_COL);
+      large_memset(output->data, GET_MAT_SIZE(output), COMPUTE_IO_COL);
       VOLATILE_WRITE(PAD_ST_RESET, COMPUTE_SWITCH);
     }
     case PAD_ST_RESET:

@@ -116,7 +116,8 @@ def lupe_args():
     )
     par.add_argument(
         "--hifram-func", type=int, default=0,
-        help="Number of functions to be put on the HIFRAM"
+        help=("Number of functions to be put on the HIFRAM. The model function"
+        "will first be put onto the HIFRAM, and then layer functions.")
     )
     par.add_argument(
         "--max-dma-size", type=int, default=10000,

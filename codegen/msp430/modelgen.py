@@ -8,13 +8,16 @@ import os
 
 from .helpers import jinja_gen
 
-def modelgen(code_dir, graph, debug, calibration, jinja_dir):
+def modelgen(code_dir, graph, debug, calibration, jinja_dir, hifram_func):
     """Generate the model using jinja template"""
     model_name = graph.name
 
     # model header
     header_template_path = os.path.join(jinja_dir, "model.h.jinja")
-    header_params = {"model_name": model_name}
+    header_params = {
+        "hifram" : hifram_func > 0,
+        "model_name": model_name
+    }
 
     # model c file
     cfile_template_path = os.path.join(jinja_dir, "model.c.jinja")

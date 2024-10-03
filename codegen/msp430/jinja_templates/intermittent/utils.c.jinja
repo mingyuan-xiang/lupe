@@ -73,6 +73,64 @@ void init_lupe() {
     memset(intermittent_status, 0, INTERMITTENT_STATUS_SIZE * sizeof(uint16_t)); 
   }
 }
+
+void large_memset(_q15* reset_ptr, uint16_t total_size, uint16_t st) {
+  uint16_t remain_size = total_size % MAX_DMA_SIZE;
+  uintptr_t remain_offset = remain_size * sizeof(int16_t);
+  uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t);
+  {%- if dma_opt %}
+  uintptr_t addr = ((uintptr_t)reset_ptr) + intermittent_status[st] * sizeof(int16_t);
+  int16_t z = 0;
+
+  if (intermittent_status[st] == 0) {
+    DMA_setWord(addr, z, remain_size);
+    intermittent_status[st] = remain_size;
+    addr += remain_offset;
+  }
+
+  for (uint16_t i = intermittent_status[st]; i < total_size; i += MAX_DMA_SIZE) {
+    DMA_setWord(addr, z, MAX_DMA_SIZE);
+    intermittent_status[st] = i + MAX_DMA_SIZE;
+    addr += offset;
+  }
+  {%- else %}
+  _q15* ptr = reset_ptr + intermittent_status[st];
+
+  if (intermittent_status[st] == 0) {
+    memset(ptr, 0, remain_offset);
+    intermittent_status[st] = remain_size;
+    ptr += remain_size;
+  }
+
+  for (uint16_t i = intermittent_status[st]; i < total_size; i += MAX_DMA_SIZE) {
+    memset(ptr, 0, offset);
+    intermittent_status[st] = i + MAX_DMA_SIZE;
+    ptr += MAX_DMA_SIZE;
+  }
+  {%- endif %}
+}
+
+void large_dma(uintptr_t in, uintptr_t out, uint16_t total_size, uint16_t st) {
+  uint16_t remain_size = total_size % MAX_DMA_SIZE;
+  uintptr_t in_addr = in + intermittent_status[st] * sizeof(int16_t);
+  uintptr_t out_addr = out + intermittent_status[st] * sizeof(int16_t);
+  uintptr_t remain_offset = remain_size * sizeof(int16_t);
+  uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t);
+
+  if (intermittent_status[st] == 0) {
+    DMA_makeTransfer(in_addr, out_addr, remain_size);
+    intermittent_status[st] = remain_size;
+    in_addr += remain_offset;
+    out_addr += remain_offset;
+  }
+
+  for (uint16_t i = intermittent_status[st]; i < total_size; i += MAX_DMA_SIZE) {
+    DMA_makeTransfer(in_addr, out_addr, MAX_DMA_SIZE);
+    intermittent_status[st] = i + MAX_DMA_SIZE;
+    in_addr += offset;
+    out_addr += offset;
+  }
+}
 {% if lea_opt %}
 void add_init(uint16_t length) {
   lea_add_params = (MSP_LEA_ADDMATRIX_PARAMS*)msp_lea_allocMemory(sizeof(MSP_LEA_ADDMATRIX_PARAMS)/sizeof(uint32_t));

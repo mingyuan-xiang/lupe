@@ -84,39 +84,13 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
  * Reset a large chunk of memory
  * `st` determines which intermittent_status is used
  */
-#define LARGE_MEMSET(reset_ptr, total_size, st) { \
-  uint16_t remain_size = total_size % MAX_DMA_SIZE; \
-  uintptr_t remain_offset = remain_size * sizeof(int16_t); \
-  uintptr_t offset = MAX_DMA_SIZE * sizeof(int16_t); \
-  {%- if dma_opt %}
-  uintptr_t addr = ((uintptr_t)reset_ptr) + intermittent_status[st] * sizeof(int16_t); \
-  int16_t z = 0; \
-  if (intermittent_status[st] == 0) { \
-    DMA_setWord(addr, z, remain_size); \
-    VOLATILE_WRITE(remain_size, st); \
-    addr += remain_offset; \
-  } \
-  for (uint16_t i = intermittent_status[st]; i < total_size; i += MAX_DMA_SIZE) { \
-    DMA_setWord(addr, z, MAX_DMA_SIZE); \
-    uint16_t next_i = i + MAX_DMA_SIZE; \
-    VOLATILE_WRITE(next_i, st); \
-    addr += offset; \
-  } \
-  {%- else %}
-  _q15* ptr = reset_ptr + intermittent_status[st]; \
-  if (intermittent_status[st] == 0) { \
-    memset(ptr, 0, remain_offset); \
-    VOLATILE_WRITE(remain_size, st); \
-    ptr += remain_size; \
-  } \
-  for (uint16_t i = intermittent_status[st]; i < total_size; i += MAX_DMA_SIZE) { \
-    memset(ptr, 0, offset); \
-    uint16_t next_i = i + MAX_DMA_SIZE; \
-    VOLATILE_WRITE(next_i, st); \
-    ptr += MAX_DMA_SIZE; \
-  } \
-  {%- endif %}
-}
+void large_memset(_q15* reset_ptr, uint16_t total_size, uint16_t st);
+
+/*
+ * Transfer a large chunk of memory
+ * `st` determines which intermittent_status is used
+ */
+void large_dma(uintptr_t in, uintptr_t out, uint16_t total_size, uint16_t st);
 
 {% if global_mem_buffer %}
 extern _q15 lea_buffer[];

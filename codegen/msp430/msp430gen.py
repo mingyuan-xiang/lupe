@@ -76,7 +76,8 @@ class MSP430Gen:
 
         # Generate the model file
         modelgen(
-            self.src_dir, self.graph, self.debug, self.calibration, jinja_dir
+            self.src_dir, self.graph, self.debug, self.calibration, jinja_dir,
+            hifram_func
         )
 
         # Generate the weight and bias files
@@ -132,7 +133,7 @@ class MSP430Gen:
         )
         layergen(
             layer_dir, self.graph, self.opt_config, self.qf,
-            self.debug, self.calibration, jinja_dir, hifram_func
+            self.debug, self.calibration, jinja_dir, hifram_func - 1
         )
 
         # Generate the makefile
