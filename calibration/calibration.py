@@ -30,6 +30,8 @@ def calibration(baud, port, result_queue):
 
     config = {}
     for d in data:
+        if not isinstance(d, str):
+            continue
         match = re.search(pattern, d)
         if match:
             layer = match.group('layer_name')

@@ -148,6 +148,10 @@ python scripts/run_experiments.py --model <model name> --dataset <dataset> --qf 
 + q5.10 for activation and bias, `qf_offset=1` for weights
 + test accuracy in PyTorch (90.57%)
 
-# TODO
+## Intermittent Time
 
-model clip does not pass to the model constructor (pytorch)
++ RNG Setting
+    + `200 - 300`
+    + `1400 - 1500`
+    + `2900 - 3000`
+

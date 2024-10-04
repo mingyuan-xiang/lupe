@@ -1,0 +1,93 @@
+from colorama import Fore, Style
+import threading
+import subprocess
+import argparse
+import sys
+import json
+import os
+sys.path.append("scripts/uart_commute")
+from uart_dump import sync_reader
+
+bound_list = [
+    (200, 300),
+    (1400, 1500),
+    (2900, 3000),
+]
+
+def _banner_print(s):
+    print(Fore.GREEN +
+        '\n*******************************************************************')
+    print(Fore.GREEN + s)
+    print(Fore.GREEN +
+        '\n*******************************************************************'
+        + Fore.WHITE + Style.RESET_ALL)
+
+def get_args():
+    par = argparse.ArgumentParser()
+    par.add_argument(
+        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
+    )
+    par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
+    par.add_argument('--repeat', type=int, default=100, help='Repeat times for inference')
+
+    args = par.parse_args()
+
+    return args
+
+args = get_args()
+
+def run_lupe(model, onnx_path, qf, config, dataset, repeat, lower, upper, hifram):
+    subprocess.run([
+        './lupe.py', 'code-gen', '--model-name', model,
+        '--model-path', onnx_path, '--qf', str(qf), '--config', config,
+        '--intermittent', '--intermittent-repeat', str(repeat),
+        '--intermittent-bound', str(lower), str(upper),
+        '--debug-random', '--debug-dataset', dataset,
+        '--hifram-func', str(hifram)
+    ], check=False)
+
+def enable_uart(baud, port, name):
+    filename = "logs"
+    os.makedirs(filename, exist_ok=True)
+
+    filename = os.path.join(filename, f'{name}.log')
+    if os.path.isfile(filename):
+        os.remove(filename)
+
+    f = open(filename, "w")
+
+    par = sync_reader(port, baud)
+
+    par.read()
+
+    par.close()
+    f.close()
+
+with open('scripts/intermittent_experiments/experiment_setting/lupe.json', "r", encoding="utf-8") as file:
+    experiment_configs = json.load(file)
+
+for bound in bound_list:
+    for m in experiment_configs:
+        c = experiment_configs[m]
+
+        onnx_path = f'models/onnx/{m}'
+        for config in c['config']:
+            _banner_print(f"Generate Code for {args.model}")
+            run_lupe(
+                m, onnx_path, c['qf'], config, c['dataset'], args.repeat,
+                bound[0],  bound[1], c['hifram-func']
+            )
+
+            name = f'{bound[0]}_{bound[1]}_{m}_{config}'
+
+            uart_thread = threading.Thread(
+                target=enable_uart,
+                args=(args.baud, args.port, name)
+            )
+            uart_thread.daemon = True
+            uart_thread.start()
+
+            _banner_print('Compile and flash code')
+            os.system(f"make apps/{m}/bld/gcc/prog")
+
+            uart_thread.join()
