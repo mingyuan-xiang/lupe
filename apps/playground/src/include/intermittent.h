@@ -24,6 +24,10 @@
 #define MAC_COMPUTE 6
 #define MAC_END 7
 
+#define RESHAPE_START 0
+#define RESHAPE_ST_RESET 1
+#define RESHAPE_END 2
+
 /* INTERMITTENT_LeNet_START has to be 0 */
 
 #define INTERMITTENT_MobileNetV2_inter_START 0

@@ -52,15 +52,15 @@ int main() {
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
     if (intermittent_status[COMPUTE_CK] == INTERMITTENT_MobileNetV2_inter_START) {
       DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
-      intermittent_status[COMPUTE_CK] = INTERMITTENT_features_features_0_block_block_0_Conv_PREPARE;
+      intermittent_status[COMPUTE_CK] = INTERMITTENT_features_features_1_pw_conv_linear_pw_conv_linear_0_Conv_PREPARE;
     }
 
-    start_intermittent_tests(0, DELAY);
+    start_intermittent_tests(0, rand(1, 5));
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
-    // DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
-    // conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
+    DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
+    conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);
 
     intermittent_status[COMPUTE_CK] = INTERMITTENT_MobileNetV2_inter_START;
 
@@ -77,35 +77,33 @@ int main() {
   msp_send_printf("Restart times: %u (repeat: %u)", intermittent_status[COUNTER], REPEAT);
   msp_send_printf("output_meta.strides[0]: %u", output_meta.strides[0]);
 
-  msp_send_mat(&input_meta);
-  
   if (verify() != 0) {
-    uint16_t cnt = 0;
-    for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
-      for (uint16_t j = 0; j < output_meta.dims[2]; ++j) {
-        for (uint16_t k = 0; k < output_meta.dims[3]; ++k) {
-          if (output_meta.data[cnt] != output_exp_meta.data[cnt]) {
-            msp_send_printf(
-              "(1, %u, %u, %u): got: %i, expected: %i", i, j, k,
-              output_meta.data[cnt], output_exp_meta.data[cnt]
-            );
-          }
-          cnt++;
-        }
-      }
-    }
+    // uint16_t cnt = 0;
+    // for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+    //   for (uint16_t j = 0; j < output_meta.dims[2]; ++j) {
+    //     for (uint16_t k = 0; k < output_meta.dims[3]; ++k) {
+    //       if (output_meta.data[cnt] != output_exp_meta.data[cnt]) {
+    //         msp_send_printf(
+    //           "(1, %u, %u, %u): got: %i, expected: %i", i, j, k,
+    //           output_meta.data[cnt], output_exp_meta.data[cnt]
+    //         );
+    //       }
+    //       cnt++;
+    //     }
+    //   }
+    // }
 
-    for (int16_t i = 1; i < log[0]; i += 3) {
-      msp_send_printf(
-        "(%i) COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
-        log[i], log[i+1], log[i+2]
-      );
-    }
+    // for (int16_t i = 1; i < log[0]; i += 3) {
+    //   msp_send_printf(
+    //     "(%i) COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
+    //     log[i], log[i+1], log[i+2]
+    //   );
+    // }
 
-    // msp_send_printf("Got activations for the last layer:");
-    // msp_send_mat(&output_meta);
-    // msp_send_printf("Expected:");
-    // msp_send_mat(&output_exp_meta);
+    msp_send_printf("Got activations for the last layer:");
+    msp_send_mat(&output_meta);
+    msp_send_printf("Expected:");
+    msp_send_mat(&output_exp_meta);
   }
 
   exit();
