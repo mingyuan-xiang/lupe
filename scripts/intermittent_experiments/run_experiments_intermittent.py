@@ -70,15 +70,16 @@ for bound in bound_list:
     for m in experiment_configs:
         c = experiment_configs[m]
 
-        onnx_path = f'models/onnx/{m}'
+        onnx_path = f'models/onnx/{m}.onnx'
         for config in c['config']:
-            _banner_print(f"Generate Code for {args.model}")
+            _banner_print(f"Generate Code for {m}")
             run_lupe(
                 m, onnx_path, c['qf'], config, c['dataset'], args.repeat,
                 bound[0],  bound[1], c['hifram-func']
             )
 
-            name = f'{bound[0]}_{bound[1]}_{m}_{config}'
+            config_name = config.split('/')[1]
+            name = f'{bound[0]}_{bound[1]}_{m}_{config_name}'
 
             uart_thread = threading.Thread(
                 target=enable_uart,
