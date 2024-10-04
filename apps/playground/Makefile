@@ -1,6 +1,6 @@
 EXEC = playground
 
-OBJECTS = main.o input.o output.o output_exp.o weight.o conv.o conv_exp.o utils.o bias.o image.o
+OBJECTS = main.o input.o output.o output_exp.o weight.o conv.o conv_exp.o utils.o bias.o image.o lupe_buffer.o
 
 DEPS = libdsp:gcc librng:gcc libmsppoweroff:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
 

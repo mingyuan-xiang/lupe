@@ -31,7 +31,15 @@
 #define MAC_COMPUTE {{ sw_increment_counter() }}
 #define MAC_END {{ sw_increment_counter() }}
 
-/* INTERMITTENT_LeNet_START has to be 0 */
+{%- set re = namespace(cnt=0) %}
+{%- macro re_increment_counter() -%}
+    {{ re.cnt }}
+    {%- set re.cnt = re.cnt + 1 -%}
+{%- endmacro %}
+
+#define RESHAPE_START {{ re_increment_counter() }}
+#define RESHAPE_ST_RESET {{ re_increment_counter() }}
+#define RESHAPE_END {{ re_increment_counter() }}
 
 {%- set inter = namespace(cnt=0) %}
 {%- macro increment_counter() -%}
@@ -39,6 +47,7 @@
     {%- set inter.cnt = inter.cnt + 1 -%}
 {%- endmacro %}
 
+/* INTERMITTENT_LeNet_START has to be 0 */
 #define INTERMITTENT_{{ model_name }}_START_TRANSFER {{ increment_counter() }}
 #define INTERMITTENT_{{ model_name }}_START_CLEANUP {{ increment_counter() }}
 {%- for layer in layer_list %}

@@ -17,9 +17,9 @@
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define DELAY 328
+#define DELAY 100
 
-#define REPEAT 1
+#define REPEAT 10
 
 void init() {
   watchdog_disable();
@@ -55,7 +55,7 @@ int main() {
       intermittent_status[COMPUTE_CK] = INTERMITTENT_features_features_1_pw_conv_linear_pw_conv_linear_0_Conv_PREPARE;
     }
 
-    start_intermittent_tests(0, rand(1, 5));
+    start_intermittent_tests(0, DELAY);
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
     stop_intermittent_tests();
 
@@ -78,27 +78,27 @@ int main() {
   msp_send_printf("output_meta.strides[0]: %u", output_meta.strides[0]);
 
   if (verify() != 0) {
-    // uint16_t cnt = 0;
-    // for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
-    //   for (uint16_t j = 0; j < output_meta.dims[2]; ++j) {
-    //     for (uint16_t k = 0; k < output_meta.dims[3]; ++k) {
-    //       if (output_meta.data[cnt] != output_exp_meta.data[cnt]) {
-    //         msp_send_printf(
-    //           "(1, %u, %u, %u): got: %i, expected: %i", i, j, k,
-    //           output_meta.data[cnt], output_exp_meta.data[cnt]
-    //         );
-    //       }
-    //       cnt++;
-    //     }
-    //   }
-    // }
+    uint16_t cnt = 0;
+    for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+      for (uint16_t j = 0; j < output_meta.dims[2]; ++j) {
+        for (uint16_t k = 0; k < output_meta.dims[3]; ++k) {
+          if (output_meta.data[cnt] != output_exp_meta.data[cnt]) {
+            msp_send_printf(
+              "(1, %u, %u, %u): got: %i, expected: %i", i, j, k,
+              output_meta.data[cnt], output_exp_meta.data[cnt]
+            );
+          }
+          cnt++;
+        }
+      }
+    }
 
-    // for (int16_t i = 1; i < log[0]; i += 3) {
-    //   msp_send_printf(
-    //     "(%i) COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
-    //     log[i], log[i+1], log[i+2]
-    //   );
-    // }
+    for (int16_t i = 1; i < log[0]; i += 3) {
+      msp_send_printf(
+        "(%i) COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
+        log[i], log[i+1], log[i+2]
+      );
+    }
 
     msp_send_printf("Got activations for the last layer:");
     msp_send_mat(&output_meta);

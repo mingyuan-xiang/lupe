@@ -76,6 +76,7 @@ actual_shape = in_shape if mul(in_shape) > mul(out_shape) else out_shape
 gen('image', image_shape, image_shape, True)
 gen('input', in_shape, actual_shape, True)
 gen('output', out_shape, actual_shape, False)
+gen('lupe_buffer', in_shape, actual_shape, False)
 gen('output_exp', out_shape, actual_shape, False)
 gen('weight', weight_shape, weight_shape, True)
 gen('bias', bias_shape, bias_shape, True)

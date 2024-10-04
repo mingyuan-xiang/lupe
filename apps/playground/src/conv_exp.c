@@ -1,5 +1,6 @@
 #include <include/utils.h>
 #include <include/conv.h>
+#include <include/lupe_buffer.h>
 #include <include/intermittent.h>
 
 #define _LEA_DST_SIZE 120
@@ -44,46 +45,46 @@ void conv_exp(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     for (uint16_t m = r; m < m_end; m += _STRIDE_COL_SIZE) {
       uint16_t input_pos = m;
       for (uint16_t n = 0; n < in_channels; ++n) {
-        output->data[ptwise_pos] = input->data[input_pos];
+        lupe_buffer_meta.data[ptwise_pos] = input->data[input_pos];
         ++ptwise_pos;
         input_pos += input_len;
       }
     }
   }
 
-  // /* convolution */
-  // for (uint16_t i = 0; i < out_channels; ++i) {
-  //   offset_params.offset = bias->data[i];
-  //   uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data;
+  /* convolution */
+  for (uint16_t i = 0; i < out_channels; ++i) {
+    offset_params.offset = bias->data[i];
+    uintptr_t mac_input_addr = (uintptr_t)lupe_buffer_meta.data;
 
-  //   DMA_makeTransfer(flt_fram_addr, flt_lea_addr, in_channels);
-  //   for (uint16_t l = 0; l < lea_remain_size; ++l) {
-  //     DMA_makeTransfer(mac_input_addr, lea_src_addr, in_channels);
-  //     msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
-  //     lea_dst[l] = (int16_t)(lea_res[0] >> 15);
+    DMA_makeTransfer(flt_fram_addr, flt_lea_addr, in_channels);
+    for (uint16_t l = 0; l < lea_remain_size; ++l) {
+      DMA_makeTransfer(mac_input_addr, lea_src_addr, in_channels);
+      msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+      lea_dst[l] = (int16_t)(lea_res[0] >> 15);
 
-  //     mac_input_addr += mac_fram_offset;
-  //   }
-  //   offset_params.length = lea_remain_size_aligned;
-  //   msp_offset_q15(&offset_params, lea_dst, lea_dst);
+      mac_input_addr += mac_fram_offset;
+    }
+    offset_params.length = lea_remain_size_aligned;
+    msp_offset_q15(&offset_params, lea_dst, lea_dst);
 
-  //   DMA_makeTransfer(lea_dst_addr, output_fram_addr, lea_remain_size);
-  //   output_fram_addr += output_remain_size_offset;
-  //   offset_params.length = _LEA_DST_SIZE;
+    DMA_makeTransfer(lea_dst_addr, output_fram_addr, lea_remain_size);
+    output_fram_addr += output_remain_size_offset;
+    offset_params.length = _LEA_DST_SIZE;
 
-  //   for (uint16_t m = lea_remain_size; m < output_len; m += _LEA_DST_SIZE) {
-  //     for (uint16_t l = 0; l < _LEA_DST_SIZE; ++l) {
-  //       DMA_makeTransfer(mac_input_addr, lea_src_addr, in_channels);
-  //       msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
-  //       lea_dst[l] = (int16_t)(lea_res[0] >> 15);
+    for (uint16_t m = lea_remain_size; m < output_len; m += _LEA_DST_SIZE) {
+      for (uint16_t l = 0; l < _LEA_DST_SIZE; ++l) {
+        DMA_makeTransfer(mac_input_addr, lea_src_addr, in_channels);
+        msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
+        lea_dst[l] = (int16_t)(lea_res[0] >> 15);
 
-  //       mac_input_addr += mac_fram_offset;
-  //     }
-  //     msp_offset_q15(&offset_params, lea_dst, lea_dst);
+        mac_input_addr += mac_fram_offset;
+      }
+      msp_offset_q15(&offset_params, lea_dst, lea_dst);
 
-  //     DMA_makeTransfer(lea_dst_addr, output_fram_addr, _LEA_DST_SIZE);
-  //     output_fram_addr += output_lea_min_size_offset;
-  //   }
-  //   flt_fram_addr += flt_addr_offset;
-  // }
+      DMA_makeTransfer(lea_dst_addr, output_fram_addr, _LEA_DST_SIZE);
+      output_fram_addr += output_lea_min_size_offset;
+    }
+    flt_fram_addr += flt_addr_offset;
+  }
 }
