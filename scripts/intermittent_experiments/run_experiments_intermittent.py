@@ -9,9 +9,9 @@ sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
 bound_list = [
-    (200, 300),
-    (1400, 1500),
-    (2900, 3000),
+    (164, 328),
+    (1311, 1638),
+    (2949, 3276),
 ]
 
 def _banner_print(s):
