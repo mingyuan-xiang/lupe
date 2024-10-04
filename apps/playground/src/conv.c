@@ -157,8 +157,9 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           msp_mac_q15(&mac_params, lea_src, lea_flt, lea_res);
           lea_dst[l] = (int16_t)(lea_res[0] >> 15);
 
+          intermittent_mac_buffer[l] = lea_dst[l];
           uint16_t next_l = l + 1;
-          DOUBLE_BUFFER_ASSIGN(next_l, COMPUTE_IO_COL, lea_dst[l], intermittent_mac_buffer[l]);
+          VOLATILE_WRITE(next_l, COMPUTE_IO_COL);
 
           mac_input_addr += mac_fram_offset;
         }

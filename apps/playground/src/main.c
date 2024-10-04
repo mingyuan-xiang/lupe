@@ -17,7 +17,7 @@
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define DELAY 100
+#define DELAY 50
 
 #define REPEAT 10
 
@@ -95,15 +95,15 @@ int main() {
 
     for (int16_t i = 1; i < log[0]; i += 3) {
       msp_send_printf(
-        "(%i) COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
+        "COMPUTE_IO_COL: %i COMPUTE_IO_ROW: %i, COMPUTE_IN_CH: %i",
         log[i], log[i+1], log[i+2]
       );
     }
 
-    msp_send_printf("Got activations for the last layer:");
-    msp_send_mat(&output_meta);
-    msp_send_printf("Expected:");
-    msp_send_mat(&output_exp_meta);
+    // msp_send_printf("Got activations for the last layer:");
+    // msp_send_mat(&output_meta);
+    // msp_send_printf("Expected:");
+    // msp_send_mat(&output_exp_meta);
   }
 
   exit();
