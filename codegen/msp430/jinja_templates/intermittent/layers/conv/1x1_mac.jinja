@@ -88,7 +88,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
 
   /* Rebuild the input for MAC */
-    /* No need for double buffering (for loop indices) as each output is independent */
+  /* No need for double buffering (for loop indices) as each output is independent */
   if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
     switch (intermittent_status[COMPUTE_SWITCH]) {
     case RESHAPE_START: {

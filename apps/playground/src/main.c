@@ -17,9 +17,9 @@
 #include <librng/rng.h>
 
 /* ACLK cycles (32768 Hz) */
-#define DELAY 50
+#define DELAY 100
 
-#define REPEAT 10
+#define REPEAT 100
 
 void init() {
   watchdog_disable();
@@ -55,9 +55,9 @@ int main() {
       intermittent_status[COMPUTE_CK] = INTERMITTENT_features_features_1_pw_conv_linear_pw_conv_linear_0_Conv_PREPARE;
     }
 
-    // start_intermittent_tests(0, DELAY);
+    start_intermittent_tests(0, DELAY);
     conv(&input_meta, &output_meta, &weight_meta, &bias_meta);
-    // stop_intermittent_tests();
+    stop_intermittent_tests();
 
     DMA_makeTransfer((uintptr_t)(image_meta.data), (uintptr_t)(input_meta.data), image_meta.strides[0]);
     conv_exp(&input_meta, &output_exp_meta, &weight_meta, &bias_meta);

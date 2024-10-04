@@ -9,8 +9,6 @@ from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion
 from .helpers import get_stride
 
-# TODO: Deal with group for separable convolution
-
 class Convolution2D(LupeLayer):
     """2D Convolution layer"""
     def _register(self, node):

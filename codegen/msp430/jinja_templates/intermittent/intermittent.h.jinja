@@ -38,6 +38,8 @@
 {%- endmacro %}
 
 #define RESHAPE_START {{ re_increment_counter() }}
+#define RESHAPE_PREPARE_ST_RESET {{ re_increment_counter() }}
+#define RESHAPE_MAIN {{ re_increment_counter() }}
 #define RESHAPE_ST_RESET {{ re_increment_counter() }}
 #define RESHAPE_END {{ re_increment_counter() }}
 

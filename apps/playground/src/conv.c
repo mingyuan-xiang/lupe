@@ -53,6 +53,7 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
           ++out_bias_pos;
         }
 
+        VOLATILE_WRITE(0, COMPUTE_IO_ROW);
         uint16_t next_i = i + 1;
         VOLATILE_WRITE(next_i, COMPUTE_OUT_CH);
       }
@@ -219,7 +220,6 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
         input_channel_addr += remain_size_offset;
         output_fram_addr += remain_size_offset;
       }
-
 
       add_params.length = _LEA_DST_SIZE;
       fill_params.length = _LEA_DST_SIZE;
