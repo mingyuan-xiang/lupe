@@ -120,6 +120,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
     {%- endif %}
   }
 
+  {%- if stride_row > 1 or stride_col > 1 %}
   /* get strided input */
   uint16_t ptwise_pos = 0;
   for (uint16_t n = 0; n < input_size; n += input_len) {
@@ -132,6 +133,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       }
     }
   }
+  {%- endif %}
 
   /* convolution */
   for (uint16_t i = 0; i < out_channels; ++i) {
