@@ -67,7 +67,7 @@ extern __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
 
 /*
  * Reset a variable and transfer data with double buffer.
- * This is helpful for batched-FIR.
+ * This is helpful for batched-FIR and point-wise MPY.
  */
 #define DOUBLE_BUFFER_TRANSFER_WITH_VAR_RESET(val, offset, var, in_addr, out_addr, size) { \
   int16_t next = val; \

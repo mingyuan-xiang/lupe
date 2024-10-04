@@ -25,8 +25,10 @@
 #define MAC_END 7
 
 #define RESHAPE_START 0
-#define RESHAPE_ST_RESET 1
-#define RESHAPE_END 2
+#define RESHAPE_PREPARE_ST_RESET 1
+#define RESHAPE_MAIN 2
+#define RESHAPE_ST_RESET 3
+#define RESHAPE_END 4
 
 /* INTERMITTENT_LeNet_START has to be 0 */
 
