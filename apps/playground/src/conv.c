@@ -175,7 +175,9 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       input_channel_addr = input_fram_addr + intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
 
       if (intermittent_status[COMPUTE_IO_ROW] == 0) {
-        DMA_makeTransfer(output_fram_addr, lea_dst_addr, lea_remain_size);
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          DMA_makeTransfer(output_fram_addr, lea_dst_addr, lea_remain_size);
+        }
 
         add_params.length = lea_remain_size_aligned;
         fill_params.length = lea_remain_size_aligned;
@@ -223,7 +225,9 @@ void conv(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       fill_params.length = _LEA_DST_SIZE;
       mpy_params.length = _LEA_DST_SIZE;
       for (uint16_t m = intermittent_status[COMPUTE_IO_ROW]; m < output_len; m += _LEA_DST_SIZE) {
-        DMA_makeTransfer(output_fram_addr, lea_dst_addr, _LEA_DST_SIZE);
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          DMA_makeTransfer(output_fram_addr, lea_dst_addr, _LEA_DST_SIZE);
+        }
 
         tmp_input_addr = input_channel_addr + \
           intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
