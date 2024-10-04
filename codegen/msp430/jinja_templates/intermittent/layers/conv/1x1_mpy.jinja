@@ -208,12 +208,20 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
       uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      {%- if (out_len % lea_dst_size) != 0 %}
       uint16_t size = _LEA_REMAIN_SIZE;
       uintptr_t offset = 0;
       if (line > _LEA_REMAIN_SIZE) {
         size = _LEA_DST_SIZE;
         offset = (line - size) * sizeof(int16_t);
       }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      uintptr_t offset = 0;
+      if (line > _LEA_DST_SIZE) {
+        offset = (line - size) * sizeof(int16_t);
+      }
+      {%- endif %}
       uintptr_t addr = (uintptr_t)(output->data) + \
         intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
 
@@ -224,20 +232,28 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
 
     if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
       uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      {%- if (out_len % lea_dst_size) != 0 %}
       uint16_t size = _LEA_REMAIN_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
         size = _LEA_DST_SIZE;
       }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      {%- endif %}
 
       DMA_makeTransfer(intermittent_buffer_addr, intermittent_mpy_buffer_addr, size);
       VOLATILE_WRITE(idx, COMPUTE_IN_CH);
     }
 
     if (intermittent_status[COMPUTE_IN_CH] > 0) {
+      {%- if (out_len % lea_dst_size) != 0 %}
       uint16_t size = _LEA_REMAIN_SIZE;
       if (intermittent_status[COMPUTE_IO_ROW] > 0) {
         size = _LEA_DST_SIZE;
       }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      {%- endif %}
 
       DMA_makeTransfer(intermittent_mpy_buffer_addr, lea_dst_addr, size);
     }
@@ -327,7 +343,7 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
       {%- endif %}
 
       {% if out_len >= lea_dst_size %}
-      {% if lea_opt %}
+      {%- if lea_opt %}
       lea_add_params->vectorSize = _LEA_DST_SIZE;
       lea_fill_params->vectorSize = _LEA_DST_SIZE;
       lea_mpy_params->vectorSize = _LEA_DST_SIZE;
