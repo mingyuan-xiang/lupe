@@ -6,7 +6,7 @@ import sys
 import json
 import os
 sys.path.append("scripts/uart_commute")
-from uart_dump import sync_reader
+from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
 bound_list = [
     (200, 300),
@@ -58,7 +58,16 @@ def enable_uart(baud, port, name):
 
     par = sync_reader(port, baud)
 
-    par.read()
+    while True:
+        msg = par.get_msg()
+        if msg is None:
+            continue
+        print(msg)
+        f.write(msg + "\n")
+        f.flush()
+
+        if isinstance(msg, str) and msg == UARTIO_END_PRINT_STR:
+            break
 
     par.close()
     f.close()

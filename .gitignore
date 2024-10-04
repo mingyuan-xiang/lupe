@@ -191,7 +191,6 @@ apps/*
 !apps/playground
 
 # calibration folder
-calibration/*
 !calibration/calibration.py
 !calibration/__init__.py
 !calibration/uart_dump.py
