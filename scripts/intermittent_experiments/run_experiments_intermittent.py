@@ -69,7 +69,6 @@ def enable_uart(baud, port, name):
 
     par = sync_reader(port, baud)
 
-    flag = True
     start = 0
     end = 0
 
@@ -78,10 +77,10 @@ def enable_uart(baud, port, name):
         if msg is None:
             continue
 
-        if flag and 'Start' in msg:
+        if 'Start inference' in msg:
             start = time.time()
-            flag = False
-        else:
+
+        if 'Restart times' in msg:
             end = time.time()
 
         print(msg)
