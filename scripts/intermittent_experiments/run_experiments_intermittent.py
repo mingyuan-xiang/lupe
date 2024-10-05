@@ -58,6 +58,8 @@ def run_lupe(model, onnx_path, qf, config, dataset, repeat, lower, upper, hifram
         ], check=False)
 
 def enable_uart(baud, port, name):
+    start = time.time()
+
     filename = "logs"
     os.makedirs(filename, exist_ok=True)
 
@@ -69,16 +71,12 @@ def enable_uart(baud, port, name):
 
     par = sync_reader(port, baud)
 
-    start = 0
     end = 0
 
     while True:
         msg = par.get_msg()
         if msg is None:
             continue
-
-        if 'Start inference' in msg:
-            start = time.time()
 
         if 'Restart times' in msg:
             end = time.time()
@@ -115,14 +113,14 @@ for bound in bound_list:
             config_name = config.split('/')[1]
             name = f'{bound[0]}_{bound[1]}_{m}_{config_name}'
 
+            _banner_print('Compile and flash code')
+            os.system(f"make apps/{m}/bld/gcc/prog")
+
             uart_thread = threading.Thread(
                 target=enable_uart,
                 args=(args.baud, args.port, name)
             )
             uart_thread.daemon = True
             uart_thread.start()
-
-            _banner_print('Compile and flash code')
-            os.system(f"make apps/{m}/bld/gcc/prog")
 
             uart_thread.join()

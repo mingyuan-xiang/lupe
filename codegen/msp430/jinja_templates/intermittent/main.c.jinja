@@ -60,10 +60,6 @@ uint16_t rand(uint16_t low, uint16_t high) {
 int main() {
   init();
 
-  if (intermittent_status[COUNTER] == 0) {
-    msp_send_printf("\nStart inference\n");
-  }
-
   uint16_t c = intermittent_status[COUNTER] + 1;
   VOLATILE_WRITE(c, COUNTER);
 
