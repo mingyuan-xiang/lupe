@@ -78,7 +78,7 @@ def enable_uart(baud, port, name):
         if msg is None:
             continue
 
-        if flag:
+        if flag and 'Start' in msg:
             start = time.time()
             flag = False
         else:
@@ -91,6 +91,7 @@ def enable_uart(baud, port, name):
         if isinstance(msg, str) and msg == UARTIO_END_PRINT_STR:
             break
 
+    print(f"Elapsed time: {end - start} seconds")
     f.write(f"Elapsed time: {end - start} seconds")
     f.flush()
 
