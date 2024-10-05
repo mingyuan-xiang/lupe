@@ -5,6 +5,8 @@ import argparse
 import sys
 import json
 import os
+import time
+
 sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
@@ -26,7 +28,7 @@ def _banner_print(s):
 def get_args():
     par = argparse.ArgumentParser()
     par.add_argument(
-        '--port', type=str, default='/dev/ttyACM1', help='UART port'
+        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
     )
     par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     par.add_argument('--repeat', type=int, default=100, help='Repeat times for inference')
@@ -67,16 +69,30 @@ def enable_uart(baud, port, name):
 
     par = sync_reader(port, baud)
 
+    flag = True
+    start = 0
+    end = 0
+
     while True:
         msg = par.get_msg()
         if msg is None:
             continue
+
+        if flag:
+            start = time.time()
+            flag = False
+        else:
+            end = time.time()
+
         print(msg)
         f.write(msg + "\n")
         f.flush()
 
         if isinstance(msg, str) and msg == UARTIO_END_PRINT_STR:
             break
+
+    f.write(f"Elapsed time: {end - start} seconds")
+    f.flush()
 
     par.close()
     f.close()
