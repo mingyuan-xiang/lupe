@@ -9,6 +9,7 @@ sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
 bound_list = [
+    (0, 0),
     (164, 328),
     (1311, 1638),
     (2949, 3276),
@@ -30,21 +31,29 @@ def get_args():
     par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     par.add_argument('--repeat', type=int, default=100, help='Repeat times for inference')
 
-    args = par.parse_args()
-
-    return args
+    return par.parse_args()
 
 args = get_args()
 
 def run_lupe(model, onnx_path, qf, config, dataset, repeat, lower, upper, hifram):
-    subprocess.run([
-        './lupe.py', 'code-gen', '--model-name', model,
-        '--model-path', onnx_path, '--qf', str(qf), '--config', config,
-        '--intermittent', '--intermittent-repeat', str(repeat),
-        '--intermittent-bound', str(lower), str(upper),
-        '--debug-random', '--debug-dataset', dataset,
-        '--hifram-func', str(hifram)
-    ], check=False)
+    if lower == upper:
+        subprocess.run([
+            './lupe.py', 'code-gen', '--model-name', model,
+            '--model-path', onnx_path, '--qf', str(qf), '--config', config,
+            '--intermittent', '--intermittent-repeat', str(repeat),
+            '--intermittent-bound', str(lower),
+            '--debug-random', '--debug-dataset', dataset,
+            '--hifram-func', str(hifram)
+        ], check=False)
+    else:
+        subprocess.run([
+            './lupe.py', 'code-gen', '--model-name', model,
+            '--model-path', onnx_path, '--qf', str(qf), '--config', config,
+            '--intermittent', '--intermittent-repeat', str(repeat),
+            '--intermittent-bound', str(lower), str(upper),
+            '--debug-random', '--debug-dataset', dataset,
+            '--hifram-func', str(hifram)
+        ], check=False)
 
 def enable_uart(baud, port, name):
     filename = "logs"
