@@ -8,7 +8,6 @@ opt_flags = {
     'no_opt' : ('Bottom-up Approach', 'pink', 'xx'),
     'dma' : ('DMA Optimization',  'deepskyblue', '||'),
     'dma_lea_opt' : ('LEA Optimization',  'mediumspringgreen', '--'),
-    'dma_lea_opt_adaptive_buffer' : ('Adaptive Buffer',  'darkorange', 'oo'),
     'dma_lea_opt_adaptive_buffer_mem' : ('Adaptive Data Movement',  'royalblue', '\\\\'),
     'dma_lea_opt_adaptive_buffer_mem_batched' : ('Batched Acceleration',  'royalblue', '++'),
     'dma_lea_opt_adaptive_buffer_mem_acc' : ('Adaptive Generation',  'firebrick', '//'),
@@ -74,26 +73,38 @@ def plot(n, r, ax):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.set_ylim([0, 30])
-
     ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    if n != 'DS_CNN':
+    if n == 'MLPClassifier':
+        ax.set_ylim([0, 11])
+        ax.set_ylabel('Normalized to Adaptive Generation')
+        ax.grid(axis='y', zorder=0)
+    elif n == 'DS_CNN':
+        ax.set_ylim([0, 30])
+        ax.yaxis.tick_right()
+        ax.yaxis.set_label_position("right")
+        ax.grid(axis='y', which='major', zorder=0)
+        ax.set_facecolor('gainsboro')
+    else:
+        ax.set_ylim([0, 11])
         ax.set_yticklabels([])
         ax.yaxis.set_tick_params(length=0)
-    else:
-        ax.set_ylabel('Normalized to Adaptive Generation')
+        ax.grid(axis='y', zorder=0)
 
     if n == 'DS_CNN':
-        n = 'DS-CNN'
+        n = 'DS-CNN (Right Axis)'
     ax.set_title(n)
-    ax.grid(axis='y', zorder=0)
 
 cnt = 0
+
+model_order = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
+
+results = {key: results[key] for key in model_order}
+
 for name, m in results.items():
     plot(name, m, axs[cnt])
     cnt += 1

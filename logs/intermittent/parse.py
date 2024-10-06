@@ -4,29 +4,64 @@ import json
 
 restart_time_pattern = r"Restart times: (\d+)"
 elapsed_time_pattern = r"Elapsed time: ([\d.]+)"
+repeat_pattern = r"repeat: (\d+)"
 rng_pattern = r"\[([0-9]+),\s*([0-9]+)\]"
+filename_pattern = r"\d+_\d+_(LeNet|ResNet3|MobileNetV2|DS_CNN|MLPClassifier)_(.+)\.json\.log"
 
 
+dir_path = os.path.dirname(os.path.abspath(__file__))
+continuous_path = os.path.join(os.path.dirname(dir_path), 'continuous', 'results.json')
+log_path = os.path.join(dir_path, 'logs')
 
+with open(continuous_path, 'r') as f:
+    continuous_results = json.load(f)
 
-dir_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'logs')
+results = {}
 
-print(dir_path)
-for file_name in os.listdir(dir_path):
+for file_name in os.listdir(log_path):
     if file_name.endswith('.log'):
-        with open(os.path.join(dir_path, file_name), 'r') as file:
+        with open(os.path.join(log_path, file_name), 'r') as file:
             content = file.read()
 
             restart_time = re.search(restart_time_pattern, content).group(1)
             elapsed_time = re.search(elapsed_time_pattern, content).group(1)
+            repeat = re.search(repeat_pattern, content).group(1)
             rng_match = re.search(rng_pattern, content)
-
             rng_lower = rng_match.group(1)
             rng_upper = rng_match.group(2)
+            filename_match = re.search(filename_pattern, file_name)
+            model_name = filename_match.group(1)
+            config = filename_match.group(2)
 
+            for r in continuous_results[model_name]:
+                if r['optimization_flags'] == config:
+                    continuous_time = r['total_cycles'] / (r['total_images'] * 32768)
+                    break;
 
+            if rng_lower == "0":
+                restart_time = 1
+            else:
+                if int(restart_time) == 1:
+                    restart_time = float(restart_time)
+                else:
+                    restart_time = float(restart_time) / float(repeat)
 
-            print(restart_time)
-            print(elapsed_time)
-            print(rng_lower)
-            print(rng_upper)
+            d = {
+                'config' : config,
+                'restart' : restart_time,
+                'intermittent_time' : float(elapsed_time) / float(repeat),
+                'continuous_time' : continuous_time,
+            }
+
+            r = str((int(rng_lower), int(rng_upper)))
+            if r not in results:
+                results[r] = { model_name : [d] }
+            else:
+                if model_name not in results[r]:
+                    results[r][model_name] = [d]
+                else:
+                    results[r][model_name].append(d)
+
+output_file = os.path.join(dir_path, 'results.json')
+with open(output_file, 'w') as json_file:
+    json.dump(results, json_file, indent=4)
