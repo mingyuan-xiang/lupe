@@ -121,4 +121,3 @@ plt.subplots_adjust(wspace=0)
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 1])
 
 plt.savefig(f'figures/opt_perf_continous.png', dpi=500)
-

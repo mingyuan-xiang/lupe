@@ -34,72 +34,87 @@ plt.rcParams.update({'font.size': 16})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-model_list = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
+models = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
+data_ranges = ['(0, 0)', '(164, 328)', '(1311, 1638)', '(2949, 3276)']
 
-for range_key, models in results.items():
-    for model_name in model_list:
-        fig, ax = plt.subplots(figsize=(6, 5))
+reordered_results = {}
+for r in data_ranges:
+    reordered_results[r] = {}
+    for m in models:
+        reordered_results[r][m] = results[r][m]
 
-        model_data = models[model_name]
+data_dict = {}
 
-        configs = []
-        intermittent_times = []
-        continuous_times = []
-        overhead_times = []
-        restarts = []
-        colors = [opt_flags[k][1] for k in opt_flags]
-        hatches = [opt_flags[k][2] for k in opt_flags]
+config_list = list(opt_flags.keys())
 
-        intermittent_times = {config: 0 for config in opt_flags}
-        continuous_times = {config: 0 for config in opt_flags}
-        overhead_times = {config: 0 for config in opt_flags}
-        restarts = {config: 0 for config in opt_flags}
-
-        for entry in model_data:
+for data_range, models in reordered_results.items():
+    for model, entries in models.items():
+        if model not in data_dict:
+            data_dict[model] = {}
+        if data_range not in data_dict[model]:
+            data_dict[model][data_range] = {}
+        for entry in entries:
             config = entry['config']
-            configs.append(opt_flags[entry['config']][0])
             intermittent_time = entry['intermittent_time']
             continuous_time = entry['continuous_time']
-            overhead_time = intermittent_time - continuous_time
-            restart = entry['restart']
+            ratio = (intermittent_time - continuous_time) / intermittent_time
+            data_dict[model][data_range][config] = {
+                'intermittent_time': intermittent_time,
+                'continuous_time': continuous_time,
+                'intermittent_time_bar_value': intermittent_time - continuous_time,
+                'ratio': ratio
+            }
 
-            intermittent_times[config] = intermittent_time
-            continuous_times[config] = continuous_time
-            overhead_times[config] = overhead_time
-            restarts[config] = restart
+fig = plt.figure(figsize=(20, 25))
 
-        cont_times = [continuous_times[config] for config in opt_flags]
-        over_times = [overhead_times[config] for config in opt_flags]
-        restarts_list = [restarts[config] for config in opt_flags]
+subfigs = fig.subfigures(nrows=5, ncols=1)
 
-        x = np.arange(len(opt_flags))
+for i, (subfig, model) in enumerate(zip(subfigs, models)):
+    axs = subfig.subplots(nrows=1, ncols=4, gridspec_kw={'wspace': 0})
 
-        ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
+    for j, (ax, data_range) in enumerate(zip(axs, data_ranges)):
+        configs = data_dict.get(model, {}).get(data_range, {})
 
-        if model_name == 'MLPClassifier':
-            ax.set_ylim(0, 0.2)
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.1))
+        intermittent_time_bar_values = []
+        continuous_times = []
+        ratios = []
+        for config in config_list:
+            config_values = configs.get(config, {})
+            intermittent_time_bar_value = config_values.get('intermittent_time_bar_value', None)
+            continuous_time = config_values.get('continuous_time', None)
+            ratio = config_values.get('ratio', None)
 
-        bars = ax.bar(x, cont_times, width, color=colors)
-        for bar, hatch in zip(bars, hatches):
-            bar.set_hatch(hatch)
+            intermittent_time_bar_values.append(intermittent_time_bar_value)
+            continuous_times.append(continuous_time)
+            ratios.append(ratio)
 
-        ax.bar(x, over_times, width, bottom=cont_times, color='darkgray')
+        x_indices = np.arange(len(config_list))
 
-        if range_key != '(0, 0)':
-            ax2 = ax.twinx()
-            ax2.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
-            ax2.plot(x, restarts_list, color='red', marker='o', linestyle='-', label='Restart')
-            ax2.set_ylabel('Recharge Times')
+        intermittent_bar_values = [0 if v is None else v for v in intermittent_time_bar_values]
+        continuous_bar_values = [0 if v is None else v for v in continuous_times]
+        total_bar_values = [i + c for i, c in zip(intermittent_bar_values, continuous_bar_values)]
 
-        x_labels = [opt_flags[k][0] for k in opt_flags]
+        ax.bar(x_indices, continuous_bar_values, label='Continuous Time', color='skyblue')
+        ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='orange')
+        if i == 0:
+            ax.set_title(data_range)
 
-        # Set labels and titles
-        ax.set_xticks(x)
-        ax.set_xticklabels(x_labels)
-        ax.set_ylabel('Time (s)')
-        ax.set_title(model_name)
+        ax2 = ax.twinx()
+        ratio_values = [np.nan if v is None else v for v in ratios]
+        ax2.plot(x_indices, ratio_values, marker='o', color='red', label='Ratio')
 
-        fig.tight_layout(pad=0.05, rect=[0, 0, 1, 1])
+        if data_range != '(0, 0)':
+            ax.set_yticklabels([])
+            ax.yaxis.set_tick_params(length=0)
+        else:
+            ax.set_ylabel('Time (s)')
 
-        plt.savefig(f'figures/{restart_map[range_key]}_{model_name}.png', dpi=500)
+        if data_range != '(2949, 3276)':
+            ax2.set_yticklabels([])
+            ax2.yaxis.set_tick_params(length=0)
+        else:
+            ax2.set_ylabel('Intermittent Overhead (%)')
+
+    subfig.supxlabel(model, fontsize=14, y=0.02)
+
+plt.show()
