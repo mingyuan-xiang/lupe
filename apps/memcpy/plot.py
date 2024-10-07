@@ -39,11 +39,11 @@ plt.rcParams["axes.labelweight"] = "bold"
 
 fig, ax = plt.subplots(figsize=(10, 2.5))
 ax.set_xlabel('Words (2 Btyes)')
-ax.set_ylabel('Time (MicroSec)')
+ax.set_ylabel('Time (μs)')
 ax.set_xlim([0, 41])
 ax.set_ylim([0, 65])
 
-freq = ((2 ** 15 - 1) * 10000) / 1000000
+freq = (32768 * 10000) / 1000000
 
 for method, data in parsed_data.items():
     if method == 'DMA':
