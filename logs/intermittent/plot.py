@@ -97,7 +97,7 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         ax.bar(x_indices, continuous_bar_values, label='Continuous Time', color='skyblue')
         ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='orange')
         if i == 0:
-            ax.set_title(data_range)
+            ax.set_title(restart_map[data_range])
 
         ax2 = ax.twinx()
         ratio_values = [np.nan if v is None else v for v in ratios]
@@ -117,4 +117,5 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
 
     subfig.supxlabel(model, fontsize=14, y=0.02)
 
-plt.show()
+# plt.show()
+plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500)

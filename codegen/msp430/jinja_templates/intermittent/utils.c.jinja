@@ -2,6 +2,7 @@
 
 __ro_nv uint16_t magic_num;
 
+__ro_nv uint32_t reboot_counter;
 __ro_nv uint16_t intermittent_status[INTERMITTENT_STATUS_SIZE];
 
 __ro_hinv int16_t intermittent_buffer[INTERMITTENT_BUFFER_SIZE];
@@ -70,6 +71,7 @@ void init_lupe() {
 
   if (magic_num != MAGIC_NUMBER) {
     magic_num = MAGIC_NUMBER;
+    reboot_counter = 0;
     memset(intermittent_status, 0, INTERMITTENT_STATUS_SIZE * sizeof(uint16_t)); 
   }
 }

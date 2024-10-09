@@ -60,8 +60,7 @@ uint16_t rand(uint16_t low, uint16_t high) {
 int main() {
   init();
 
-  uint16_t c = intermittent_status[COUNTER] + 1;
-  VOLATILE_WRITE(c, COUNTER);
+  reboot_counter = reboot_counter + 1;
 
   for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
     {%- if bounds | length > 1 %}
@@ -94,9 +93,9 @@ int main() {
   }
 
   {%- if bounds | length > 1 %}
-  msp_send_printf("Restart times: %u (repeat: %u, [%u, %u])", intermittent_status[COUNTER], REPEAT, LOWER_BOUND, UPPER_BOUND);
+  msp_send_printf("Restart times: %n (repeat: %u, [%u, %u])", reboot_counter, REPEAT, LOWER_BOUND, UPPER_BOUND);
   {%- else %}
-  msp_send_printf("Restart times: %u (repeat: %u, [%u, %u])", intermittent_status[COUNTER], REPEAT, DELAY, DELAY);
+  msp_send_printf("Restart times: %n (repeat: %u, [%u, %u])", reboot_counter, REPEAT, DELAY, DELAY);
   {%- endif %}
   {% if verify %}
   msp_send_printf("Got activations for the last layer:");
