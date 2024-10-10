@@ -7,15 +7,23 @@ import numpy as np
 opt_flags = {
     'no_opt' : ('Bottom-up', 'pink', 'xx'),
     'hawaii' : ('HAWAII',  'royalblue', '--'),
-    'sonic' : ('TAILS',  'royalblue', '++'),
+    'Tails' : ('TAILS',  'royalblue', '++'),
     'dma_lea_opt_adaptive_buffer_mem_acc' : ('Lupe',  'firebrick', '\\\\'),
 }
 
 restart_map = {
     '(0, 0)' : 'Continuous Power',
-    '(164, 328)' : 'Recharge Frequency 5 - 10 ms',
-    '(1311, 1638)' : 'Recharge Frequency 40 - 50 ms',
-    '(2949, 3276)' : 'Recharge Frequency 90 - 100 ms',
+    '(164, 328)' : '5 - 10 ms',
+    '(1311, 1638)' : '40 - 50 ms',
+    '(2949, 3276)' : '90 - 100 ms',
+}
+
+y_limits = {
+    'MLPClassifier' : ((0, 0.3), (0, 25)),
+    'LeNet' : ((0, 6), (0, 60)),
+    'ResNet3' : ((0, 60), (0, 80)),
+    'MobileNetV2' : ((0, 35), (0, 80)),
+    'DS_CNN' : ((0, 95), (0, 50)),
 }
 
 cmap = plt.get_cmap('cool')
@@ -57,7 +65,7 @@ for data_range, models in reordered_results.items():
             config = entry['config']
             intermittent_time = entry['intermittent_time']
             continuous_time = entry['continuous_time']
-            ratio = (intermittent_time - continuous_time) / intermittent_time
+            ratio = 100.0 * (intermittent_time - continuous_time) / intermittent_time
             data_dict[model][data_range][config] = {
                 'intermittent_time': intermittent_time,
                 'continuous_time': continuous_time,
@@ -65,7 +73,7 @@ for data_range, models in reordered_results.items():
                 'ratio': ratio
             }
 
-fig = plt.figure(figsize=(20, 25))
+fig = plt.figure(figsize=(20, 25), constrained_layout=True)
 
 subfigs = fig.subfigures(nrows=5, ncols=1)
 
@@ -78,6 +86,8 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         intermittent_time_bar_values = []
         continuous_times = []
         ratios = []
+        colors = []
+        hatches = []
         for config in config_list:
             config_values = configs.get(config, {})
             intermittent_time_bar_value = config_values.get('intermittent_time_bar_value', None)
@@ -88,26 +98,32 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
             continuous_times.append(continuous_time)
             ratios.append(ratio)
 
+            colors.append(opt_flags[config][1])
+            hatches.append(opt_flags[config][2])
+
         x_indices = np.arange(len(config_list))
 
         intermittent_bar_values = [0 if v is None else v for v in intermittent_time_bar_values]
         continuous_bar_values = [0 if v is None else v for v in continuous_times]
         total_bar_values = [i + c for i, c in zip(intermittent_bar_values, continuous_bar_values)]
 
-        ax.bar(x_indices, continuous_bar_values, label='Continuous Time', color='skyblue')
-        ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='orange')
+        bars = ax.bar(x_indices, continuous_bar_values, label=config_list, color=colors, zorder=3)
+        for bar, hatch in zip(bars, hatches):
+            bar.set_hatch(hatch)
+        ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='lightgray', zorder=3)
+
         if i == 0:
-            ax.set_title(restart_map[data_range])
+            ax.set_title(restart_map[data_range], fontweight='bold')
 
         ax2 = ax.twinx()
         ratio_values = [np.nan if v is None else v for v in ratios]
-        ax2.plot(x_indices, ratio_values, marker='o', color='red', label='Ratio')
+        ax2.scatter(x_indices, ratio_values, marker='o', color='red', label='Ratio', zorder=3)
 
         if data_range != '(0, 0)':
             ax.set_yticklabels([])
             ax.yaxis.set_tick_params(length=0)
         else:
-            ax.set_ylabel('Time (s)')
+            ax.set_ylabel('Time Per Inference (s)')
 
         if data_range != '(2949, 3276)':
             ax2.set_yticklabels([])
@@ -115,7 +131,29 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         else:
             ax2.set_ylabel('Intermittent Overhead (%)')
 
-    subfig.supxlabel(model, fontsize=14, y=0.02)
+        ax.grid(axis='y', zorder=0)
+
+        ax.set_ylim(*y_limits[model][0])
+        ax2.set_ylim(*y_limits[model][1])
+        ax.set_xticklabels([])
+        ax.xaxis.set_tick_params(length=0)
+        ax2.set_xticklabels([])
+        ax2.xaxis.set_tick_params(length=0)
+
+    if model == 'DS_CNN':
+        subfig.supxlabel('DS-CNN', y=-0.02, fontweight='bold')
+    else:
+        subfig.supxlabel(model, y=-0.02, fontweight='bold')
+l = []
+for _, f in opt_flags.items():
+    p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=f[0])
+    l.append(p)
+
+l.append(mpatches.Patch(facecolor='lightgray',label='Intermittent Support Overhead'))
+
+fig.legend(handles=l, loc='lower center', ncol=5, bbox_to_anchor=(0.5, -0.025))
+
+fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 
 # plt.show()
-plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500)
+plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500, bbox_inches='tight')
