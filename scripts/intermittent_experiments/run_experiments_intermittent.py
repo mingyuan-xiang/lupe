@@ -11,8 +11,8 @@ sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
 bound_list = [
-    (0, 0),
-    (164, 328),
+    # (0, 0),
+    # (164, 328),
     (1311, 1638),
     (2949, 3276),
 ]
@@ -28,7 +28,7 @@ def _banner_print(s):
 def get_args():
     par = argparse.ArgumentParser()
     par.add_argument(
-        '--port', type=str, default='/dev/cu.usbmodem1203', help='UART port'
+        '--port', type=str, default='/dev/ttyACM1', help='UART port'
     )
     par.add_argument('--baud', type=int, default=19200, help='UART baud rate')
     par.add_argument('--repeat', type=int, default=100, help='Repeat times for inference')
