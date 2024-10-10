@@ -1,0 +1,92 @@
+{
+    "DS_CNN": [
+        {
+            "optimization_flags": "Tails",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 11005,
+            "last_accuracy": 0.47778282598818717,
+            "total_cycles": 17523440052
+        },
+        {
+            "optimization_flags": "HAWAII",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 11005,
+            "last_accuracy": 0.6298046342571558,
+            "total_cycles": 1712650088
+        }
+    ],
+    "MLPClassifier": [
+        {
+            "optimization_flags": "Tails",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1,
+            "total_cycles": 75847172
+        },
+        {
+            "optimization_flags": "HAWAII",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1,
+            "total_cycles": 25533290
+        }
+    ],
+    "ResNet3": [
+        {
+            "optimization_flags": "HAWAII",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1,
+            "total_cycles": 1176634686
+        },
+        {
+            "optimization_flags": "Tails",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1056,
+            "total_cycles": 6967708542
+        }
+    ],
+    "LeNet": [
+        {
+            "optimization_flags": "Tails",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1027,
+            "total_cycles": 846763525
+        },
+        {
+            "optimization_flags": "HAWAII",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 36,
+            "last_accuracy": 0.1111111111111111,
+            "total_cycles": 907616
+        },
+        {
+            "optimization_flags": "HAWAII",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 10000,
+            "last_accuracy": 0.1032,
+            "total_cycles": 319044533
+        }
+    ],
+    "MobileNetV2": [
+        {
+            "optimization_flags": "Tails",
+            "frequency": 32767,
+            "count": 10,
+            "total_images": 8059,
+            "last_accuracy": 0.5284774785953592,
+            "total_cycles": 2260258627
+        }
+    ]
+}
