@@ -7,14 +7,18 @@ elapsed_time_pattern = r"Elapsed time: ([\d.]+)"
 repeat_pattern = r"repeat: (\d+)"
 rng_pattern = r"\[([0-9]+),\s*([0-9]+)\]"
 filename_pattern = r"\d+_\d+_(LeNet|ResNet3|MobileNetV2|DS_CNN|MLPClassifier)_(.+)\.json\.log"
-
+related_filename_pattern = r"\d+_\d+_(.+)_(LeNet|ResNet3|MobileNetV2|DS_CNN|MLPClassifier)_(.+)\.log"
 
 dir_path = os.path.dirname(os.path.abspath(__file__))
 continuous_path = os.path.join(os.path.dirname(dir_path), 'continuous', 'results.json')
+related_continuous_path = os.path.join(os.path.dirname(dir_path), 'continuous', 'related_results.json')
 log_path = os.path.join(dir_path, 'logs')
 
 with open(continuous_path, 'r') as f:
     continuous_results = json.load(f)
+
+with open(related_continuous_path, 'r') as f:
+    related_continuous_results = json.load(f)
 
 results = {}
 
@@ -30,21 +34,32 @@ for file_name in os.listdir(log_path):
             rng_lower = rng_match.group(1)
             rng_upper = rng_match.group(2)
             filename_match = re.search(filename_pattern, file_name)
-            model_name = filename_match.group(1)
-            config = filename_match.group(2)
+            if filename_match:
+                model_name = filename_match.group(1)
+                config = filename_match.group(2)
+            else:
+                filename_match = re.search(related_filename_pattern, file_name)
+                model_name = filename_match.group(2)
+                config = filename_match.group(1)
 
+            flag = False
             for r in continuous_results[model_name]:
                 if r['optimization_flags'] == config:
                     continuous_time = r['total_cycles'] / (r['total_images'] * 32768)
-                    break;
+                    flag = True
+                    break
+
+            if not flag:
+                for r in related_continuous_results[model_name]:
+                    if r['optimization_flags'] == config:
+                        continuous_time = r['total_cycles'] / (r['total_images'] * 32768)
+                        break
+            flag = False
 
             if rng_lower == "0":
                 restart_time = 1
             else:
-                if int(restart_time) == 1:
-                    restart_time = float(restart_time)
-                else:
-                    restart_time = float(restart_time) / float(repeat)
+                restart_time = float(restart_time) / float(repeat)
 
             d = {
                 'config' : config,
