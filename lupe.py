@@ -128,7 +128,7 @@ def lupe_args():
         help="Add intermittent-safe support."
     )
     par.add_argument(
-        "--intermittent-repeat", type=int, default=10,
+        "--intermittent-repeat", type=int, default=100,
         help="The number for repeating the experiments."
     )
     par.add_argument(

@@ -43,7 +43,7 @@ plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
 models = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
-data_ranges = ['(0, 0)', '(164, 328)', '(1311, 1638)', '(2949, 3276)']
+data_ranges = ['(164, 328)', '(1311, 1638)', '(2949, 3276)', '(0, 0)']
 
 reordered_results = {}
 for r in data_ranges:
@@ -85,18 +85,15 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
 
         intermittent_time_bar_values = []
         continuous_times = []
-        ratios = []
         colors = []
         hatches = []
         for config in config_list:
             config_values = configs.get(config, {})
             intermittent_time_bar_value = config_values.get('intermittent_time_bar_value', None)
             continuous_time = config_values.get('continuous_time', None)
-            ratio = config_values.get('ratio', None)
 
             intermittent_time_bar_values.append(intermittent_time_bar_value)
             continuous_times.append(continuous_time)
-            ratios.append(ratio)
 
             colors.append(opt_flags[config][1])
             hatches.append(opt_flags[config][2])
@@ -115,30 +112,17 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         if i == 0:
             ax.set_title(restart_map[data_range], fontweight='bold')
 
-        ax2 = ax.twinx()
-        ratio_values = [np.nan if v is None else v for v in ratios]
-        ax2.scatter(x_indices, ratio_values, marker='o', color='red', label='Ratio', zorder=3)
-
-        if data_range != '(0, 0)':
+        if data_range != data_ranges[0]:
             ax.set_yticklabels([])
             ax.yaxis.set_tick_params(length=0)
         else:
             ax.set_ylabel('Time Per Inference (s)')
 
-        if data_range != '(2949, 3276)':
-            ax2.set_yticklabels([])
-            ax2.yaxis.set_tick_params(length=0)
-        else:
-            ax2.set_ylabel('Intermittent Overhead (%)')
-
         ax.grid(axis='y', zorder=0)
 
         ax.set_ylim(*y_limits[model][0])
-        ax2.set_ylim(*y_limits[model][1])
         ax.set_xticklabels([])
         ax.xaxis.set_tick_params(length=0)
-        ax2.set_xticklabels([])
-        ax2.xaxis.set_tick_params(length=0)
 
     if model == 'DS_CNN':
         subfig.supxlabel('DS-CNN', y=-0.02, fontweight='bold')

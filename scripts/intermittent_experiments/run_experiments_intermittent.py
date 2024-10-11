@@ -11,10 +11,10 @@ sys.path.append("scripts/uart_commute")
 from uart_dump import sync_reader, UARTIO_END_PRINT_STR
 
 bound_list = [
-    # (0, 0),
-    # (164, 328),
-    (1311, 1638),
-    (2949, 3276),
+    (0, 0),
+    (2500, 5000),
+    (20000, 25000),
+    (45000, 50000),
 ]
 
 def _banner_print(s):

@@ -66,13 +66,13 @@ int main() {
     {%- if bounds | length > 1 %}
     uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
 
-    start_intermittent_tests(0, delay);
+    start_intermittent_tests(delay);
     {{ model_name }}(&input_meta);
     stop_intermittent_tests();
     {%- else %}
 
     {%- if bounds[0] > 0 %}
-    start_intermittent_tests(0, DELAY);
+    start_intermittent_tests(DELAY);
     {{ model_name }}(&input_meta);
     stop_intermittent_tests();
     {%- else %}
