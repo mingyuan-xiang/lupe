@@ -49,7 +49,6 @@
     {%- set inter.cnt = inter.cnt + 1 -%}
 {%- endmacro %}
 
-/* INTERMITTENT_LeNet_START has to be 0 */
 #define INTERMITTENT_{{ model_name }}_START_TRANSFER {{ increment_counter() }}
 #define INTERMITTENT_{{ model_name }}_START_CLEANUP {{ increment_counter() }}
 {%- for layer in layer_list %}
