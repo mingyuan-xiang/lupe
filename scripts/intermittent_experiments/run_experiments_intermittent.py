@@ -48,13 +48,17 @@ def run_lupe(model, onnx_path, qf, config, dataset, repeat, lower, upper, hifram
             '--hifram-func', str(hifram)
         ], check=False)
     else:
+        max_dma_size = 10000
+        # For experiments that restart every 5 -10 ms. DMA size 10000 is too large
+        if lower == 2500:
+            max_dma_size = 1000
         subprocess.run([
             './lupe.py', 'code-gen', '--model-name', model,
             '--model-path', onnx_path, '--qf', str(qf), '--config', config,
             '--intermittent', '--intermittent-repeat', str(repeat),
             '--intermittent-bound', str(lower), str(upper),
             '--debug-random', '--debug-dataset', dataset,
-            '--hifram-func', str(hifram)
+            '--hifram-func', str(hifram), '----max-dma-size', str(max_dma_size)
         ], check=False)
 
 def enable_uart(baud, port, name):
