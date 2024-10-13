@@ -13,13 +13,13 @@ opt_flags = {
 
 restart_map = {
     '(0, 0)' : 'Continuous Power',
-    '(164, 328)' : '5 - 10 ms',
-    '(1311, 1638)' : '40 - 50 ms',
-    '(2949, 3276)' : '90 - 100 ms',
+    '(2500, 5000)' : '5 - 10 ms',
+    '(20000, 25000)' : '40 - 50 ms',
+    '(45000, 50000)' : '90 - 100 ms',
 }
 
 y_limits = {
-    'MLPClassifier' : ((0, 0.3), (0, 25)),
+    'MLPClassifier' : ((0, 0.5), (0, 25)),
     'LeNet' : ((0, 6), (0, 60)),
     'ResNet3' : ((0, 60), (0, 80)),
     'MobileNetV2' : ((0, 35), (0, 80)),
@@ -43,7 +43,7 @@ plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
 models = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
-data_ranges = ['(164, 328)', '(1311, 1638)', '(2949, 3276)', '(0, 0)']
+data_ranges = ['(2500, 5000)', '(20000, 25000)', '(45000, 50000)', '(0, 0)']
 
 reordered_results = {}
 for r in data_ranges:
@@ -128,6 +128,7 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         subfig.supxlabel('DS-CNN', y=-0.02, fontweight='bold')
     else:
         subfig.supxlabel(model, y=-0.02, fontweight='bold')
+
 l = []
 for _, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=f[0])
