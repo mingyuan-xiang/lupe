@@ -150,8 +150,6 @@ python scripts/run_experiments.py --model <model name> --dataset <dataset> --qf 
 
 ## Intermittent Time
 
-+ RNG Setting
-    + `200 - 300`
-    + `1400 - 1500`
-    + `2900 - 3000`
++ For restart frequency in 5 - 10 ms, the DMA for no optimization case is too
+  slow, so we need to set `max-dma-size` to be 2000.
 
