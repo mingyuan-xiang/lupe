@@ -5,9 +5,9 @@ import json
 import numpy as np
 
 opt_flags = {
-    'no_opt' : ('Bottom-up', 'pink', 'xx'),
-    'Hawaii' : ('Hawaii',  'royalblue', '--'),
     'Tails' : ('TAILS',  'royalblue', '++'),
+    'Hawaii' : ('Hawaii',  'royalblue', '--'),
+    'no_opt' : ('Bottom-up', 'pink', 'xx'),
     'dma_lea_opt_adaptive_buffer_mem_acc' : ('Lupe',  'firebrick', '\\\\'),
 }
 
