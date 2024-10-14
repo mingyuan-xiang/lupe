@@ -6,7 +6,7 @@ import numpy as np
 
 opt_flags = {
     'no_opt' : ('Bottom-up', 'pink', 'xx'),
-    'hawaii' : ('HAWAII',  'royalblue', '--'),
+    'Hawaii' : ('Hawaii',  'royalblue', '--'),
     'Tails' : ('TAILS',  'royalblue', '++'),
     'dma_lea_opt_adaptive_buffer_mem_acc' : ('Lupe',  'firebrick', '\\\\'),
 }
@@ -109,6 +109,9 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
             bar.set_hatch(hatch)
         ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='lightgray', zorder=3)
 
+        if model == 'MobileNetV2':
+            ax.scatter(1, 1.5, marker='X', s=300, color='red')
+
         if i == 0:
             ax.set_title(restart_map[data_range], fontweight='bold')
 
@@ -125,9 +128,9 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         ax.xaxis.set_tick_params(length=0)
 
     if model == 'DS_CNN':
-        subfig.supxlabel('DS-CNN', y=-0.02, fontweight='bold')
+        subfig.supxlabel('DS-CNN', y=-0.02, x=0.57, fontweight='bold')
     else:
-        subfig.supxlabel(model, y=-0.02, fontweight='bold')
+        subfig.supxlabel(model, y=-0.02, x=0.57, fontweight='bold')
 
 l = []
 for _, f in opt_flags.items():
@@ -136,9 +139,9 @@ for _, f in opt_flags.items():
 
 l.append(mpatches.Patch(facecolor='lightgray',label='Intermittent Support Overhead'))
 
-fig.legend(handles=l, loc='lower center', ncol=5, bbox_to_anchor=(0.5, -0.025))
+fig.legend(handles=l, loc='lower center', ncol=5, bbox_to_anchor=(0.55, -0.025))
 
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 
 # plt.show()
-plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500, bbox_inches='tight')
+plt.savefig(f'figures/opt_perf_intermittent.png', dpi=100, bbox_inches='tight')

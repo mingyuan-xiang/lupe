@@ -1,5 +1,31 @@
 {
     "(20000, 25000)": {
+        "LeNet": [
+            {
+                "config": "Hawaii",
+                "restart": 28.07,
+                "intermittent_time": 1.2978293371200562,
+                "continuous_time": 0.7693956163194444
+            },
+            {
+                "config": "no_opt",
+                "restart": 43.46,
+                "intermittent_time": 1.9997248244285584,
+                "continuous_time": 1.876205386352539
+            },
+            {
+                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
+                "restart": 5.93,
+                "intermittent_time": 0.28284409523010257,
+                "continuous_time": 0.23311783142089842
+            },
+            {
+                "config": "Tails",
+                "restart": 110.58,
+                "intermittent_time": 5.046900990009308,
+                "continuous_time": 2.584117202758789
+            }
+        ],
         "DS_CNN": [
             {
                 "config": "dma_lea_opt_adaptive_buffer_mem_acc",
@@ -18,6 +44,12 @@
                 "restart": 1933.96,
                 "intermittent_time": 87.98707683086396,
                 "continuous_time": 48.59363478470369
+            },
+            {
+                "config": "Hawaii",
+                "restart": 146.55,
+                "intermittent_time": 6.691116540431977,
+                "continuous_time": 4.749289673905327
             }
         ],
         "MobileNetV2": [
@@ -40,26 +72,6 @@
                 "continuous_time": 8.559079194959391
             }
         ],
-        "LeNet": [
-            {
-                "config": "no_opt",
-                "restart": 43.46,
-                "intermittent_time": 1.9997248244285584,
-                "continuous_time": 1.876205386352539
-            },
-            {
-                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
-                "restart": 5.93,
-                "intermittent_time": 0.28284409523010257,
-                "continuous_time": 0.23311783142089842
-            },
-            {
-                "config": "Tails",
-                "restart": 110.58,
-                "intermittent_time": 5.046900990009308,
-                "continuous_time": 2.584117202758789
-            }
-        ],
         "MLPClassifier": [
             {
                 "config": "Tails",
@@ -78,6 +90,12 @@
                 "restart": 3.01,
                 "intermittent_time": 0.1643153691291809,
                 "continuous_time": 0.15297293090820313
+            },
+            {
+                "config": "Hawaii",
+                "restart": 2.01,
+                "intermittent_time": 0.11153302192687989,
+                "continuous_time": 0.07792141723632813
             }
         ],
         "ResNet3": [
@@ -92,6 +110,12 @@
                 "restart": 60.58,
                 "intermittent_time": 2.793398838043213,
                 "continuous_time": 2.172798147583008
+            },
+            {
+                "config": "Hawaii",
+                "restart": 120.18,
+                "intermittent_time": 5.493684272766114,
+                "continuous_time": 3.590804095458984
             },
             {
                 "config": "no_opt",
@@ -114,6 +138,12 @@
                 "restart": 560.83,
                 "intermittent_time": 53.62824812173844,
                 "continuous_time": 21.263758978271483
+            },
+            {
+                "config": "Hawaii",
+                "restart": 56.39,
+                "intermittent_time": 5.441901204586029,
+                "continuous_time": 3.590804095458984
             },
             {
                 "config": "no_opt",
@@ -140,6 +170,12 @@
                 "restart": 0.01,
                 "intermittent_time": 0.08064655780792236,
                 "continuous_time": 0.06511947021484375
+            },
+            {
+                "config": "Hawaii",
+                "restart": 1.01,
+                "intermittent_time": 0.11125898361206055,
+                "continuous_time": 0.07792141723632813
             }
         ],
         "LeNet": [
@@ -154,6 +190,12 @@
                 "restart": 52.04,
                 "intermittent_time": 5.0106223201751705,
                 "continuous_time": 2.584117202758789
+            },
+            {
+                "config": "Hawaii",
+                "restart": 13.01,
+                "intermittent_time": 1.2885790181159973,
+                "continuous_time": 0.7693956163194444
             },
             {
                 "config": "no_opt",
@@ -196,6 +238,12 @@
                 "continuous_time": 48.191559403595846
             },
             {
+                "config": "Hawaii",
+                "restart": 69.01,
+                "intermittent_time": 6.640968432426453,
+                "continuous_time": 4.749289673905327
+            },
+            {
                 "config": "dma_lea_opt_adaptive_buffer_mem_acc",
                 "restart": 22.01,
                 "intermittent_time": 2.1342631220817565,
@@ -222,6 +270,12 @@
                 "restart": 10.69,
                 "intermittent_time": 0.0897620987892151,
                 "continuous_time": 0.06511947021484375
+            },
+            {
+                "config": "Hawaii",
+                "restart": 14.85,
+                "intermittent_time": 0.12029605627059936,
+                "continuous_time": 0.07792141723632813
             }
         ],
         "MobileNetV2": [
@@ -244,27 +298,13 @@
                 "continuous_time": 9.18951064982061
             }
         ],
-        "ResNet3": [
-            {
-                "config": "no_opt",
-                "restart": 2345.66,
-                "intermittent_time": 18.66330291748047,
-                "continuous_time": 15.928721051025391
-            },
-            {
-                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
-                "restart": 375.73,
-                "intermittent_time": 3.099888381958008,
-                "continuous_time": 2.172798147583008
-            },
-            {
-                "config": "Tails",
-                "restart": 7225.94,
-                "intermittent_time": 57.490499057769775,
-                "continuous_time": 21.263758978271483
-            }
-        ],
         "DS_CNN": [
+            {
+                "config": "Hawaii",
+                "restart": 900.57,
+                "intermittent_time": 7.187939178943634,
+                "continuous_time": 4.749289673905327
+            },
             {
                 "config": "no_opt",
                 "restart": 7501.88,
@@ -284,12 +324,44 @@
                 "continuous_time": 1.7304936798525528
             }
         ],
+        "ResNet3": [
+            {
+                "config": "no_opt",
+                "restart": 2345.66,
+                "intermittent_time": 18.66330291748047,
+                "continuous_time": 15.928721051025391
+            },
+            {
+                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
+                "restart": 375.73,
+                "intermittent_time": 3.099888381958008,
+                "continuous_time": 2.172798147583008
+            },
+            {
+                "config": "Hawaii",
+                "restart": 751.93,
+                "intermittent_time": 6.008547406196595,
+                "continuous_time": 3.590804095458984
+            },
+            {
+                "config": "Tails",
+                "restart": 7225.94,
+                "intermittent_time": 57.490499057769775,
+                "continuous_time": 21.263758978271483
+            }
+        ],
         "LeNet": [
             {
                 "config": "no_opt",
                 "restart": 274.3,
                 "intermittent_time": 2.186684455871582,
                 "continuous_time": 1.876205386352539
+            },
+            {
+                "config": "Hawaii",
+                "restart": 174.26,
+                "intermittent_time": 1.3891992092132568,
+                "continuous_time": 0.7693956163194444
             },
             {
                 "config": "dma_lea_opt_adaptive_buffer_mem_acc",
@@ -320,6 +392,12 @@
                 "continuous_time": 2.172798147583008
             },
             {
+                "config": "Hawaii",
+                "restart": 1,
+                "intermittent_time": 5.402335424423217,
+                "continuous_time": 3.590804095458984
+            },
+            {
                 "config": "Tails",
                 "restart": 1,
                 "intermittent_time": 53.20098394393921,
@@ -327,6 +405,12 @@
             }
         ],
         "LeNet": [
+            {
+                "config": "Hawaii",
+                "restart": 1,
+                "intermittent_time": 1.282129671573639,
+                "continuous_time": 0.7693956163194444
+            },
             {
                 "config": "no_opt",
                 "restart": 1,
@@ -344,6 +428,32 @@
                 "restart": 1,
                 "intermittent_time": 0.2781014370918274,
                 "continuous_time": 0.23311783142089842
+            }
+        ],
+        "DS_CNN": [
+            {
+                "config": "Hawaii",
+                "restart": 1,
+                "intermittent_time": 6.593996214866638,
+                "continuous_time": 4.749289673905327
+            },
+            {
+                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
+                "restart": 1,
+                "intermittent_time": 2.1175956606864927,
+                "continuous_time": 1.7304936798525528
+            },
+            {
+                "config": "no_opt",
+                "restart": 1,
+                "intermittent_time": 55.22905039310455,
+                "continuous_time": 48.191559403595846
+            },
+            {
+                "config": "Tails",
+                "restart": 1,
+                "intermittent_time": 86.86493850708008,
+                "continuous_time": 48.59363478470369
             }
         ],
         "MobileNetV2": [
@@ -366,26 +476,6 @@
                 "continuous_time": 8.559079194959391
             }
         ],
-        "DS_CNN": [
-            {
-                "config": "dma_lea_opt_adaptive_buffer_mem_acc",
-                "restart": 1,
-                "intermittent_time": 2.1175956606864927,
-                "continuous_time": 1.7304936798525528
-            },
-            {
-                "config": "no_opt",
-                "restart": 1,
-                "intermittent_time": 55.22905039310455,
-                "continuous_time": 48.191559403595846
-            },
-            {
-                "config": "Tails",
-                "restart": 1,
-                "intermittent_time": 86.86493850708008,
-                "continuous_time": 48.59363478470369
-            }
-        ],
         "MLPClassifier": [
             {
                 "config": "no_opt",
@@ -404,6 +494,12 @@
                 "restart": 1,
                 "intermittent_time": 0.3931456780433655,
                 "continuous_time": 0.23146719970703125
+            },
+            {
+                "config": "Hawaii",
+                "restart": 1,
+                "intermittent_time": 0.11070775985717773,
+                "continuous_time": 0.07792141723632813
             }
         ]
     }

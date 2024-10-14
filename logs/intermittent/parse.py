@@ -51,7 +51,7 @@ for file_name in os.listdir(log_path):
 
             if not flag:
                 for r in related_continuous_results[model_name]:
-                    if r['optimization_flags'] == config:
+                    if r['optimization_flags'].lower() == config.lower():
                         continuous_time = r['total_cycles'] / (r['total_images'] * 32768)
                         break
             flag = False
