@@ -5,7 +5,7 @@ import json
 import numpy as np
 
 opt_flags = {
-    'Tails' : ('TAILS',  'royalblue', '++'),
+    'Tails' : ('Tails',  'royalblue', '++'),
     'Hawaii' : ('Hawaii',  'royalblue', '--'),
     'no_opt' : ('Bottom-up', 'pink', 'xx'),
     'dma_lea_opt_adaptive_buffer_mem_acc' : ('Lupe',  'firebrick', '\\\\'),
@@ -104,10 +104,10 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         continuous_bar_values = [0 if v is None else v for v in continuous_times]
         total_bar_values = [i + c for i, c in zip(intermittent_bar_values, continuous_bar_values)]
 
-        bars = ax.bar(x_indices, continuous_bar_values, label=config_list, color=colors, zorder=3)
+        bars = ax.bar(x_indices, continuous_bar_values, width, label=config_list, color=colors, zorder=3)
         for bar, hatch in zip(bars, hatches):
             bar.set_hatch(hatch)
-        ax.bar(x_indices, intermittent_bar_values, bottom=continuous_bar_values, label='Intermittent Overhead', color='lightgray', zorder=3)
+        ax.bar(x_indices, intermittent_bar_values, width, bottom=continuous_bar_values, label='Intermittent Overhead', color='lightgray', zorder=3)
 
         if model == 'MobileNetV2':
             ax.scatter(1, 1.5, marker='X', s=300, color='red')
@@ -144,4 +144,4 @@ fig.legend(handles=l, loc='lower center', ncol=5, bbox_to_anchor=(0.55, -0.025))
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 
 # plt.show()
-plt.savefig(f'figures/opt_perf_intermittent.png', dpi=100, bbox_inches='tight')
+plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500, bbox_inches='tight')

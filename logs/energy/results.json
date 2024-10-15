@@ -1,0 +1,88 @@
+{
+    "MLPClassifier": {
+        "Hawaii": {
+            "continuous": 0.0008383462163572857,
+            "intermittent": 0.0007259703706990201
+        },
+        "Bottom-up": {
+            "continuous": 0.0009017362637849427,
+            "intermittent": 0.0009523442238714525
+        },
+        "Tails": {
+            "continuous": 0.002335936745391382,
+            "intermittent": 0.0023785273576394264
+        },
+        "Lupe": {
+            "intermittent": 0.0005133041402220543,
+            "continuous": 0.00038340473314411286
+        }
+    },
+    "LeNet": {
+        "Bottom-up": {
+            "intermittent": 0.011396716078311489,
+            "continuous": 0.010962986627342023
+        },
+        "Lupe": {
+            "continuous": 0.001309775956580935,
+            "intermittent": 0.0016966298127604666
+        },
+        "Hawaii": {
+            "continuous": 0.007942597160724742,
+            "intermittent": 0.007874450856656669
+        },
+        "Tails": {
+            "continuous": 0.02646113191178739,
+            "intermittent": 0.029427936986702166
+        }
+    },
+    "MobileNetV2": {
+        "Tails": {
+            "intermittent": 0.20273837783767037,
+            "continuous": 0.08638307000136539
+        },
+        "Bottom-up": {
+            "continuous": 0.05365549896637171,
+            "intermittent": 0.061291598928460464
+        },
+        "Lupe": {
+            "intermittent": 0.007842621477818904,
+            "continuous": 0.0055475441242586925
+        }
+    },
+    "ResNet3": {
+        "Hawaii": {
+            "continuous": 0.037449021306082395,
+            "intermittent": 0.03479104345281875
+        },
+        "Tails": {
+            "intermittent": 0.3430298565233079,
+            "continuous": 0.21481159240489153
+        },
+        "Bottom-up": {
+            "intermittent": 0.09914768878884293,
+            "continuous": 0.09265517110954757
+        },
+        "Lupe": {
+            "continuous": 0.012571923778846994,
+            "intermittent": 0.017092018252037263
+        }
+    },
+    "DS-CNN": {
+        "Bottom-up": {
+            "intermittent": 0.32118265919213734,
+            "continuous": 0.28196274583364045
+        },
+        "Hawaii": {
+            "continuous": 0.04949766033477757,
+            "intermittent": 0.0414465417347949
+        },
+        "Lupe": {
+            "continuous": 0.010122504758714623,
+            "intermittent": 0.012820025856417491
+        },
+        "Tails": {
+            "intermittent": 0.55604247725129,
+            "continuous": 0.4903257302612873
+        }
+    }
+}
