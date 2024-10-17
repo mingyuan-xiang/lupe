@@ -6,8 +6,8 @@ import numpy as np
 
 opt_flags = {
     'Tails' : ('Tails',  'royalblue', '++'),
-    'Hawaii' : ('Hawaii',  'royalblue', '--'),
     'Bottom-up' : ('no_opt', 'pink', 'xx'),
+    'Hawaii' : ('Hawaii',  'royalblue', '--'),
     'Lupe' : ('dma_lea_opt_adaptive_buffer_mem_acc',  'firebrick', '\\\\'),
 }
 
@@ -21,14 +21,14 @@ for (key, (label, _, marker)), color in zip(opt_flags.items(), colors1):
 
 width = 0.5
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 20})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
 with open('../intermittent/results.json', 'r') as file:
     results = json.load(file)['(0, 0)']
 
-ordered_models = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS-CNN']
+ordered_models = ['ResNet3',  'DS_CNN', 'MobileNetV2', 'LeNet', 'MLPClassifier']
 ordered_configs = list(opt_flags.keys())
 
 data = {}
@@ -46,7 +46,9 @@ for m in ordered_models:
         data[m][config] = d['continuous_time']
 
 fig = plt.figure(figsize=(25, 8))
-subfigs = fig.subfigures(nrows=1, ncols=len(ordered_models))
+subfigs = fig.subfigures(nrows=1, ncols=len(ordered_models), wspace=0.25)
+
+speedup = []
 
 for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
     ax = subfig.subplots()
@@ -66,34 +68,66 @@ for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
         colors.append(opt_flags[config][1])
         hatches.append(opt_flags[config][2])
 
+    lupe = continuous_vals[-1]
+    speedup.append([v / lupe for v in continuous_vals[:-1]])
+
     x = np.arange(len(ordered_configs))
-    
-    bars = ax.bar(x, continuous_vals, width, color=colors)
+
+    ax.set_ylabel('Time (s)')
+
+    bars = ax.bar(x, continuous_vals, width, color=colors, zorder=3)
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    if model == 'MLPClassifier':
-        ax.set_ylabel('Time (s)')
-    else:
-        ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-        yticks = ax.get_yticks()[:-1]
-        ax.set_yticks([tick for tick in yticks if tick != 0])
+    ax.grid(axis='y', zorder=0)
+
+    if model == 'ResNet3':
+        ax.set_yticks(np.arange(0, 22, 2))
+        ax.set_ylim([0, 22])
+
+    if model == 'DS_CNN':
+        ax.set_yticks(np.arange(0, 50, 5))
+        ax.set_ylim([0, 50])
 
     if model == 'MobileNetV2':
-        ax.scatter(1, 0.3, marker='X', s=300, color='red')
+        ax.set_yticks(np.arange(0, 10, 1))
+        ax.set_ylim([0, 10])
+        ax.scatter(2, 0.3, marker='X', s=300, color='red')
+
+    if model == 'LeNet':
+        ax.set_yticks(np.arange(0, 2.75, 0.25))
+        ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+        ax.set_ylim([0, 2.75])
+
+    if model == 'MLPClassifier':
+        ax.set_yticks(np.arange(0, 0.3, 0.05))
+        ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.2f'))
+        ax.set_ylim([0, 0.3])
 
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    subfig.supxlabel(model, y=0.015, x=0.58, fontweight='bold')
+    subfig.supxlabel(model, y=0.09, x=0.5, fontweight='bold')
 
 l = []
 for n, f in opt_flags.items():
+    if n == 'Bottom-up':
+        n = 'Polaris'
     p = mpatches.Patch(facecolor=f[1], hatch=f[2], label=n)
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=6, bbox_to_anchor=(0.5, -0.06))
+fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0))
 
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 
 plt.savefig(f'figures/continuous_related.png', dpi=500, bbox_inches='tight')
+
+print(speedup)
+for i in range(len(speedup[0])):
+    s = 0
+    for l in speedup:
+        s += l[i]
+    if i == 1:
+        print(round(s / 4, 2))
+    else:
+        print(round(s / 5, 2))

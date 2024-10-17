@@ -5,7 +5,7 @@ import json
 import numpy as np
 
 opt_flags = {
-    'no_opt' : ('Bottom-up Approach', 'pink', 'xx'),
+    'no_opt' : ('No Optimization', 'pink', 'xx'),
     'dma' : ('DMA Optimization',  'deepskyblue', '||'),
     'dma_lea_opt' : ('LEA Optimization',  'mediumspringgreen', '--'),
     'dma_lea_opt_adaptive_buffer_mem' : ('Adaptive Data Movement',  'royalblue', '\\\\'),
@@ -51,6 +51,8 @@ def disable_tick(t):
     t.tick1line.set_markersize(0)
     t.tick2line.set_markersize(0)
 
+total_times = []
+
 def plot(n, r, ax):
     times = []
     nums = list(range(len(opt_flags)))
@@ -65,6 +67,13 @@ def plot(n, r, ax):
         colors.append(setting[1])
         hatches.append(setting[2])
 
+    prev = times[0]
+    sp = [prev / times[-1]]
+    for t in times[1:]:
+        sp.append(prev / t)
+        prev = t
+    total_times.append(sp)
+
     min_time = get_min_time(times)
     times = [t / min_time for t in times]
 
@@ -73,15 +82,14 @@ def plot(n, r, ax):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
 
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    if n == 'MLPClassifier':
+    if n == 'ResNet3':
         ax.set_ylim([0, 11])
-        ax.set_ylabel('Normalized to Adaptive Generation')
+        ax.set_ylabel('Speedup vs. Adaptive Generation')
         ax.grid(axis='y', zorder=0)
     elif n == 'DS_CNN':
         ax.set_ylim([0, 30])
@@ -101,7 +109,7 @@ def plot(n, r, ax):
 
 cnt = 0
 
-model_order = ['MLPClassifier', 'LeNet', 'ResNet3', 'MobileNetV2', 'DS_CNN']
+model_order = ['ResNet3', 'MobileNetV2', 'LeNet', 'MLPClassifier', 'DS_CNN']
 
 results = {key: results[key] for key in model_order}
 
@@ -114,10 +122,17 @@ for _, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=f[0])
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=7, fontsize=12, bbox_to_anchor=(0.5, -0.01))
+fig.legend(handles=l, loc='lower center', ncol=7, fontsize=16, bbox_to_anchor=(0.5, -0.02))
 
 plt.subplots_adjust(wspace=0)
 
-fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 1])
+fig.tight_layout(pad=0.05, rect=[0, 0.065, 1, 1])
 
 plt.savefig(f'figures/opt_perf_continous.png', dpi=500)
+
+print(total_times)
+for i in range(len(total_times[0])):
+    s = 0
+    for l in total_times:
+        s += l[i]
+    print(round(s / len(total_times), 2))
