@@ -125,9 +125,9 @@ plt.savefig(f'figures/continuous_related.png', dpi=500, bbox_inches='tight')
 print(speedup)
 for i in range(len(speedup[0])):
     s = 0
+    cnt = 0
     for l in speedup:
         s += l[i]
-    if i == 1:
-        print(round(s / 4, 2))
-    else:
-        print(round(s / 5, 2))
+        if l[i] != 0:
+            cnt += 1
+    print(round(s / cnt, 2))
