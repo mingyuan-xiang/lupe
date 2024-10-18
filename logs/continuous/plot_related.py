@@ -79,7 +79,7 @@ for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.grid(axis='y', zorder=0)
+    ax.grid(axis='y', color='grey', zorder=0)
 
     if model == 'ResNet3':
         ax.set_yticks(np.arange(0, 22, 2))
@@ -116,7 +116,7 @@ for n, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2], label=n)
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0))
+fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0), edgecolor='black')
 
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 

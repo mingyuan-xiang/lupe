@@ -1,8 +1,8 @@
-import matplotlib.pyplot as plt
-import matplotlib.patches as mpatches
-import matplotlib.ticker as ticker
 import json
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
+import matplotlib.patches as mpatches
 
 opt_flags = {
     'no_opt' : ('No Optimization', 'pink', 'xx'),
@@ -33,7 +33,6 @@ def get_results(r, flag):
     for d in r:
         if d['optimization_flags'] == flag:
             return d
-
     return None
 
 def get_min_time(times):
@@ -41,19 +40,18 @@ def get_min_time(times):
     for t in times:
         if min_time > t and t > 0:
             min_time = t
-
     return min_time
 
-fig, axs = plt.subplots(1, len(results), figsize=(20, 5))
-
-def disable_tick(t):
-    t.label1.set_visible(False)
-    t.tick1line.set_markersize(0)
-    t.tick2line.set_markersize(0)
+fig = plt.figure(figsize=(25, 8))
+model_order = ['ResNet3', 'MobileNetV2', 'LeNet', 'MLPClassifier', 'DS_CNN']
+subfigs = fig.subfigures(nrows=1, ncols=len(model_order))
 
 total_times = []
 
-def plot(n, r, ax):
+for idx, (model, subfig) in enumerate(zip(model_order, subfigs)):
+    ax = subfig.subplots()
+    r = results[model]
+    
     times = []
     nums = list(range(len(opt_flags)))
     colors = []
@@ -82,51 +80,37 @@ def plot(n, r, ax):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    if n == 'ResNet3':
-        ax.set_ylim([0, 11])
-        ax.set_ylabel('Speedup vs. Adaptive Generation')
-        ax.grid(axis='y', zorder=0)
-    elif n == 'DS_CNN':
-        ax.set_ylim([0, 30])
-        ax.yaxis.tick_right()
-        ax.yaxis.set_label_position("right")
-        ax.grid(axis='y', which='major', zorder=0)
-        ax.set_facecolor('gainsboro')
-    else:
-        ax.set_ylim([0, 11])
-        ax.set_yticklabels([])
-        ax.yaxis.set_tick_params(length=0)
-        ax.grid(axis='y', zorder=0)
+    # if model == 'ResNet3':
+    #     ax.set_ylim([0, 11])
+    #     ax.set_ylabel('Normalized Speedup')
+    #     ax.grid(axis='y', color='grey', zorder=0)
+    # elif model == 'DS_CNN':
+    #     ax.set_ylim([0, 30])
+    #     ax.yaxis.tick_right()
+    #     ax.yaxis.set_label_position("right")
+    #     ax.grid(axis='y', color='grey', which='major', zorder=0)
+    #     ax.set_facecolor('silver')
+    # else:
+    #     ax.set_ylim([0, 11])
+    #     ax.set_yticklabels([])
+    #     ax.grid(axis='y', color='grey', zorder=0)
 
-    if n == 'DS_CNN':
-        n = 'DS-CNN (Right Axis)'
-    ax.set_title(n)
+    if model == 'DS_CNN':
+        model = 'DS-CNN (Right Axis)'
 
-cnt = 0
-
-model_order = ['ResNet3', 'MobileNetV2', 'LeNet', 'MLPClassifier', 'DS_CNN']
-
-results = {key: results[key] for key in model_order}
-
-for name, m in results.items():
-    plot(name, m, axs[cnt])
-    cnt += 1
+    subfig.supxlabel(model, y=0.1, x=0.58, fontweight='bold')
 
 l = []
 for _, f in opt_flags.items():
-    p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=f[0])
+    p = mpatches.Patch(facecolor=f[1], hatch=f[2], label=f[0])
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=7, fontsize=16, bbox_to_anchor=(0.5, -0.02))
+fig.legend(handles=l, loc='lower center', ncol=7, fontsize=16, bbox_to_anchor=(0.5, -0.02), edgecolor='black')
 
-plt.subplots_adjust(wspace=0)
-
-fig.tight_layout(pad=0.05, rect=[0, 0.065, 1, 1])
+fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 
 plt.savefig(f'figures/opt_perf_continous.png', dpi=500)
 

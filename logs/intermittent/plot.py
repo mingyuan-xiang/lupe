@@ -116,10 +116,10 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         bars = ax.bar(x_indices, continuous_bar_values, width, label=config_list, color=colors, zorder=3)
         for bar, hatch in zip(bars, hatches):
             bar.set_hatch(hatch)
-        ax.bar(x_indices, intermittent_bar_values, width, bottom=continuous_bar_values, label='Intermittent Overhead', color='lightgray', zorder=3)
+        ax.bar(x_indices, intermittent_bar_values, width, bottom=continuous_bar_values, label='Intermittent Overhead', color='darkgrey', zorder=3)
 
         if model == 'MobileNetV2':
-            ax.scatter(2, 2.5, marker='X', s=300, color='red')
+            ax.scatter(2, 1.75, marker='X', s=150, color='red')
 
         if i == 0:
             ax.set_title(restart_map[data_range], fontweight='bold')
@@ -130,7 +130,7 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         else:
             ax.set_ylabel('Latency Per Inference (s)')
 
-        ax.grid(axis='y', zorder=0)
+        ax.grid(axis='y', color='grey', zorder=0)
 
         ax.set_ylim(*y_limits[model][0])
         ax.set_yticks(y_limits[model][1])
@@ -150,9 +150,9 @@ for _, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=n)
     l.append(p)
 
-l.append(mpatches.Patch(facecolor='lightgray',label='Intermittent Support Overhead'))
+l.append(mpatches.Patch(facecolor='darkgrey',label='Intermittent Support Overhead'))
 
-fig.legend(handles=l, loc='lower center', ncol=3, fontsize=16, bbox_to_anchor=(0.615, -0.065))
+fig.legend(handles=l, loc='lower center', ncol=3, fontsize=14, bbox_to_anchor=(0.615, -0.057), edgecolor='black')
 
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 

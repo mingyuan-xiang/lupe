@@ -74,12 +74,12 @@ for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
     ax.set_ylabel('Energy Consumption Per Inference (mJ)')
 
     if model == 'MobileNetV2':
-        ax.scatter(2, 7, marker='X', s=300, color='red')
+        ax.scatter(2, 6, marker='X', s=300, color='red')
 
     ax.set_xticklabels([])
     ax.xaxis.set_tick_params(length=0)
 
-    ax.grid(axis='y', zorder=0)
+    ax.grid(axis='y', color='grey', zorder=0)
 
     subfig.supxlabel(model, y=0.1, x=0.58, fontweight='bold')
 
@@ -92,7 +92,7 @@ for n, f in opt_flags.items():
 l.append(mpatches.Patch(facecolor='w', label='Continuous', edgecolor='black'))
 l.append(mpatches.Patch(facecolor='w', hatch='xx', label='Intermittent', edgecolor='black'))
 
-fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0.02))
+fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0.02), edgecolor='black')
 
 fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
 

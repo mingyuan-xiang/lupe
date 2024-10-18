@@ -87,9 +87,9 @@ for i, (key, values) in enumerate(log_data.items()):
     core_label = None
     total_label = None
     if key == 'DMA':
-        st_time = 'Start-up Overhead'
-        core_label = 'Compute Time'
-        total_label = 'Set-up Overhead'
+        st_time = 'Start-up'
+        core_label = 'Compute'
+        total_label = 'Set-up'
 
     axes[i].bar(sizes, real_norm_core_times, bar_width, label=core_label, color='royalblue', hatch='oo')
     axes[i].bar(sizes, constant, bar_width, label=st_time, bottom=real_norm_core_times, color='firebrick', hatch='++')
@@ -163,11 +163,12 @@ for i, (key, values) in enumerate(log_data.items()):
 
 fig.legend(
     loc='lower center', ncol=4,
-    fontsize=12, bbox_to_anchor=(0.5, -0.017)
+    fontsize=14, bbox_to_anchor=(0.54, -0.019),
+    edgecolor='black'
 )
 fig.tight_layout(pad=0.05, rect=[0.03, 0.09, 1, 1])
 
-fig.text(0.0, 0.615, 'Normalized to Input Size of 6', va='center', rotation='vertical', fontsize=16)
+fig.text(0.0, 0.615, 'Normalized Time', va='center', rotation='vertical', fontsize=16)
 
 plt.subplots_adjust(hspace=0)
 

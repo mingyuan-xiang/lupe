@@ -77,12 +77,12 @@ x_intersection = int((intercept2 - intercept1) / (slope1 - slope2))
 y_intersection = slope1 * x_intersection + intercept1
 
 ax.plot(x_intersection, y_intersection, 'ro')
-ax.plot([x_intersection, x_intersection], [y_intersection, 0], 'gray', linestyle='dashed')
+ax.plot([x_intersection, x_intersection], [y_intersection, 0], 'darkgrey', linestyle='dashed')
 
 # Print the x-coordinate of the intersection directly on the plot
 ax.text(x_intersection, -0.026, f'{x_intersection}', horizontalalignment='center', verticalalignment='top', transform=ax.get_xaxis_transform())
 
-ax.legend(fontsize=12)
+ax.legend(fontsize=14)
 
 plt.xticks(np.arange(0, 40, 30))
 
