@@ -43,7 +43,7 @@ mac_df = pd.DataFrame(mac_data)
 fir_df = pd.DataFrame(fir_data)
 tmp_df = pd.merge(fir_df, mac_df, on=['kernel_size', 'channels', 'input_size'], suffixes=('_fir', '_mac'))
 df = tmp_df.copy()
-df['time'] = tmp_df['time_fir'] - tmp_df['time_mac']
+df['time'] = tmp_df['time_mac'] - tmp_df['time_fir']
 df.drop(columns=['time_fir', 'time_mac'], inplace=True)
 
 time_max = df['time'].max()
@@ -53,26 +53,26 @@ val = max(abs(time_max), abs(time_min))
 fig = plt.figure()
 fig.add_subplot(111)
 
-x = df['input_size']
-y = df['channels']
+y = df['input_size']
+x = df['channels']
 z = df['time']
 xi = np.linspace(x.min(), x.max(), 100)
 yi = np.linspace(y.min(), y.max(), 100)
 xi, yi = np.meshgrid(xi, yi)
 zi = griddata((x, y), z, (xi, yi), method='cubic')
 
-scatter = plt.scatter(df['input_size'], df['channels'], c=df['time'], cmap='coolwarm', s=10)
+scatter = plt.scatter(df['channels'], df['input_size'], c=df['time'], cmap='coolwarm', s=10)
 cbar = plt.colorbar(scatter)
 scatter.set_clim(-val, val)
 cbar.set_ticks([])
 
 contour = plt.contour(xi, yi, zi, levels=[0], colors='black', linewidths=1.5)
 
-plt.xlabel('Input Size')
-plt.ylabel('Input Channels + Output Channels')
+plt.ylabel('Input Size')
+plt.xlabel('Input Channels + Output Channels')
 
-plt.text(1.05 + 0.08, 0.75, 'MAC', transform=plt.gca().transAxes, fontsize=12, verticalalignment='center', color='black')
-plt.text(1.05 + 0.08, 0.25, 'FIR', transform=plt.gca().transAxes, fontsize=12, verticalalignment='center', color='black')
+plt.text(1.05 + 0.08, 0.25, 'MAC-Inst.', transform=plt.gca().transAxes, fontsize=16, rotation=90, verticalalignment='center', color='black')
+plt.text(1.05 + 0.08, 0.75, 'FIR-Inst.', transform=plt.gca().transAxes, fontsize=16, rotation=90, verticalalignment='center', color='black')
 
 plt.xlim(x.min() - 1, x.max() + 1)
 plt.ylim(y.min() - 1, y.max() + 1)
