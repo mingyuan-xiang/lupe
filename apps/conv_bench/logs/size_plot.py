@@ -35,7 +35,7 @@ with open(f'fir_conv_{kernel_size}.log') as f:
     fir_data = parse_data(data)
 
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 20})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
@@ -71,8 +71,8 @@ contour = plt.contour(xi, yi, zi, levels=[0], colors='black', linewidths=1.5)
 plt.ylabel('Input Size')
 plt.xlabel('Input Channels + Output Channels')
 
-plt.text(1.05 + 0.08, 0.25, 'MAC-Inst.', transform=plt.gca().transAxes, fontsize=16, rotation=90, verticalalignment='center', color='black')
-plt.text(1.05 + 0.08, 0.75, 'FIR-Inst.', transform=plt.gca().transAxes, fontsize=16, rotation=90, verticalalignment='center', color='black')
+plt.text(1.05 + 0.08, 0.25, 'MAC-Inst.', transform=plt.gca().transAxes, fontsize=20, rotation=90, verticalalignment='center', color='black')
+plt.text(1.05 + 0.08, 0.75, 'FIR-Inst.', transform=plt.gca().transAxes, fontsize=20, rotation=90, verticalalignment='center', color='black')
 
 plt.xlim(x.min() - 1, x.max() + 1)
 plt.ylim(y.min() - 1, y.max() + 1)
