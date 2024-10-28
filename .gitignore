@@ -183,6 +183,7 @@ apps/*
 !apps/memcpy
 !apps/external_timer
 !apps/conv_bench
+!apps/conv_bench_no_opt
 !apps/fir_mac_cpu_bench
 !apps/fir_mac_bench
 !apps/fir_mac_bench_lupe
