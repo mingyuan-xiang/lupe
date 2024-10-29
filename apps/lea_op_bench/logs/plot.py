@@ -89,11 +89,11 @@ for i, (key, values) in enumerate(log_data.items()):
     if key == 'DMA':
         st_time = 'Invocation Time'
         core_label = 'Computation Time'
-        total_label = 'Maintenance Time'
+        total_label = 'Preparation Time'
 
-    axes[i].bar(sizes, real_norm_core_times, bar_width, label=core_label, color='royalblue', hatch='oo')
-    axes[i].bar(sizes, constant, bar_width, label=st_time, bottom=real_norm_core_times, color='firebrick', hatch='++')
-    axes[i].bar(sizes, norm_setup_times, bar_width, bottom=norm_core_times, label=total_label, color='pink')
+    bars1 = axes[i].bar(sizes, real_norm_core_times, bar_width, label=core_label, color='royalblue', hatch='oo')
+    bars2 = axes[i].bar(sizes, constant, bar_width, label=st_time, bottom=real_norm_core_times, color='firebrick', hatch='++')
+    bars3 = axes[i].bar(sizes, norm_setup_times, bar_width, bottom=norm_core_times, label=total_label, color='pink')
 
     axes[i].yaxis.set_major_formatter(ticker.FormatStrFormatter('%.1f'))
     axes[i].yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
@@ -134,7 +134,7 @@ for i, (key, values) in enumerate(log_data.items()):
 
         yticks = axes[i].yaxis.get_major_ticks()
         disable_tick(yticks[0])
-        axes[i].axvline(x=52, color='orange', linestyle='--')
+        lines = axes[i].axvline(x=52, color='orange', linestyle='--')
     else:
         axes[i].set_xlabel('Input Size')
 
@@ -154,7 +154,7 @@ for i, (key, values) in enumerate(log_data.items()):
         current_ticks = axes[i].get_xticks()
         new_ticks = list(current_ticks) + [52]  # Add a new tick at 2.5
         axes[i].set_xticks(new_ticks)
-        axes[i].axvline(x=52, color='orange', linestyle='--', label='Max Input Size')
+        lines = axes[i].axvline(x=52, color='orange', linestyle='--', label='Max Input Size')
 
     axes[i].text(0.5, 0.85, key, ha='center', va='center', transform=axes[i].transAxes, 
         fontsize=12, bbox=dict(facecolor='white', edgecolor='gainsboro', boxstyle='round,pad=0.1'))
@@ -162,6 +162,7 @@ for i, (key, values) in enumerate(log_data.items()):
     axes[i].tick_params(axis='y', labelsize=12)
 
 fig.legend(
+    handles=[lines, bars3, bars2, bars1],
     loc='lower center', ncol=4,
     fontsize=11, bbox_to_anchor=(0.52, -0.01),
     edgecolor='black'
