@@ -169,7 +169,7 @@ fig.legend(
 )
 fig.tight_layout(pad=0.05, rect=[0.03, 0.12, 1, 1])
 
-fig.text(0.0, 0.65, 'Normalized Time (s)', va='center', rotation='vertical', fontsize=12)
+fig.text(0.0, 0.65, 'Normalized Time', va='center', rotation='vertical', fontsize=12)
 
 plt.subplots_adjust(hspace=0)
 
