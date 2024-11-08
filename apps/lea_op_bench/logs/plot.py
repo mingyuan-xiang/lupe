@@ -44,18 +44,18 @@ data = parse_log(log)
 
 log_data = {}
 for d in data:
-    if d in ('msp_fir_q15', 'msp_mac_q15', 'msp_add_q15', 'DMA'):
+    if d in ('msp_fir_q15', 'msp_add_q15'):
         log_data[d] = data[d]
 
 bar_width = 2.5
 plt.rcParams["font.family"] = "Times New Roman"
-plt.rcParams.update({'font.size': 16})
+plt.rcParams.update({'font.size': 14})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
 n_subplots = len(log_data)
 
-fig, axes = plt.subplots(n_subplots, 1, figsize=(8, n_subplots * 1))
+fig, axes = plt.subplots(n_subplots, 1, figsize=(8, n_subplots * 1.2))
 
 def disable_tick(t):
     t.label1.set_visible(False)
@@ -86,7 +86,7 @@ for i, (key, values) in enumerate(log_data.items()):
     st_time = None
     core_label = None
     total_label = None
-    if key == 'DMA':
+    if key == 'msp_fir_q15':
         st_time = 'Invocation Time'
         core_label = 'Computation Time'
         total_label = 'SRAM Preparation Time'
@@ -106,9 +106,9 @@ for i, (key, values) in enumerate(log_data.items()):
     #     yticks = axes[i].yaxis.get_major_ticks()
     #     disable_tick(yticks[2])
 
-    if key == 'msp_mac_q15':
-        yticks = axes[i].yaxis.get_major_ticks()
-        disable_tick(yticks[1])
+    # if key == 'msp_mac_q15':
+    #     yticks = axes[i].yaxis.get_major_ticks()
+    #     disable_tick(yticks[1])
 
     if key == 'msp_add_q15':
         yticks = axes[i].yaxis.get_major_ticks()
@@ -128,7 +128,7 @@ for i, (key, values) in enumerate(log_data.items()):
     #     yticks = axes[i].yaxis.get_major_ticks()
     #     disable_tick(yticks[1])
 
-    if key != 'DMA':
+    if key != 'msp_fir_q15':
         axes[i].set_xticklabels([])
         axes[i].xaxis.set_tick_params(length=0)
 
@@ -164,12 +164,12 @@ for i, (key, values) in enumerate(log_data.items()):
 fig.legend(
     handles=[lines, bars3, bars2, bars1],
     loc='lower center', ncol=4,
-    fontsize=11, bbox_to_anchor=(0.50, -0.01),
+    fontsize=11, bbox_to_anchor=(0.50, -0.03),
     edgecolor='black'
 )
-fig.tight_layout(pad=0.05, rect=[0.03, 0.09, 1, 1])
+fig.tight_layout(pad=0.05, rect=[0.03, 0.12, 1, 1])
 
-fig.text(0.0, 0.615, 'Normalized Time', va='center', rotation='vertical', fontsize=16)
+fig.text(0.0, 0.65, 'Normalized Time (s)', va='center', rotation='vertical', fontsize=12)
 
 plt.subplots_adjust(hspace=0)
 
