@@ -68,10 +68,11 @@ ax.bar(x - width/2, fir_opt_values, width, bottom=fir_no_opt_values, label='FIR-
 ax.bar(x + width/2, mac_no_opt_values, width, label='MAC-Inst. Bottom-up', zorder=3, color=colors[2], hatch='\\\\')
 ax.bar(x + width/2, mac_opt_values, width, bottom=mac_no_opt_values, label='MAC-Inst. Top-down', zorder=3, color=colors[3])
 
-plt.grid(True, color='grey', zorder=0)
+plt.grid(True, axis='y', color='grey', zorder=0)
 ax.set_ylabel('LEA Utilization (%)')
 ax.set_xticks(x)
 ax.set_xticklabels(models)
+ax.xaxis.set_tick_params(length=0)
 ax.legend(ncol=2, loc='upper center', edgecolor='black', bbox_to_anchor=(0.5, 1.02), framealpha=1)
 
 plt.tight_layout()
