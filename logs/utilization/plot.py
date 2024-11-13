@@ -51,7 +51,7 @@ mac_opt_values = [
 ]
 
 x = np.arange(len(models))
-width = 0.35
+width = 0.2
 cmap = plt.get_cmap('tab10')
 colors = cmap(np.linspace(0, 1, 4))
 
