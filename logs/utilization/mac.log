@@ -1,0 +1,150 @@
+Test ResNet3
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 42056
+layer1_layer1_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 138477
+layer1_layer1_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 138475
+layer2_layer2_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 56763
+layer2_layer2_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 69307
+layer2_layer2_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 138233
+layer3_layer3_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 57205
+layer3_layer3_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 69743
+layer3_layer3_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 139312
+linear_Gemm total cycles (32767 Hz) (repeat=10): 21
+
+Finish: total cycles (32767 Hz) (repeat=10): 849592
+
+Test ResNet3
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 68567
+layer1_layer1_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 230213
+layer1_layer1_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 227029
+layer2_layer2_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 105078
+layer2_layer2_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 113914
+layer2_layer2_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 233590
+layer3_layer3_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 104108
+layer3_layer3_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 117509
+layer3_layer3_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 228809
+linear_Gemm total cycles (32767 Hz) (repeat=10): 27
+
+Finish: total cycles (32767 Hz) (repeat=10): 1428844
+
+Test MobileNetV2
+(no_opt)
+features_features_0_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 51644
+features_features_1_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 4566
+features_features_1_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 27794
+features_features_2_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 166993
+features_features_2_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 6808
+features_features_2_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 41772
+features_features_3_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 42139
+features_features_3_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 1828
+features_features_3_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 10748
+features_features_4_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 10911
+features_features_4_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 763
+features_features_4_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 8225
+features_features_5_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 16662
+features_features_5_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 1496
+features_features_5_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 16479
+features_features_6_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 16639
+features_features_6_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 1537
+features_features_6_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 24645
+conv_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 41404
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 12
+
+Finish: total cycles (32767 Hz) (repeat=10): 493065
+
+Test MobileNetV2
+(dma_lea_opt_adaptive_buffer_mem)
+features_features_0_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 86272
+features_features_1_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 7404
+features_features_1_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 52910
+features_features_2_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 314245
+features_features_2_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 11250
+features_features_2_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 76988
+features_features_3_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 78548
+features_features_3_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 2998
+features_features_3_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 20264
+features_features_4_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 19875
+features_features_4_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 1231
+features_features_4_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 15038
+features_features_5_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 30463
+features_features_5_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 2472
+features_features_5_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 29609
+features_features_6_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 30734
+features_features_6_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 2487
+features_features_6_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 45042
+conv_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 75621
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 12
+
+Finish: total cycles (32767 Hz) (repeat=10): 903463
+
+Test DS_CNN
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 19150
+block1_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 11728
+block1_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 582641
+block2_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 11733
+block2_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 582565
+block3_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 11735
+block3_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 582601
+block4_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 12063
+block4_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 582705
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 33
+
+Finish: total cycles (32767 Hz) (repeat=10): 2396954
+
+Test DS_CNN
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 25166
+block1_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 18641
+block1_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 1043072
+block2_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 18633
+block2_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 1042967
+block3_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 18645
+block3_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 1043095
+block4_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 19026
+block4_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 1042878
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 34
+
+Finish: total cycles (32767 Hz) (repeat=10): 4272157
+
+Test LeNet
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 8778
+conv2_Conv total cycles (32767 Hz) (repeat=10): 17455
+conv3_Conv total cycles (32767 Hz) (repeat=10): 5569
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 391
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 36
+
+Finish: total cycles (32767 Hz) (repeat=10): 32229
+
+Test LeNet
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 13004
+conv2_Conv total cycles (32767 Hz) (repeat=10): 25894
+conv3_Conv total cycles (32767 Hz) (repeat=10): 9070
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 403
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 38
+
+Finish: total cycles (32767 Hz) (repeat=10): 48409
+
+Test MLPClassifier
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 6507
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 1519
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 851
+fc3_Gemm total cycles (32767 Hz) (repeat=10): 389
+fc4_Gemm total cycles (32767 Hz) (repeat=10): 34
+
+Finish: total cycles (32767 Hz) (repeat=10): 9300
+
+Test MLPClassifier
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 9528
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 1520
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 855
+fc3_Gemm total cycles (32767 Hz) (repeat=10): 404
+fc4_Gemm total cycles (32767 Hz) (repeat=10): 40
+
+Finish: total cycles (32767 Hz) (repeat=10): 12347
+

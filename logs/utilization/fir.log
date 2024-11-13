@@ -1,0 +1,150 @@
+Test ResNet3
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 29046
+layer1_layer1_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 95209
+layer1_layer1_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 95228
+layer2_layer2_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 31981
+layer2_layer2_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 107799
+layer2_layer2_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 117158
+layer3_layer3_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 43573
+layer3_layer3_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 143216
+layer3_layer3_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 161404
+linear_Gemm total cycles (32767 Hz) (repeat=10): 22
+
+Finish: total cycles (32767 Hz) (repeat=10): 824636
+
+Test ResNet3
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 32725
+layer1_layer1_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 108152
+layer1_layer1_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 107550
+layer2_layer2_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 38095
+layer2_layer2_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 129321
+layer2_layer2_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 144132
+layer3_layer3_0_shortcut_shortcut_0_Conv total cycles (32767 Hz) (repeat=10): 57017
+layer3_layer3_0_conv1_Conv total cycles (32767 Hz) (repeat=10): 187816
+layer3_layer3_0_conv2_Conv total cycles (32767 Hz) (repeat=10): 217265
+linear_Gemm total cycles (32767 Hz) (repeat=10): 26
+
+Finish: total cycles (32767 Hz) (repeat=10): 1022099
+
+Test MobileNetV2
+(no_opt)
+features_features_0_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 65437
+features_features_1_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 6682
+features_features_1_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 8088
+features_features_2_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 48630
+features_features_2_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 12584
+features_features_2_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 16269
+features_features_3_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 16602
+features_features_3_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 4604
+features_features_3_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 6650
+features_features_4_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 6813
+features_features_4_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 2419
+features_features_4_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 7092
+features_features_5_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 14306
+features_features_5_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 3207
+features_features_5_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 14117
+features_features_6_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 14384
+features_features_6_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 3184
+features_features_6_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 21165
+conv_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 35635
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 12
+
+Finish: total cycles (32767 Hz) (repeat=10): 307880
+
+Test MobileNetV2
+(dma_lea_opt_adaptive_buffer_mem)
+features_features_0_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 71480
+features_features_1_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 7794
+features_features_1_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 9487
+features_features_2_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 56900
+features_features_2_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 16020
+features_features_2_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 20255
+features_features_3_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 20559
+features_features_3_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 6478
+features_features_3_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 9562
+features_features_4_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 9810
+features_features_4_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 3545
+features_features_4_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 10873
+features_features_5_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 22167
+features_features_5_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 4859
+features_features_5_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 21841
+features_features_6_pw_conv_pw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 22161
+features_features_6_dw_conv_dw_conv_0_Conv total cycles (32767 Hz) (repeat=10): 4849
+features_features_6_pw_conv_linear_pw_conv_linear_0_Conv total cycles (32767 Hz) (repeat=10): 32758
+conv_block_block_0_Conv total cycles (32767 Hz) (repeat=10): 54623
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 12
+
+Finish: total cycles (32767 Hz) (repeat=10): 406033
+
+Test DS_CNN
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 87493
+block1_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 16066
+block1_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 300672
+block2_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 16040
+block2_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 300763
+block3_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 16032
+block3_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 300447
+block4_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 16384
+block4_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 300724
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 33
+
+Finish: total cycles (32767 Hz) (repeat=10): 1354654
+
+Test DS_CNN
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 121326
+block1_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 22376
+block1_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 428021
+block2_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 22381
+block2_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 424196
+block3_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 22352
+block3_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 427967
+block4_dw_conv_Conv total cycles (32767 Hz) (repeat=10): 22763
+block4_pw_conv_Conv total cycles (32767 Hz) (repeat=10): 424276
+classifier_Gemm total cycles (32767 Hz) (repeat=10): 36
+
+Finish: total cycles (32767 Hz) (repeat=10): 1915694
+
+Test LeNet
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 8724
+conv2_Conv total cycles (32767 Hz) (repeat=10): 24316
+conv3_Conv total cycles (32767 Hz) (repeat=10): 27320
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 390
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 35
+
+Finish: total cycles (32767 Hz) (repeat=10): 60785
+
+Test LeNet
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 9947
+conv2_Conv total cycles (32767 Hz) (repeat=10): 32011
+conv3_Conv total cycles (32767 Hz) (repeat=10): 42839
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 404
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 38
+
+Finish: total cycles (32767 Hz) (repeat=10): 85239
+
+Test MLPClassifier
+(no_opt)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 6733
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 1518
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 851
+fc3_Gemm total cycles (32767 Hz) (repeat=10): 390
+fc4_Gemm total cycles (32767 Hz) (repeat=10): 36
+
+Finish: total cycles (32767 Hz) (repeat=10): 9528
+
+Test MLPClassifier
+(dma_lea_opt_adaptive_buffer_mem)
+conv1_Conv total cycles (32767 Hz) (repeat=10): 7846
+fc1_Gemm total cycles (32767 Hz) (repeat=10): 1500
+fc2_Gemm total cycles (32767 Hz) (repeat=10): 849
+fc3_Gemm total cycles (32767 Hz) (repeat=10): 406
+fc4_Gemm total cycles (32767 Hz) (repeat=10): 39
+
+Finish: total cycles (32767 Hz) (repeat=10): 10640
+

@@ -1,0 +1,130 @@
+Test ResNet3
+(no_opt)
+6
+6
+6
+6
+6
+6
+6
+6
+6
+6
+Finish: Running ResNet3 (no_opt) total cycles (32767 Hz) (CNT=10): 11984904
+Test ResNet3
+(dma_lea_opt_adaptive_buffer_mem)
+6
+6
+6
+6
+6
+6
+6
+6
+6
+6
+Finish: Running ResNet3 (dma_lea_opt_adaptive_buffer_mem) total cycles (32767 Hz) (CNT=10): 3941291
+Test MobileNetV2
+(no_opt)
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Finish: Running MobileNetV2 (no_opt) total cycles (32767 Hz) (CNT=10): 8101754
+Test MobileNetV2
+(dma_lea_opt_adaptive_buffer_mem)
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Finish: Running MobileNetV2 (dma_lea_opt_adaptive_buffer_mem) total cycles (32767 Hz) (CNT=10): 2537070
+Test DS_CNN
+(no_opt)
+10
+10
+10
+10
+10
+10
+10
+10
+10
+10
+Finish: Running DS_CNN (no_opt) total cycles (32767 Hz) (CNT=10): 36466877
+Test DS_CNN
+(dma_lea_opt_adaptive_buffer_mem)
+10
+10
+10
+10
+10
+10
+10
+10
+10
+10
+Finish: Running DS_CNN (dma_lea_opt_adaptive_buffer_mem) total cycles (32767 Hz) (CNT=10): 11284501
+Test LeNet
+(no_opt)
+8
+8
+8
+8
+8
+8
+8
+8
+8
+8
+Finish: Running LeNet (no_opt) total cycles (32767 Hz) (CNT=10): 442206
+Test LeNet
+(dma_lea_opt_adaptive_buffer_mem)
+8
+8
+8
+8
+8
+8
+8
+8
+8
+8
+Finish: Running LeNet (dma_lea_opt_adaptive_buffer_mem) total cycles (32767 Hz) (CNT=10): 177313
+Test MLPClassifier
+(no_opt)
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Finish: Running MLPClassifier (no_opt) total cycles (32767 Hz) (CNT=10): 102698
+Test MLPClassifier
+(dma_lea_opt_adaptive_buffer_mem)
+0
+0
+0
+0
+0
+0
+0
+0
+0
+0
+Finish: Running MLPClassifier (dma_lea_opt_adaptive_buffer_mem) total cycles (32767 Hz) (CNT=10): 45069
