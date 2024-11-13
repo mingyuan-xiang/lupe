@@ -86,7 +86,7 @@ for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
 l = []
 for n, f in opt_flags.items():
     if n == 'Bottom-up':
-        n = 'Polaris'
+        n = 'Lupe-BT'
     p = mpatches.Patch(facecolor=f[1], label=n)
     l.append(p)
 l.append(mpatches.Patch(facecolor='w', label='Continuous', edgecolor='black'))

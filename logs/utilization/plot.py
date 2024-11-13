@@ -27,7 +27,7 @@ plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
 plt.figure(figsize=(12, 8))
-plt.scatter(models, no_opt_ratio, color='blue', marker='x', s=200, label='Bottom-up Implementation', zorder=3)
+plt.scatter(models, no_opt_ratio, color='blue', marker='X', s=200, label='Bottom-up Implementation', zorder=3)
 plt.scatter(models, opt_ratio, color='red', marker='o', s=200, label='Top-down Implementation', zorder=3)
 
 plt.grid(True, color='grey', zorder=0)

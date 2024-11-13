@@ -146,7 +146,7 @@ l = []
 for _, f in opt_flags.items():
     n = f[0]
     if n == 'Bottom-up':
-        n = 'Polaris'
+        n = 'Lupe-BT'
     p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=n)
     l.append(p)
 
