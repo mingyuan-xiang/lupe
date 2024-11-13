@@ -77,3 +77,8 @@ ax.legend(ncol=2, loc='upper center', edgecolor='black', bbox_to_anchor=(0.5, 1.
 plt.tight_layout()
 plt.tight_layout(pad=0.05)
 plt.savefig(f'utilization.png', dpi=500, bbox_inches='tight')
+
+print(f'avg (fir, no opt): {round(sum(fir_no_opt_values) / 5, 2)}')
+print(f'avg (fir, opt): {round((sum(fir_no_opt_values) + sum(fir_opt_values)) / 5, 2)}')
+print(f'avg (mac, no opt): {round(sum(mac_no_opt_values) / 5, 2)}')
+print(f'avg (mac, opt): {round((sum(mac_no_opt_values) + sum(mac_opt_values)) / 5, 2)}')
