@@ -44,7 +44,7 @@ def get_min_time(times):
 
     return min_time
 
-fig, axs = plt.subplots(1, len(results), figsize=(20, 5))
+fig, axs = plt.subplots(1, len(results), figsize=(20, 4))
 
 def disable_tick(t):
     t.label1.set_visible(False)
@@ -93,6 +93,7 @@ def plot(n, r, ax):
         ax.grid(axis='y', zorder=0)
     elif n == 'DS_CNN':
         ax.set_ylim([0, 30])
+        ax.set_yticks(np.arange(0, 31, step=5))
         ax.yaxis.tick_right()
         ax.yaxis.set_label_position("right")
         ax.grid(axis='y', which='major', zorder=0)
@@ -123,11 +124,13 @@ for _, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2],label=f[0])
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=7, fontsize=16, bbox_to_anchor=(0.5, -0.018), edgecolor='black')
+fig.legend(handles=l, loc='lower center', ncol=7, fontsize=16, bbox_to_anchor=(0.5, -0.02), edgecolor='black')
 
 plt.subplots_adjust(wspace=0)
 
 fig.tight_layout(pad=0.05, rect=[0, 0.085, 1, 1])
+
+fig.subplots_adjust(bottom=0.17)
 
 plt.savefig(f'figures/opt_perf_continous.png', dpi=500)
 

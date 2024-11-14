@@ -32,7 +32,7 @@ ordered_configs = list(opt_flags.keys())
 
 shifter = 1000
 
-fig = plt.figure(figsize=(25, 8))
+fig = plt.figure(figsize=(25, 6))
 subfigs = fig.subfigures(nrows=1, ncols=len(ordered_models), wspace=0.25)
 
 cont = []
@@ -71,7 +71,7 @@ for idx, (model, subfig) in enumerate(zip(ordered_models, subfigs)):
     for bar, hatch in zip(bars, hatches):
         bar.set_hatch(hatch)
 
-    ax.set_ylabel('Energy Consumption Per Inference (mJ)')
+    ax.set_ylabel('Energy Per Inference (mJ)', fontsize=22)
 
     if model == 'MobileNetV2':
         ax.scatter(2, 6, marker='X', s=300, color='red')
@@ -92,9 +92,9 @@ for n, f in opt_flags.items():
 l.append(mpatches.Patch(facecolor='w', label='Continuous', edgecolor='black'))
 l.append(mpatches.Patch(facecolor='w', hatch='xx', label='Intermittent', edgecolor='black'))
 
-fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0.02), edgecolor='black')
+fig.legend(handles=l, loc='lower center', ncol=6, fontsize=22, bbox_to_anchor=(0.5, -0.015), edgecolor='black')
 
-fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
+fig.tight_layout(pad=0.05, rect=[0, 0.03, 1, 0.95])
 
 plt.savefig(f'figures/energy.png', dpi=500, bbox_inches='tight')
 

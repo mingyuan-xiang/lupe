@@ -45,7 +45,7 @@ for m in ordered_models:
                 break
         data[m][config] = d['continuous_time']
 
-fig = plt.figure(figsize=(25, 8))
+fig = plt.figure(figsize=(25, 6))
 subfigs = fig.subfigures(nrows=1, ncols=len(ordered_models), wspace=0.25)
 
 speedup = []
@@ -116,9 +116,9 @@ for n, f in opt_flags.items():
     p = mpatches.Patch(facecolor=f[1], hatch=f[2], label=n)
     l.append(p)
 
-fig.legend(handles=l, loc='lower center', ncol=6, fontsize=20, bbox_to_anchor=(0.5, 0), edgecolor='black')
+fig.legend(handles=l, loc='lower center', ncol=6, fontsize=24, bbox_to_anchor=(0.5, -0.04), edgecolor='black')
 
-fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
+fig.tight_layout(pad=0.05, rect=[0, 0.02, 1, 0.95])
 
 plt.savefig(f'figures/continuous_related.png', dpi=500, bbox_inches='tight')
 

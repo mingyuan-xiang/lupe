@@ -23,7 +23,7 @@ y_limits = {
     'LeNet' : ((0, 6), np.arange(0, 6, 1)),
     'ResNet3' : ((0, 60), np.arange(0, 60, 8)),
     'MobileNetV2' : ((0, 35), np.arange(0, 35, 5)),
-    'DS_CNN' : ((0, 95), np.arange(0, 100, 10)),
+    'DS_CNN' : ((0, 95), np.arange(0, 100, 15)),
 }
 
 cmap = plt.get_cmap('cool')
@@ -73,7 +73,7 @@ for data_range, models in reordered_results.items():
                 'ratio': ratio
             }
 
-fig = plt.figure(figsize=(10, 15), constrained_layout=True)
+fig = plt.figure(figsize=(10, 12), constrained_layout=True)
 
 subfigs = fig.subfigures(nrows=5, ncols=1)
 
@@ -128,7 +128,8 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
             ax.set_yticklabels([])
             ax.yaxis.set_tick_params(length=0)
         else:
-            ax.set_ylabel('Latency Per Inference (s)')
+            if model == 'MobileNetV2':
+                ax.set_ylabel('Latency Per Inference (s)', fontsize=20)
 
         ax.grid(axis='y', color='grey', zorder=0)
 
@@ -138,9 +139,9 @@ for i, (subfig, model) in enumerate(zip(subfigs, models)):
         ax.xaxis.set_tick_params(length=0)
 
     if model == 'DS_CNN':
-        subfig.supxlabel('DS-CNN', y=-0.05, x=0.65, fontweight='bold')
+        subfig.supxlabel('DS-CNN', y=-0.05, x=0.6, fontweight='bold')
     else:
-        subfig.supxlabel(model, y=-0.05, x=0.65, fontweight='bold')
+        subfig.supxlabel(model, y=-0.05, x=0.6, fontweight='bold')
 
 l = []
 for _, f in opt_flags.items():
@@ -152,9 +153,9 @@ for _, f in opt_flags.items():
 
 l.append(mpatches.Patch(facecolor='darkgrey',label='Intermittent Support Overhead'))
 
-fig.legend(handles=l, loc='lower center', ncol=3, fontsize=14, bbox_to_anchor=(0.615, -0.057), edgecolor='black')
+fig.legend(handles=l, loc='lower center', ncol=3, fontsize=16, bbox_to_anchor=(0.59, -0.08), edgecolor='black')
 
-fig.tight_layout(pad=0.05, rect=[0, 0.05, 1, 0.95])
+fig.tight_layout(pad=0.05, rect=[0, 0.07, 1, 0.95])
 
 # plt.show()
 plt.savefig(f'figures/opt_perf_intermittent.png', dpi=500, bbox_inches='tight')
