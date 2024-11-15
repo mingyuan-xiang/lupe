@@ -64,7 +64,7 @@ plt.rcParams.update({'font.size': 20})
 plt.rcParams["font.weight"] = "bold"
 plt.rcParams["axes.labelweight"] = "bold"
 
-fig, ax = plt.subplots(figsize=(12, 4))
+fig, ax = plt.subplots(figsize=(12, 6))
 
 ax.bar(x - width/2, fir_no_opt_values, width, label='FIR-Inst. Bottom-up', zorder=3, color=colors[0], hatch='\\\\')
 ax.bar(x - width/2, fir_opt_values, width, bottom=fir_no_opt_values, label='FIR-Inst. Top-down', zorder=3, color=colors[1])
@@ -77,7 +77,7 @@ ax.set_ylabel('LEA Utilization (%)', fontsize=20)
 ax.set_xticks(x)
 ax.set_xticklabels(models, fontsize=20)
 ax.xaxis.set_tick_params(length=0)
-ax.legend(ncol=2, loc='upper center', edgecolor='black', bbox_to_anchor=(0.5, 1.02), framealpha=1, fontsize=15)
+ax.legend(ncol=2, loc='upper center', edgecolor='black', bbox_to_anchor=(0.5, 1.02), framealpha=1, fontsize=20)
 
 plt.tight_layout(pad=0.05)
 plt.savefig(f'utilization.png', dpi=500, bbox_inches='tight')
