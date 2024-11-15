@@ -50,6 +50,10 @@ mac_opt_values = [
     for model in models
 ]
 
+for i in range(len(models)):
+    if models[i] == 'DS_CNN':
+        models[i] = 'DS-CNN'
+
 x = np.arange(len(models))
 width = 0.2
 cmap = plt.get_cmap('tab10')
