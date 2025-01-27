@@ -2,6 +2,7 @@ import re
 from math import log2
 
 import matplotlib.pyplot as plt
+import matplotlib.lines as mlines
 import seaborn as sns
 import pandas as pd
 import numpy as np
@@ -67,6 +68,7 @@ scatter.set_clim(-val, val)
 cbar.set_ticks([])
 
 contour = plt.contour(xi, yi, zi, levels=[0], colors='black', linewidths=1.5)
+custom_contour = mlines.Line2D([], [], color='black', linestyle='-', label='Perf. Boundary')
 
 plt.ylabel('Input Size')
 plt.xlabel('Input Channels + Output Channels')
@@ -76,6 +78,8 @@ plt.text(1.05 + 0.08, 0.75, 'FIR-Inst.', transform=plt.gca().transAxes, fontsize
 
 plt.xlim(x.min() - 1, x.max() + 1)
 plt.ylim(y.min() - 1, y.max() + 1)
+
+plt.legend(handles=[custom_contour], loc='upper left', bbox_to_anchor=(0, 1), borderaxespad=0.1, fontsize=20)
 
 fig.tight_layout(pad=0.05)
 plt.savefig(f'figures/fir_vs_mac_{kernel_size}.png', dpi=500)
