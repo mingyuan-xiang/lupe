@@ -190,6 +190,7 @@ apps/*
 !apps/lea_op_bench
 !apps/LeNet_inter
 !apps/playground
+!apps/blink
 
 # calibration folder
 !calibration/calibration.py
