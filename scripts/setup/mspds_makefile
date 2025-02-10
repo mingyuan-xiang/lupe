@@ -75,10 +75,10 @@ else
 
     ifdef STATIC
     STATIC_LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
-	STATIC_LIBS += -framework CoreFoundation -framework IOKit -lhidapi
+	STATIC_LIBS += -framework CoreFoundation -framework IOKit $(shell pkg-config --cflags --libs hidapi)
     else
     LIBS += -lboost_filesystem -lboost_system -lbsl430 -lboost_date_time -lboost_chrono -lboost_thread-mt
-	LIBS += -framework CoreFoundation -framework IOKit -lhidapi
+	LIBS += -framework CoreFoundation -framework IOKit $(shell pkg-config --cflags --libs hidapi)
     endif
 
 	ifdef BOOST_DIR

@@ -1,5 +1,10 @@
 #!/bin/bash
 
+#TODO: install `pkg-config` on mac
+#TODO: There is a bug with boost 1.87.0 library (https://github.com/PointCloudLibrary/pcl/issues/6202),
+# which is the version when I install it with homebrew.
+# So, I use version 1.85.0 instead (MSP_BOOST_DIR="/opt/homebrew/opt/boost@1.85/").
+
 verify_input() {
   if [ "$#" -ne 1 ]; then
     echo "Usage: setup.sh <linux | mac>"
@@ -11,7 +16,7 @@ verify_input() {
   fi
 }
 
-export LINUX_PREFIX=$CONDA_PREFIX
+export LINUX_PREFIX=$VIRTUAL_ENV
 
 linux_install() {
   if [[ "$1" == "hidapi" ]]; then
@@ -135,8 +140,8 @@ main() {
     fi
 
     # make
-    make --silent PREFIX=$CONDA_PREFIX install
-    mv $CONDA_PREFIX/bin/mspdebug $CONDA_PREFIX/bin/mspdebug_unlinked
+    make --silent PREFIX=$VIRTUAL_ENV install
+    mv $VIRTUAL_ENV/bin/mspdebug $VIRTUAL_ENV/bin/mspdebug_unlinked
 
     cd ..
     echo "mspdebug_unlinked installed"
@@ -150,11 +155,11 @@ main() {
     MSP_LIB=libmsp430.dylib
     HID_PATH=`brew --prefix hidapi`
     HID_PATH=$HID_PATH/include/hidapi/hidapi.h
-    MSP_BOOST_DIR=/opt/homebrew 
+    MSP_BOOST_DIR="/opt/homebrew/opt/boost@1.85/"
   fi
 
   ## Install the required dylib
-  if [ ! -f $CONDA_PREFIX/lib/$MSP_LIB ]; then
+  if [ ! -f $VIRTUAL_ENV/lib/$MSP_LIB ]; then
     echo "installing $MSP_LIB deps"
     install_deps $1 "hidapi" "boost"
     if [ $? -eq 1 ]; then
@@ -174,9 +179,10 @@ main() {
       export PKG_CONFIG_PATH=$LINUX_PREFIX/lib/pkgconfig/
       make --silent BOOST_DIR=$MSP_BOOST_DIR BOOST_INCLUDE=$MSP_BOOST_INCLUDE
     else
+      export PKG_CONFIG_PATH=/opt/homebrew/lib/pkgconfig/
       make --silent BOOST_DIR=$MSP_BOOST_DIR
     fi
-    make --silent PREFIX=$CONDA_PREFIX install
+    make --silent PREFIX=$VIRTUAL_ENV install
 
     cd ..
     echo "$MSP_LIB installed"
@@ -211,18 +217,18 @@ main() {
     mv $GCC_DIRNAME/* $TOOLCHAIN_DIR
 
     cd $TOOLCHAIN_DIR
-    stow -t $CONDA_PREFIX/bin bin
+    stow -t $VIRTUAL_ENV/bin bin
   fi
 
   if ! hash mspdebug 2>/dev/null; then
     echo "installing linked mspdebug"
-    mspdebug=$CONDA_PREFIX/bin/mspdebug
+    mspdebug=$VIRTUAL_ENV/bin/mspdebug
     touch $mspdebug
     echo "#!/bin/bash" > $mspdebug
     if [[ "$1" == "linux" ]]; then
-      echo "LD_LIBRARY_PATH=\"$CONDA_PREFIX/lib\" mspdebug_unlinked \"\$@\"" >> $mspdebug
+      echo "LD_LIBRARY_PATH=\"$VIRTUAL_ENV/lib\" mspdebug_unlinked \"\$@\"" >> $mspdebug
     else
-      echo "DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
+      echo "DYLD_LIBRARY_PATH=$VIRTUAL_ENV/lib mspdebug_unlinked \"\$@\"" >> $mspdebug
     fi
     chmod +x $mspdebug
   fi
