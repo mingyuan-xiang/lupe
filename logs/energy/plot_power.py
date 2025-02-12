@@ -2,10 +2,10 @@ import os
 import pandas as pd
 import matplotlib.pyplot as plt
 
-prefix = os.path.join('logs', 'parsed_logs')
+prefix = os.path.join('logs', 'power_snapshot')
 
 file_name = [
-'tails_resnet.csv',
+    'inter_hawaii_resnet.csv',
 ]
 
 def get_df(filepath):

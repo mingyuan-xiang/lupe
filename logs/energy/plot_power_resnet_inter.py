@@ -6,10 +6,10 @@ import numpy as np
 prefix = os.path.join('logs', 'power_snapshot')
 
 files = [
-    ('tails_resnet.csv', 'Tails'),
-    ('lupe_no_opt_resnet.csv', 'Lupe-BT'),
-    ('hawaii_resnet.csv', 'Hawaii'),
-    ('lupe_resnet.csv', 'Lupe'),
+    ('inter_tails_resnet.csv', 'Tails'),
+    ('inter_lupe_no_opt_resnet.csv', 'Lupe-BT'),
+    ('inter_hawaii_resnet.csv', 'Hawaii'),
+    ('inter_lupe_resnet.csv', 'Lupe'),
 ]
 
 cmap1 = plt.get_cmap('cool')
@@ -47,7 +47,7 @@ for ax, (f, n, c) in zip(axes, files):
     ax.plot(df['Time:ulong'], df['Power:float'], linestyle='-', color=c, label=n, zorder=3)
     ax.set_ylim([0, 9])
     ax.set_yticks([0, 3, 6])
-    ax.set_xlim(0, 30)
+    ax.set_xlim(0, 60)
     ax.grid(axis='both', zorder=0, linestyle='--')
 
     if n != 'Lupe':
@@ -71,5 +71,5 @@ fig.text(0, 0.6, 'Power (mW)', va='center', rotation='vertical')
 
 plt.subplots_adjust(hspace=0)
 
-plt.savefig(f"figures/power_resnet.png", dpi=500)
+plt.savefig(f"figures/power_resnet_inter.png", dpi=500)
 # plt.show()

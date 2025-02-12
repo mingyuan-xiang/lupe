@@ -74,3 +74,11 @@ logs/energy/logs/raw_logs/inter_lupe_mlp.csv filter=lfs diff=lfs merge=lfs -text
 logs/energy/logs/raw_logs/inter_lupe_no_opt_mobilenet.csv filter=lfs diff=lfs merge=lfs -text
 logs/energy/logs/raw_logs/inter_lupe_lenet.csv filter=lfs diff=lfs merge=lfs -text
 logs/energy/logs/raw_logs/lupe_lenet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/inter_tails_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/lupe_no_opt_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/lupe_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/tails_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/hawaii_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/inter_hawaii_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/inter_lupe_no_opt_resnet.csv filter=lfs diff=lfs merge=lfs -text
+logs/energy/logs/power_snapshot/inter_lupe_resnet.csv filter=lfs diff=lfs merge=lfs -text
