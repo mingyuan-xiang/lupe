@@ -30,7 +30,7 @@ with open('results.json', 'r') as file:
 ordered_models = ['ResNet3', 'DS-CNN', 'MobileNetV2', 'LeNet', 'MLPClassifier']
 ordered_configs = list(opt_flags.keys())
 
-shifter = 1000
+shifter = 0.001
 
 fig = plt.figure(figsize=(25, 6))
 subfigs = fig.subfigures(nrows=1, ncols=len(ordered_models), wspace=0.25)
