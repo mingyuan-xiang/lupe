@@ -12,7 +12,7 @@ files = [
     ('lupe_resnet.csv', 'Lupe'),
 ]
 
-cmap1 = plt.get_cmap('cool')
+cmap1 = plt.get_cmap('rainbow')
 N = len(files)
 colors1 = cmap1(np.linspace(0, 1, N))
 files = [(*files[i], colors1[i]) for i in range(N)]
