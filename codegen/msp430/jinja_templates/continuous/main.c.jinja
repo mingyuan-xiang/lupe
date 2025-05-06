@@ -1,0 +1,77 @@
+#include <libmsp/mspbase.h>
+#include <libmspdriver/driverlib.h>
+{%- if add_timer %}
+#include <libmsptimer/timekeeper.h>
+{%- endif %}
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <msp430.h>
+
+#include <include/{{ model_name }}.h>
+#include <buffer/include/input.h>
+#include <layers/include/utils.h>
+
+void init() {
+  watchdog_disable();
+  gpio_init_all_ports();
+  gpio_unlock();
+  gpio_clear_interrupts();
+  clock_init();
+  uartio_open(0);
+{%- if add_timer %}
+  timers_init();
+{%- endif %}
+  init_lupe();
+}
+
+void exit() {
+  msp_end_printing();
+{%- if add_timer %}
+  timers_stop();
+{%- endif %}
+}
+
+int main() {
+  init();
+
+{%- if not calibration %}
+  uint16_t l;
+{%- endif %}
+
+  msp_send_printf("Test {{ model_name }}\n");
+
+{%- if calibration %}
+  {{ model_name }}(&input_meta);
+{%- elif debug %}
+  l = {{ model_name }}(&input_meta);
+  msp_send_printf("Got %u, Expecting: {{ label }}", l);
+{%- else %}
+{% if add_timer %}
+  uint32_t total_time = 0;
+  uint32_t cnt = 0;
+{%- endif %}
+
+  for (uint16_t i = 0; i < {{ dataset_size }}; ++i) {
+    msp_recv_mat(&input_meta);
+{% if add_timer %}
+    start_timer();
+{%- endif %}
+    l = {{ model_name }}(&input_meta);
+{% if add_timer %}
+    uint32_t t = stop_timer();
+    total_time += t;
+{%- endif %}
+{# Send the classification results through UART #}
+    msp_send_printf("%u", l);
+{% if add_timer %}
+    if (cnt == {{ print_freq - 1 }} || i == {{ dataset_size - 1 }}) {
+      msp_send_printf("Running {{ model_name }} ({{ config_name }}) total cycles (32767 Hz) (CNT=%n): %n", cnt + 1, total_time);
+      total_time = 0;
+      cnt = 0;
+    } else {
+      ++cnt;
+    }
+{%- endif %}
+  }
+{%- endif %}
+  exit();
+}

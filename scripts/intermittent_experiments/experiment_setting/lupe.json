@@ -1,0 +1,32 @@
+{
+    "MLPClassifier" : {
+        "qf" : 5,
+        "config" : ["configs/no_opt.json", "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"],
+        "dataset" : "fashion_mnist",
+        "hifram-func" : 0
+    },
+    "LeNet" : {
+        "qf" : 5,
+        "config" : ["configs/no_opt.json", "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"],
+        "dataset" : "MNIST",
+        "hifram-func" : 16
+    },
+    "ResNet3" : {
+        "qf" : 4,
+        "config" : ["configs/no_opt.json", "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"],
+        "dataset" : "CIFAR10",
+        "hifram-func" : 5
+    },
+    "MobileNetV2" : {
+        "qf" : 4,
+        "config" : ["configs/no_opt.json", "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"],
+        "dataset" : "vww",
+        "hifram-func" : 16
+    },
+    "DS_CNN" : {
+        "qf" : 5,
+        "config" : ["configs/no_opt.json", "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"],
+        "dataset" : "sc",
+        "hifram-func" : 2
+    }
+}

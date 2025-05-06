@@ -1,0 +1,108 @@
+#include <libmsp/mspbase.h>
+#include <libmspdriver/driverlib.h>
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <msp430.h>
+
+#include <include/{{ model_name }}.h>
+#include <buffer/include/input.h>
+{%- if verify %}
+#include <buffer/include/output.h>
+{%- endif %}
+#include <libmsppoweroff/poweroff.h>
+#include <librng/rng.h>
+#include <buffer/include/buffer.h>
+#include <layers/include/utils.h>
+#include <layers/include/intermittent.h>
+{%- if bounds | length > 1 %}
+{%- endif %}
+
+/* ACLK cycles (32768 Hz) */
+{%- if bounds | length > 1 %}
+#define LOWER_BOUND {{ bounds[0] }}
+#define UPPER_BOUND {{ bounds[1] }}
+{%- else %}
+#define DELAY {{ bounds[0] }}
+{%- endif %}
+
+#define REPEAT {{ repeat }}
+
+void init() {
+  watchdog_disable();
+  gpio_init_all_ports();
+  gpio_unlock();
+  gpio_clear_interrupts();
+  clock_init();
+  uartio_open(0);
+  init_lupe();
+}
+
+void exit() {
+  msp_end_printing();
+}
+{% if verify %}
+uint16_t verify() {
+  uint16_t flag = 0;
+  for (uint16_t i = 0; i < output_meta.dims[1]; ++i) {
+    if (output_meta.data[i] != {{ last_layer }}_out_meta.data[i]) {
+      flag = 1;
+    }
+  }
+  return flag;
+}
+{%- endif %}
+
+{%- if bounds | length > 1 %}
+uint16_t rand(uint16_t low, uint16_t high) {
+  return prand_range(high - low) + low;
+}
+{%- endif %}
+
+int main() {
+  init();
+
+  reboot_counter = reboot_counter + 1;
+
+  for (uint16_t i = intermittent_status[MAIN_LOOP]; i < REPEAT; ++i) {
+    {%- if bounds | length > 1 %}
+    uint16_t delay = rand(LOWER_BOUND, UPPER_BOUND);
+
+    start_intermittent_tests(delay);
+    {{ model_name }}(&input_meta);
+    stop_intermittent_tests();
+    {%- else %}
+
+    {%- if bounds[0] > 0 %}
+    start_intermittent_tests(DELAY);
+    {{ model_name }}(&input_meta);
+    stop_intermittent_tests();
+    {%- else %}
+    {{ model_name }}(&input_meta);
+    {%- endif %}
+
+    {%- endif %}
+
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START_TRANSFER, COMPUTE_CK);
+    {% if verify %}
+    if (verify() != 0) {
+      break;
+    }
+    {%- endif %}
+
+    uint16_t next_i = i + 1;
+    VOLATILE_WRITE(next_i, MAIN_LOOP);
+  }
+
+  {%- if bounds | length > 1 %}
+  msp_send_printf("Restart times: %n (repeat: %u, [%u, %u])", reboot_counter, REPEAT, LOWER_BOUND, UPPER_BOUND);
+  {%- else %}
+  msp_send_printf("Restart times: %n (repeat: %u, [%u, %u])", reboot_counter, REPEAT, DELAY, DELAY);
+  {%- endif %}
+  {% if verify %}
+  msp_send_printf("Got activations for the last layer:");
+  msp_send_mat(&{{ last_layer }}_out_meta);
+  msp_send_printf("Expected:");
+  msp_send_mat(&output_meta);
+  {%- endif %}
+
+  exit();
+}

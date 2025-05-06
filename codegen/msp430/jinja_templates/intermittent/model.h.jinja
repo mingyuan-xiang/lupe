@@ -1,0 +1,9 @@
+#ifndef {{ model_name | upper }}_MODEL_H
+#define {{ model_name | upper }}_MODEL_H
+
+#include <stdint.h>
+#include <libmatAbstract/mat.h>
+
+uint16_t {%if hifram%} __attribute__((section(".upper.text"))){%endif%} {{ model_name }}(mat_t* image);
+
+#endif

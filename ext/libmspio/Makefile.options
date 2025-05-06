@@ -1,0 +1,22 @@
+# This makefile applies the options.
+# For list of options and documentation see Makefile.config
+include $(MAKER_ROOT)/Makefile.pre
+include $(MAKER_ROOT)/Makefile.msp
+
+# TODO: Do the baudrate setting here?
+
+ifneq ($(LIBUARTIO0_INT_ENABLE),)
+override CFLAGS +=-DCONFIG_UARTIO0_INT_ENABLE=$(LIBUARTIO0_INT_ENABLE)
+endif
+
+ifneq ($(LIBUARTIO1_INT_ENABLE),)
+override CFLAGS +=-DCONFIG_UARTIO1_INT_ENABLE=$(LIBUARTIO1_INT_ENABLE)
+endif
+
+ifneq ($(LIBUARTIO2_INT_ENABLE),)
+override CFLAGS +=-DCONFIG_UARTIO2_INT_ENABLE=$(LIBUARTIO2_INT_ENABLE)
+endif
+
+ifneq ($(LIBUARTIO3_INT_ENABLE),)
+override CFLAGS +=-DCONFIG_UARTIO3_INT_ENABLE=$(LIBUARTIO3_INT_ENABLE)
+endif

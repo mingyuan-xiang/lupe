@@ -1,0 +1,96 @@
+#include <libdsp/DSPLib.h>
+#include <libmatAbstract/mat.h>
+#include <libmsp/mspbase.h>
+#include <libmspdriver/driverlib.h>
+#include <msp430.h>
+{%- if debug or calibration %}
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <libmsptimer/timekeeper.h>
+{%- endif %}
+
+#include <include/{{ model_name }}.h>
+#include <buffer/include/buffer.h>
+#include <buffer/include/input.h>
+{%- if has_add_buffer %}
+#include <buffer/include/add_buffer.h>
+{%- endif %}
+
+{% for layer in layer_list -%}
+{%- if calibration and (calibration_list[layer.name] | length) > 0 %}
+{%- for acc in calibration_list[layer.name] %}
+#include <layers/include/{{ layer.name }}_{{ acc }}.h>
+{%- endfor %}
+{%- else %}
+#include <layers/include/{{ layer.name }}.h>
+{%- endif %}
+{%- endfor %}
+
+#include <layers/include/utils.h>
+
+{% for layer in layer_list -%}
+{% if layer.has_weights %}
+#include <params/include/{{ layer.name }}.h>
+{%- endif -%}
+{% endfor %}
+
+{%- if calibration %}
+#define REPEAT 10
+{%- endif %}
+
+uint16_t {{ model_name }}(mat_t* model_in) {
+  {%- if calibration %}
+  uint32_t total_time;
+  {%- endif %}
+{#- Prepare the input data #}
+  DMA_makeTransfer((uintptr_t)(model_in->data), (uintptr_t)({{ layer_list[0].name }}_in_meta.data), GET_MAT_SIZE(model_in));
+  {%- if debug %}
+  msp_send_printf("\n============== Input ==============\n");
+  // msp_send_mat(model_in);
+  {%- endif %}
+{#- layers #}
+  {%- for layer in layer_list %}
+  /* {{ layer.name }} */
+  {%- if calibration and (calibration_list[layer.name] | length) > 0 %}
+
+  {%- for acc in calibration_list[layer.name] %}
+  total_time = 0;
+  for (uint16_t i = 0; i < REPEAT; ++i) {
+    start_timer();
+    {%- if layer.has_weights %}
+    {{ layer.name }}_{{ acc }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.weight_name }}_meta, &{{ layer.bias_name }}_meta);
+    {%- else %}
+    {{ layer.name }}_{{ acc }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
+    {%- endif %}
+    uint32_t t = stop_timer();
+    total_time += t;
+  }
+  msp_send_printf("{{ layer.name }} ({{ acc }}) takes %n cycles to execute (REPEAT: %u)", total_time, REPEAT);
+  {%- endfor %}
+
+  {%- else %}
+  {%- if layer.has_weights %}
+  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.weight_name }}_meta, &{{ layer.bias_name }}_meta);
+  {%- else %}
+  {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
+  {%- endif -%}
+  {%- endif -%}
+
+  {%- if layer.name in add_buffer_list %}
+  DMA_makeTransfer((uintptr_t)({{ layer.name }}_out_meta.data), (uintptr_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), GET_MAT_SIZE(&{{ layer.name }}_out_meta));
+  {%- endif %}
+
+  {%- if debug %}
+  msp_send_printf("\n============== Output of {{ layer.name }} ==============\n");
+  // msp_send_mat(&{{ layer.name }}_out_meta);
+  {%- endif %}
+  {%- endfor %}
+
+{#- classification #}
+  /* Get the max score */
+  uint16_t max = 0;
+  for (uint16_t i = 0; i < {{ last_layer }}_out_meta.dims[1]; ++i) {
+    max = {{ last_layer }}_out_meta.data[max] > {{ last_layer }}_out_meta.data[i] ? max : i;
+  }
+
+  return max;
+}

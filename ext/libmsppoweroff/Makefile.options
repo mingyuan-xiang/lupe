@@ -1,0 +1,6 @@
+# This makefile applies the options.
+# For list of options and documentation see Makefile.config
+include $(MAKER_ROOT)/Makefile.pre
+include $(MAKER_ROOT)/Makefile.msp
+
+override CFLAGS +=-DCONFIG_INTERMITTENT_TIMER=$(LIBINTERMITTENT_TIMER)

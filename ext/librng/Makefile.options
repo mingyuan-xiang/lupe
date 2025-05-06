@@ -1,0 +1,12 @@
+# This makefile applies the options.
+# For list of options and documentation see Makefile.config
+
+include $(MAKER_ROOT)/Makefile.pre
+include $(MAKER_ROOT)/Makefile.msp
+
+override CFLAGS +=-DCONFIG_PCG_MULT=$(LIBRNG_PCG_MULT)
+override CFLAGS +=-DCONFIG_PCG_INCR=$(LIBRNG_PCG_INCR) 
+
+ifneq ($(LIBRNG_PCG),)
+override CFLAGS += -DCONFIG_RNG_PCG=1
+endif

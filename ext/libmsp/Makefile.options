@@ -1,0 +1,13 @@
+# This makefile applies the options.
+# For list of options and documentation see Makefile.config
+
+include $(MAKER_ROOT)/Makefile.pre
+include $(MAKER_ROOT)/Makefile.msp
+
+override CFLAGS +=-DDCOFREQ=$(LIBMSP_CLK_DCOFREQ)
+override CFLAGS +=-DACLK_SRC=$(LIBMSP_CLK_ACLK_SRC) 
+override CFLAGS +=-DMCLK_SRC=$(LIBMSP_CLK_MCLK_SRC) 
+override CFLAGS +=-DSMCLK_SRC=$(LIBMSP_CLK_SMCLK_SRC)
+override CFLAGS +=-DACLK_DIV=$(LIBMSP_CLK_ACLK_DIV)
+override CFLAGS +=-DMCLK_DIV=$(LIBMSP_CLK_MCLK_DIV)
+override CFLAGS +=-DSMCLK_DIV=$(LIBMSP_CLK_SMCLK_DIV)

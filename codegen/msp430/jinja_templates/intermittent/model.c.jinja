@@ -1,0 +1,68 @@
+#include <libdsp/DSPLib.h>
+#include <libmatAbstract/mat.h>
+#include <libmsp/mspbase.h>
+#include <libmspdriver/driverlib.h>
+#include <msp430.h>
+
+#include <include/{{ model_name }}.h>
+#include <buffer/include/buffer.h>
+#include <buffer/include/input.h>
+{%- if has_add_buffer %}
+#include <buffer/include/add_buffer.h>
+{%- endif %}
+{% for layer in layer_list %}
+#include <layers/include/{{ layer.name }}.h>
+{%- endfor %}
+
+#include <layers/include/utils.h>
+#include <layers/include/intermittent.h>
+
+{% for layer in layer_list -%}
+{% if layer.has_weights %}
+#include <params/include/{{ layer.name }}.h>
+{%- endif -%}
+{% endfor %}
+
+uint16_t {{ model_name }}(mat_t* model_in) {
+  switch (intermittent_status[COMPUTE_CK]) {
+  case INTERMITTENT_{{ model_name }}_START_TRANSFER: {
+    large_dma(
+      (uintptr_t)(model_in->data), (uintptr_t)({{ layer_list[0].name }}_in_meta.data),
+      GET_MAT_SIZE(model_in), COMPUTE_IO_ROW
+    );
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_START_CLEANUP, COMPUTE_CK);
+  }
+  case INTERMITTENT_{{ model_name }}_START_CLEANUP:
+    VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+  {%- for layer in layer_list %}
+    VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_PREPARE, COMPUTE_CK);
+  case INTERMITTENT_{{ layer.name }}_PREPARE:
+  case INTERMITTENT_{{ layer.name }}_MAIN:
+  case INTERMITTENT_{{ layer.name }}_BIAS:
+  case INTERMITTENT_{{ layer.name }}_EXIT:
+  /* {{ layer.name }} */
+  {%- if layer.has_weights %}
+    {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta, &{{ layer.weight_name }}_meta, &{{ layer.bias_name }}_meta);
+  {%- else %}
+    {{ layer.name }}(&{{ layer.name }}_in_meta, &{{ layer.name }}_out_meta);
+  {%- endif -%}
+
+  {%- if layer.name in add_buffer_list %}
+    VOLATILE_WRITE(INTERMITTENT_{{ layer.name }}_DMA, COMPUTE_CK);
+  case INTERMITTENT_{{ layer.name }}_DMA:
+    DMA_makeTransfer((uintptr_t)({{ layer.name }}_out_meta.data), (uintptr_t)({{ add_buffer_list[layer.name] }}_add_buffer_meta.data), GET_MAT_SIZE(&{{ layer.name }}_out_meta));
+  {%- endif %}
+  {%- endfor %}
+    VOLATILE_WRITE(INTERMITTENT_{{ model_name }}_END, COMPUTE_CK);
+  default:
+    break;
+  }
+
+  /* Get the max score */
+  uint16_t max = 0;
+  for (uint16_t i = 0; i < {{ last_layer }}_out_meta.dims[1]; ++i) {
+    max = {{ last_layer }}_out_meta.data[max] > {{ last_layer }}_out_meta.data[i] ? max : i;
+  }
+
+  return max;
+}

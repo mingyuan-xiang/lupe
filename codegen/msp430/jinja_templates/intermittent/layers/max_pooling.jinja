@@ -1,0 +1,71 @@
+void {{ layer_name }}(mat_t* input, mat_t* output) {
+  uint16_t in_ch = input->dims[1];
+  uint16_t rows = input->dims[2];
+  uint16_t cols = input->dims[3];
+  uint16_t in_ch_stride = input->strides[1];
+  uint16_t in_row_stride = input->strides[2];
+  uint16_t out_ch_stride = output->strides[1];
+  uint16_t out_row_stride = output->strides[2];
+  uint16_t height = {{ height }};
+  uint16_t width = {{ width }};
+
+  int16_t agg;
+
+  /* No need for double buffering (for loop indices) as each output is independant */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
+    if (intermittent_status[COMPUTE_IO_COL] > cols) {
+      VOLATILE_WRITE(0, COMPUTE_IO_COL);
+      uint16_t next_r = intermittent_status[COMPUTE_IO_ROW] + height;
+      VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
+    }
+
+    if (intermittent_status[COMPUTE_IO_ROW] > rows) {
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      uint16_t next_s = intermittent_status[COMPUTE_IN_CH] + height;
+      VOLATILE_WRITE(next_s, COMPUTE_IN_CH);
+    }
+
+    uint16_t out_r = intermittent_status[COMPUTE_IO_ROW] / height;
+    uint16_t out_c = intermittent_status[COMPUTE_IO_COL] / width;
+
+    for (uint16_t s = intermittent_status[COMPUTE_IN_CH]; s < in_ch; ++s) {
+      for (uint16_t r = intermittent_status[COMPUTE_IO_ROW]; r < rows; r += height) {
+        for (uint16_t c = intermittent_status[COMPUTE_IO_COL]; c < cols; c += width) {
+          agg = LUPE_MIN;
+          uint16_t h = r + height;
+          uint16_t w = c + width;
+          for (uint16_t i = r; i < h; ++i) {
+            for (uint16_t j = c; j < w; ++j) {
+              uint16_t offset = s * in_ch_stride + i * in_row_stride + j;
+              int16_t in_data = *(input->data + offset);
+              agg = (agg > in_data ? agg : in_data);
+            }
+          }
+          uint16_t offset = s * out_ch_stride + out_r * out_row_stride + out_c;
+          *(output->data + offset) = agg;
+          ++out_c;
+
+          uint16_t next_c = c + width;
+          VOLATILE_WRITE(next_c, COMPUTE_IO_COL);
+        }
+        ++out_r;
+
+        VOLATILE_WRITE(0, COMPUTE_IO_COL);
+        uint16_t next_r = r + height;
+        VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
+      }
+
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      uint16_t next_s = s + 1;
+      VOLATILE_WRITE(next_s, COMPUTE_IN_CH);
+    }
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
+  }
+
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
+    intermittent_status[COMPUTE_IO_COL] = 0;
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH] = 0;
+  }
+}

@@ -1,0 +1,436 @@
+#define _LEA_DST_SIZE {{ lea_dst_size }}
+#define _LEA_REMAIN_SIZE ({{ out_len }} % _LEA_DST_SIZE)
+{%- if padding %}
+#define _PADDING_TOP {{ padding["top"] }}
+#define _PADDING_BOTTOM {{ padding["bottom"] }}
+#define _PADDING_RIGHT {{ padding["right"] }}
+#define _PADDING_LEFT {{ padding["left"] }}
+{%- endif %}
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_flt (lea_buffer + {{ lea_src_size }})
+#define lea_tmp (lea_buffer + {{ lea_src_size + lea_flt_size }})
+#define lea_dst (lea_buffer + {{ lea_src_size + lea_flt_size + lea_tmp_size }})
+{% endif %}
+#define _INPUT_LINE_SIZE {{ in_line_size }}
+#define _STRIDE_ROW_SIZE {{ stride_row }}
+#define _STRIDE_ROW_LINE_SIZE (_STRIDE_ROW_SIZE * _INPUT_LINE_SIZE)
+#define _STRIDE_COL_SIZE {{ stride_col }}
+{% if lea_opt %}
+static inline __attribute__((always_inline)) void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+
+static inline __attribute__((always_inline)) void set_fill(int16_t val) {
+  fill_vector[0] = val;
+  fill_vector[1] = val;
+}
+
+static inline __attribute__((always_inline)) void new_fill_q15(_q15* dst) {
+  lea_fill_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = fill_vector_addr;
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_fill_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+
+static inline __attribute__((always_inline)) void new_mpy_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+  lea_mpy_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+  lea_mpy_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_mpy_params);
+
+  /* Invoke the LEACMD__MPYMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__MPYMATRIX);
+}
+
+{%- endif %}
+void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
+  uint16_t in_channels = input->dims[1];
+  uint16_t out_channels = output->dims[1];
+  uint16_t output_len = output->strides[1];
+  {%- if stride_row > 1 or stride_col > 1 %}
+  uint16_t input_len = input->strides[1];
+  uint16_t output_line_num = output->dims[2];
+  uint16_t output_line_size = output->dims[3];
+  {%- endif %}
+
+  uintptr_t output_fram_addr = (uintptr_t)(output->data);
+  {%- if stride_row > 1 or stride_col > 1 %}
+  uintptr_t input_fram_addr = (uintptr_t)lupe_buffer_meta.data;
+  {%- else %}
+  uintptr_t input_fram_addr = (uintptr_t)(input->data);
+  {%- endif %}
+  uintptr_t input_channel_addr = input_fram_addr;
+  uintptr_t tmp_input_addr = input_channel_addr;
+  uintptr_t output_addr_offset = output_len * sizeof(int16_t);
+
+  uint16_t lea_remain_size = _LEA_REMAIN_SIZE;
+  uint16_t lea_remain_size_aligned = MAKE_ALIGN_2(lea_remain_size);
+  {%- if (out_len % lea_dst_size) != 0 %}
+  uintptr_t remain_size_offset = lea_remain_size * sizeof(int16_t);
+  {%- endif %}
+  {%- if out_len >= lea_dst_size %}
+  uintptr_t lea_min_size_offset = _LEA_DST_SIZE * sizeof(int16_t);
+  {%- endif %}
+
+  uintptr_t lea_src_addr = (uintptr_t)lea_src;
+  uintptr_t lea_dst_addr = (uintptr_t)lea_dst;
+
+  {%- if lea_opt %}
+  add_init(lea_remain_size_aligned);
+  mpy_init(lea_remain_size_aligned);
+  fill_init(lea_remain_size_aligned);
+  {%- else %}
+  msp_add_q15_params add_params = { .length = lea_remain_size_aligned };
+  msp_fill_q15_params fill_params = { .length = lea_remain_size_aligned, .value = 0 };
+  msp_mpy_q15_params mpy_params = { .length = lea_remain_size_aligned };
+  {%- endif %}
+
+  uint16_t tmp_weight_pos = 0;
+
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
+    switch (intermittent_status[COMPUTE_SWITCH]) {
+    case RESHAPE_START: {
+      /* add bias */
+      {% if dma_opt %}
+      uintptr_t out_bias_addr = output_fram_addr + \
+        intermittent_status[COMPUTE_OUT_CH] * output_addr_offset;
+      {%- else %}
+      uint16_t out_bias_pos = intermittent_status[COMPUTE_OUT_CH] * output_len + \
+        intermittent_status[COMPUTE_IO_ROW];
+      {%- endif %}
+      for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
+        {%- if dma_opt %}
+        DMA_setWord(out_bias_addr, bias->data[i], output_len);
+        out_bias_addr += output_addr_offset;
+        {%- else %}
+        for (uint16_t j = intermittent_status[COMPUTE_IO_ROW]; j < output_len; ++j) {
+          output->data[out_bias_pos] = bias->data[i];
+
+          uint16_t next_j = j + 1;
+          VOLATILE_WRITE(next_j, COMPUTE_IO_ROW);
+          ++out_bias_pos;
+        }
+
+        VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+        {%- endif %}
+        uint16_t next_i = i + 1;
+        VOLATILE_WRITE(next_i, COMPUTE_OUT_CH);
+      }
+
+      VOLATILE_WRITE(RESHAPE_PREPARE_ST_RESET, COMPUTE_SWITCH);
+    }
+    case RESHAPE_PREPARE_ST_RESET:
+      VOLATILE_WRITE(0, COMPUTE_OUT_CH);
+      {%- if not dma_opt %}
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      {%- endif %}
+    {%- if stride_row > 1 or stride_col > 1 %}
+      VOLATILE_WRITE(RESHAPE_MAIN, COMPUTE_SWITCH);
+    case RESHAPE_MAIN: {
+      /* get strided input */
+      uint16_t ptwise_pos = intermittent_status[COMPUTE_IN_CH] * output_len + \
+        intermittent_status[COMPUTE_IO_ROW] * output_line_size + \
+        intermittent_status[COMPUTE_IO_COL];
+      uint16_t input_ch = intermittent_status[COMPUTE_IN_CH] * input_len;
+      for (uint16_t c = intermittent_status[COMPUTE_IN_CH]; c < in_channels; ++c) {
+        uint16_t input_row = input_ch + intermittent_status[COMPUTE_IO_ROW] * _STRIDE_ROW_LINE_SIZE;
+        for (uint16_t r = intermittent_status[COMPUTE_IO_ROW]; r < output_line_num; ++r) {
+          uint16_t input_col = input_row + intermittent_status[COMPUTE_IO_COL] * _STRIDE_COL_SIZE;
+          for (uint16_t m = intermittent_status[COMPUTE_IO_COL]; m < output_line_size; ++m) {
+            lupe_buffer_meta.data[ptwise_pos] = input->data[input_col];
+
+            uint16_t next_m = m + 1;
+            VOLATILE_WRITE(next_m, COMPUTE_IO_COL);
+
+            input_col += _STRIDE_COL_SIZE;
+            ++ptwise_pos;
+          }
+
+          VOLATILE_WRITE(0, COMPUTE_IO_COL);
+          uint16_t next_r = r + 1;
+          VOLATILE_WRITE(next_r, COMPUTE_IO_ROW);
+
+          input_row += _STRIDE_ROW_LINE_SIZE;
+        }
+
+        VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+        uint16_t next_c = c + 1;
+        VOLATILE_WRITE(next_c, COMPUTE_IN_CH);
+
+        input_ch += input_len;
+      }
+
+      VOLATILE_WRITE(RESHAPE_ST_RESET, COMPUTE_SWITCH);
+    }
+    case RESHAPE_ST_RESET:
+      VOLATILE_WRITE(0, COMPUTE_IO_COL);
+      VOLATILE_WRITE(0, COMPUTE_IO_ROW);
+      VOLATILE_WRITE(0, COMPUTE_IN_CH);
+    {%- endif %}
+      VOLATILE_WRITE(RESHAPE_END, COMPUTE_SWITCH);
+    default:
+      break;
+    }
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_MAIN, COMPUTE_CK);
+  }
+
+  uintptr_t intermittent_buffer_addr = (uintptr_t)intermittent_buffer;
+  /*
+   * We use the later half of intermittent_buffer to store the temporary MPY results.
+   * This is safe as the MPY output will always be smaller than 1/3 of the entire intermittent_buffer.
+   */
+  uintptr_t intermittent_mpy_buffer_addr = intermittent_buffer_addr + INTERMITTENT_BUFFER_SIZE;
+
+  /* convolution */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_MAIN) {
+    if (intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_OUT_CH] & DOUBLE_BUFFER_COMPLETE;
+      VOLATILE_WRITE(intermittent_buffer[0], COMPUTE_IO_ROW);
+      VOLATILE_WRITE(idx, COMPUTE_OUT_CH);
+    }
+
+    if (intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_WRITE) {
+      uint16_t line = intermittent_status[COMPUTE_IO_ROW] & DOUBLE_BUFFER_COMPLETE;
+      {%- if (out_len % lea_dst_size) != 0 %}
+      uint16_t size = _LEA_REMAIN_SIZE;
+      uintptr_t offset = 0;
+      if (line > _LEA_REMAIN_SIZE) {
+        size = _LEA_DST_SIZE;
+        offset = (line - size) * sizeof(int16_t);
+      }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      uintptr_t offset = 0;
+      if (line > _LEA_DST_SIZE) {
+        offset = (line - size) * sizeof(int16_t);
+      }
+      {%- endif %}
+      uintptr_t addr = (uintptr_t)(output->data) + \
+        intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + offset;
+
+      DMA_makeTransfer(intermittent_buffer_addr, addr, size);
+      intermittent_status[COMPUTE_IN_CH] = 0;
+      VOLATILE_WRITE(line, COMPUTE_IO_ROW);
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_WRITE) {
+      uint16_t idx = intermittent_status[COMPUTE_IN_CH] & DOUBLE_BUFFER_COMPLETE;
+      {%- if (out_len % lea_dst_size) != 0 %}
+      uint16_t size = _LEA_REMAIN_SIZE;
+      if (intermittent_status[COMPUTE_IO_ROW] > 0) {
+        size = _LEA_DST_SIZE;
+      }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      {%- endif %}
+
+      DMA_makeTransfer(intermittent_buffer_addr, intermittent_mpy_buffer_addr, size);
+      VOLATILE_WRITE(idx, COMPUTE_IN_CH);
+    }
+
+    if (intermittent_status[COMPUTE_IN_CH] > 0) {
+      {%- if (out_len % lea_dst_size) != 0 %}
+      uint16_t size = _LEA_REMAIN_SIZE;
+      if (intermittent_status[COMPUTE_IO_ROW] > 0) {
+        size = _LEA_DST_SIZE;
+      }
+      {%- else %}
+      uint16_t size = _LEA_DST_SIZE;
+      {%- endif %}
+
+      DMA_makeTransfer(intermittent_mpy_buffer_addr, lea_dst_addr, size);
+    }
+
+    if (intermittent_status[COMPUTE_IO_ROW] >= output_len) {
+      uint16_t next_idx = intermittent_status[COMPUTE_OUT_CH] + 1;
+      DOUBLE_BUFFER_ASSIGN(next_idx, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+    }
+  
+    output_fram_addr += intermittent_status[COMPUTE_OUT_CH] * output_addr_offset + \
+      intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+    uint16_t weight_pos = intermittent_status[COMPUTE_OUT_CH] * in_channels;
+
+
+    for (uint16_t i = intermittent_status[COMPUTE_OUT_CH]; i < out_channels; ++i) {
+      input_channel_addr = input_fram_addr + intermittent_status[COMPUTE_IO_ROW] * sizeof(int16_t);
+      {% if (out_len % lea_dst_size) != 0 %}
+      {%- if out_len >= lea_dst_size %}
+      if (intermittent_status[COMPUTE_IO_ROW] == 0) {
+      {%- endif %}
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          DMA_makeTransfer(output_fram_addr, lea_dst_addr, lea_remain_size);
+        }
+        {% if lea_opt %}
+        lea_add_params->vectorSize = lea_remain_size_aligned;
+        lea_fill_params->vectorSize = lea_remain_size_aligned;
+        lea_mpy_params->vectorSize = lea_remain_size_aligned;
+        {%- else %}
+        add_params.length = lea_remain_size_aligned;
+        fill_params.length = lea_remain_size_aligned;
+        mpy_params.length = lea_remain_size_aligned;
+        {% endif %}
+        tmp_input_addr = input_channel_addr + \
+          intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
+        tmp_weight_pos = weight_pos + intermittent_status[COMPUTE_IN_CH];
+        for (uint16_t j = intermittent_status[COMPUTE_IN_CH]; j < in_channels; ++j) {
+          DMA_makeTransfer(tmp_input_addr, lea_src_addr, lea_remain_size);
+          {% if lea_opt %}
+          set_fill(weight->data[tmp_weight_pos]);
+
+          new_fill_q15(lea_flt);
+
+          new_mpy_q15(lea_src, lea_flt, lea_flt);
+          {% if qf > 0 %}
+          /* right shift the output to match up the fixed point format */
+          {%- endif -%}
+          {%- for i in range(qf) %}
+          new_add_q15(lea_flt, lea_flt, lea_flt);
+          {% endfor %}
+          new_add_q15(lea_flt, lea_dst, lea_dst);
+          {%- else %}
+          fill_params.value = weight->data[tmp_weight_pos];
+
+          msp_fill_q15(&fill_params, lea_flt);
+
+          msp_mpy_q15(&mpy_params, lea_src, lea_flt, lea_flt);
+          {% if qf > 0 %}
+          /* right shift the output to match up the fixed point format */
+          {%- endif -%}
+          {%- for i in range(qf) %}
+          msp_add_q15(&add_params, lea_flt, lea_flt, lea_flt);
+          {% endfor %}
+          msp_add_q15(&add_params, lea_flt, lea_dst, lea_dst);
+          {%- endif %}
+
+          /* save the results to intermittent_buffer */
+          uint16_t next_j = j + 1;
+          DOUBLE_BUFFER_TRANSFER(
+            next_j, COMPUTE_IN_CH, lea_dst_addr, intermittent_mpy_buffer_addr,
+            _LEA_REMAIN_SIZE
+          );
+
+          ++tmp_weight_pos;
+          tmp_input_addr += output_addr_offset;
+        }
+
+        DOUBLE_BUFFER_TRANSFER_WITH_VAR_RESET(
+          _LEA_REMAIN_SIZE, COMPUTE_IO_ROW, intermittent_status[COMPUTE_IN_CH],
+          lea_dst_addr, output_fram_addr, _LEA_REMAIN_SIZE
+        );
+
+        input_channel_addr += remain_size_offset;
+        output_fram_addr += remain_size_offset;
+      {%- if out_len >= lea_dst_size %}
+      }
+      {%- endif %}
+      {%- endif %}
+
+      {% if out_len >= lea_dst_size %}
+      {%- if lea_opt %}
+      lea_add_params->vectorSize = _LEA_DST_SIZE;
+      lea_fill_params->vectorSize = _LEA_DST_SIZE;
+      lea_mpy_params->vectorSize = _LEA_DST_SIZE;
+      {%- else %}
+      add_params.length = _LEA_DST_SIZE;
+      fill_params.length = _LEA_DST_SIZE;
+      mpy_params.length = _LEA_DST_SIZE;
+      {%- endif %}
+      for (uint16_t m = intermittent_status[COMPUTE_IO_ROW]; m < output_len; m += _LEA_DST_SIZE) {
+        if (intermittent_status[COMPUTE_IN_CH] == 0) {
+          DMA_makeTransfer(output_fram_addr, lea_dst_addr, _LEA_DST_SIZE);
+        }
+
+        tmp_input_addr = input_channel_addr + \
+          intermittent_status[COMPUTE_IN_CH] * output_addr_offset;
+        tmp_weight_pos = weight_pos + intermittent_status[COMPUTE_IN_CH];
+        for (uint16_t j = intermittent_status[COMPUTE_IN_CH]; j < in_channels; ++j) {
+          DMA_makeTransfer(tmp_input_addr, lea_src_addr, _LEA_DST_SIZE);
+          {% if lea_opt %}
+          set_fill(weight->data[tmp_weight_pos]);
+
+          new_fill_q15(lea_flt);
+
+          new_mpy_q15(lea_src, lea_flt, lea_flt);
+          {% if qf > 0 %}
+          /* right shift the output to match up the fixed point format */
+          {%- endif -%}
+          {%- for i in range(qf) %}
+          new_add_q15(lea_flt, lea_flt, lea_flt);
+          {% endfor %}
+          new_add_q15(lea_flt, lea_dst, lea_dst);
+          {%- else %}
+          fill_params.value = weight->data[tmp_weight_pos];
+
+          msp_fill_q15(&fill_params, lea_flt);
+
+          msp_mpy_q15(&mpy_params, lea_src, lea_flt, lea_flt);
+          {% if qf > 0 %}
+          /* right shift the output to match up the fixed point format */
+          {%- endif -%}
+          {%- for i in range(qf) %}
+          msp_add_q15(&add_params, lea_flt, lea_flt, lea_flt);
+          {% endfor %}
+          msp_add_q15(&add_params, lea_flt, lea_dst, lea_dst);
+          {%- endif %}
+
+          /* save the results to intermittent_buffer */
+          uint16_t next_j = j + 1;
+          DOUBLE_BUFFER_TRANSFER(
+            next_j, COMPUTE_IN_CH, lea_dst_addr, intermittent_mpy_buffer_addr,
+            _LEA_DST_SIZE
+          );
+
+          ++tmp_weight_pos;
+          tmp_input_addr += output_addr_offset;
+        }
+
+        uint16_t next_m = m + _LEA_DST_SIZE;
+        DOUBLE_BUFFER_TRANSFER_WITH_VAR_RESET(
+          next_m, COMPUTE_IO_ROW, intermittent_status[COMPUTE_IN_CH],
+          lea_dst_addr, output_fram_addr, _LEA_DST_SIZE
+        );
+
+        input_channel_addr += lea_min_size_offset;
+        output_fram_addr += lea_min_size_offset;
+      }
+      {%- endif %}
+
+      uint16_t next_i = i + 1;
+      DOUBLE_BUFFER_ASSIGN(next_i, COMPUTE_OUT_CH, 0, intermittent_status[COMPUTE_IO_ROW]);
+
+      weight_pos += in_channels;
+    }
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK)
+  }
+
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
+    {%- if lea_opt %}
+    fill_clear();
+    mpy_clear();
+    add_clear();
+    {%- endif %}
+    intermittent_status[COMPUTE_SWITCH] = PAD_START;
+    intermittent_status[COMPUTE_IO_COL] = 0;
+    intermittent_status[COMPUTE_IO_ROW] = 0;
+    intermittent_status[COMPUTE_IN_CH] = 0;
+    intermittent_status[COMPUTE_OUT_CH] = 0;
+  }
+}

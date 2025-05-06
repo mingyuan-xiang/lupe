@@ -1,0 +1,10 @@
+TOOLS_REL_ROOT = tools
+# TOOLS =
+TOOLCHAINS = gcc
+
+APPS = blink external_timer playground {{ model_name }}
+
+export DEVICE = msp430fr5994
+export BOARD = launchpad 
+
+include tools/maker/Makefile

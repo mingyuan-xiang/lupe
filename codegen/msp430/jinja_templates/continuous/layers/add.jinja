@@ -1,0 +1,95 @@
+#include <buffer/include/add_buffer.h>
+
+#define _LEA_SRC_SIZE {{ lea_src_size }}
+#define _INPUT_SIZE {{ input_size }}
+#define _LEA_REMAIN_SIZE (_INPUT_SIZE % _LEA_SRC_SIZE)
+#define _LEA_LINE_SIZE_CNT (_INPUT_SIZE / _LEA_SRC_SIZE)
+
+{% if global_mem_buffer %}
+/* assign the lea buffer pointer */
+#define lea_src (lea_buffer)
+#define lea_tmp (lea_buffer + {{ lea_src_size }})
+{% endif %}
+
+{%- if lea_opt %}
+static inline void new_add_q15(const _q15* srcA, const _q15* srcB, _q15* dst) {
+  lea_add_params->input2 = MSP_LEA_CONVERT_ADDRESS(srcB);
+  lea_add_params->output = MSP_LEA_CONVERT_ADDRESS(dst);
+
+  /* Load source arguments to LEA. */
+  LEAPMS0 = MSP_LEA_CONVERT_ADDRESS(srcA);
+  LEAPMS1 = MSP_LEA_CONVERT_ADDRESS(lea_add_params);
+
+  /* Invoke the LEACMD__ADDMATRIX command. */
+  msp_lea_invokeCommand(LEACMD__ADDMATRIX);
+}
+{%- endif %}
+
+void {{ layer_name }}(mat_t* input, mat_t* output) {
+  {%- if input_size >= lea_src_size %}
+  uintptr_t lea_line_size_offset = _LEA_SRC_SIZE * sizeof(int16_t);
+  {%- endif %}
+  uint16_t lea_input_line_remain_size = _LEA_REMAIN_SIZE;
+  uintptr_t lea_input_line_remain_size_offset = lea_input_line_remain_size*sizeof(int16_t);
+
+  uintptr_t input_0_fram_addr = (uintptr_t){{ layer_name }}_add_buffer_meta.data;
+  uintptr_t input_1_fram_addr = (uintptr_t)input->data;
+  uintptr_t output_fram_addr = (uintptr_t)output->data;
+
+  {% if lea_opt %}
+  add_init(MAKE_ALIGN_2(lea_input_line_remain_size));
+  {%- else %}
+  msp_add_q15_params add_params = { .length = MAKE_ALIGN_2(lea_input_line_remain_size) };
+  {%- endif %}
+
+  {%- if (input_size % lea_src_size) != 0 %}
+  /*
+  * Do the remaining size ADD when the input size is not a multiple
+  * of the lea buffer size
+  */
+  {%- if input_size % 2 != 0 %}
+  lea_src[lea_input_line_remain_size] = 0;
+  lea_src[lea_input_line_remain_size] = 0;
+  {% endif %}
+  DMA_makeTransfer(input_0_fram_addr, (uintptr_t)lea_src, lea_input_line_remain_size);
+  DMA_makeTransfer(input_1_fram_addr, (uintptr_t)lea_tmp, lea_input_line_remain_size);
+  {%- if lea_opt %}
+  new_add_q15(lea_src, lea_tmp, lea_src);
+  {%- else %}
+  msp_add_q15(&add_params, lea_src, lea_tmp, lea_src);
+  {%- endif %}
+  DMA_makeTransfer((uintptr_t)lea_src, output_fram_addr, lea_input_line_remain_size);
+
+  input_0_fram_addr += lea_input_line_remain_size_offset;
+  input_1_fram_addr += lea_input_line_remain_size_offset;
+  output_fram_addr += lea_input_line_remain_size_offset;
+  {%- endif %}
+
+  {%- if input_size >= lea_src_size %}
+
+  /* Compute the rest ADD */
+  {%- if lea_opt %}
+  lea_add_params->vectorSize = MAKE_ALIGN_2(_LEA_SRC_SIZE);
+  {%- else %}
+  add_params.length = MAKE_ALIGN_2(_LEA_SRC_SIZE);
+  {%- endif %}
+  for (uint16_t l = 0; l < _LEA_LINE_SIZE_CNT; ++l) {
+    DMA_makeTransfer(input_0_fram_addr, (uintptr_t)lea_src, _LEA_SRC_SIZE);
+    DMA_makeTransfer(input_1_fram_addr, (uintptr_t)lea_tmp, _LEA_SRC_SIZE);
+    {%- if lea_opt %}
+    new_add_q15(lea_src, lea_tmp, lea_src);
+    {%- else %}
+    msp_add_q15(&add_params, lea_src, lea_tmp, lea_src);
+    {%- endif %}
+    DMA_makeTransfer((uintptr_t)lea_src, output_fram_addr, _LEA_SRC_SIZE);
+
+    input_0_fram_addr += lea_line_size_offset;
+    input_1_fram_addr += lea_line_size_offset;
+    output_fram_addr += lea_line_size_offset;
+  }
+  {%- endif %}
+
+  {%- if lea_opt %}
+  add_clear();
+  {%- endif %}
+}

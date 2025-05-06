@@ -1,0 +1,53 @@
+{
+    "conv1_Conv": {
+        "acceleration": "enhanced_fir",
+        "cycles": 39408,
+        "repeat": 10
+    },
+    "layer1_layer1_0_conv1_Conv": {
+        "acceleration": "enhanced_fir",
+        "cycles": 125544,
+        "repeat": 10
+    },
+    "layer1_layer1_0_conv2_Conv": {
+        "acceleration": "enhanced_fir",
+        "cycles": 125534,
+        "repeat": 10
+    },
+    "layer2_layer2_0_shortcut_shortcut_0_Conv": {
+        "acceleration": "1x1_mpy",
+        "cycles": 13659,
+        "repeat": 10
+    },
+    "layer2_layer2_0_conv1_Conv": {
+        "acceleration": "enhanced_mac",
+        "cycles": 76247,
+        "repeat": 10
+    },
+    "layer2_layer2_0_conv2_Conv": {
+        "acceleration": "enhanced_mac",
+        "cycles": 120333,
+        "repeat": 10
+    },
+    "layer3_layer3_0_shortcut_shortcut_0_Conv": {
+        "acceleration": "enhanced_mac",
+        "cycles": 18558,
+        "repeat": 10
+    },
+    "layer3_layer3_0_conv1_Conv": {
+        "acceleration": "enhanced_mac",
+        "cycles": 56564,
+        "repeat": 10
+    },
+    "layer3_layer3_0_conv2_Conv": {
+        "acceleration": "enhanced_mac",
+        "cycles": 95892,
+        "repeat": 10
+    },
+    "linear_Gemm": {
+        "acceleration": "vec_mat",
+        "cycles": 57,
+        "repeat": 10
+    },
+    "opt_config": "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"
+}

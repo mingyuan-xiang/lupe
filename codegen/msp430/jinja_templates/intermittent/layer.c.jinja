@@ -1,0 +1,13 @@
+#include <layers/include/utils.h>
+#include <layers/include/{{ layer_name }}.h>
+#include <buffer/include/buffer.h>
+{%- if debug %}
+#include <libmspsyncioutils/mspsyncioutils.h>
+#include <libmsptimer/timekeeper.h>
+{%- endif %}
+{%- if has_extra_buffer %}
+#include <buffer/include/lupe_buffer.h>
+{%- endif %}
+#include <layers/include/intermittent.h>
+
+{{ code }}

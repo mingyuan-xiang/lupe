@@ -1,0 +1,20 @@
+EXEC = {{ model_name }}
+
+OBJECTS = main.o {{model_name}}.o buffer/input.o{%if verify%} buffer/output.o{%endif%} buffer/buffer.o{%if has_extra_buffer%} buffer/lupe_buffer.o{%endif%}{%if has_add_buffer%} buffer/add_buffer.o{%endif%} layers/utils.o{%for l in layer_list%} layers/{{l}}.o{%endfor%}{%for l in layers_with_weights%} params/{{l}}.o{%endfor%}
+
+DEPS = libdsp:gcc librng:gcc libmsppoweroff:gcc libmsptimer:gcc libmspsyncioutils:gcc libmatAbstract:gcc libfixedAbstract:gcc libmspprintf:gcc libmspio:gcc libmspdriver:gcc libmsp:gcc
+
+# clock config
+export LIBMSP_CLK_DCOFREQ = 16
+export LIBMSP_CLK_MCLK_DIV = 1
+
+# print config
+export LIBUARTIO0_INT_ENABLE = 1
+export LIBMSPPRINTF_PRINT_PORT = 0
+
+override CFLAGS += -Wno-pointer-to-int-cast
+override CFLAGS += -Wno-missing-braces
+{%- if adaptive_gen_mem %}
+override CFLAGS += -Wno-unused-variable
+{%- endif %}
+include tools/maker/Makefile

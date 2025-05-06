@@ -1,0 +1,25 @@
+void {{ layer_name }}(mat_t* input, mat_t* output) {
+  uint16_t size = input->strides[0];
+
+  /* No need to use double buffering for relu as it doesn't matter. */
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_PREPARE) {
+    for (uint16_t i = intermittent_status[COMPUTE_IO_COL]; i < size; ++i) {
+      if (input->data[i] > {{ max }}) {
+        output->data[i] = {{ max }};
+      } else if (input->data[i] < {{ min }}) {
+        output->data[i] = {{ min }};
+      } else {
+        output->data[i] = input->data[i];
+      }
+
+      uint16_t next_i = i + 1;
+      VOLATILE_WRITE(next_i, COMPUTE_IO_COL);
+    }
+
+    VOLATILE_WRITE(INTERMITTENT_{{ layer_name }}_EXIT, COMPUTE_CK);
+  }
+
+  if (intermittent_status[COMPUTE_CK] == INTERMITTENT_{{ layer_name }}_EXIT) {
+    intermittent_status[COMPUTE_IO_COL] = 0;
+  }
+}

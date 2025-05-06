@@ -1,0 +1,63 @@
+#ifndef INTERMITTENT_H
+#define INTERMITTENT_H
+
+#define COMPUTE_CK 0
+#define COMPUTE_SWITCH 1
+#define COMPUTE_IN_CH 2
+#define COMPUTE_OUT_CH 3
+#define COMPUTE_IO_ROW 4
+#define COMPUTE_IO_COL 5
+#define MAIN_LOOP 6
+#define COUNTER 7
+
+#define GET_OFFSET(x) ((x) * 2)
+
+#define DOUBLE_BUFFER_COMPLETE 0x7FFF // Complete double buffering. No need for recovery
+#define DOUBLE_BUFFER_WRITE 0x8000 // Finish transferring to temporary buffer
+
+{%- set sw = namespace(cnt=0) %}
+{%- macro sw_increment_counter() -%}
+    {{ sw.cnt }}
+    {%- set sw.cnt = sw.cnt + 1 -%}
+{%- endmacro %}
+
+#define PAD_START {{ sw_increment_counter() }}
+#define PAD_MAIN {{ sw_increment_counter() }}
+#define PAD_TRANSFER {{ sw_increment_counter() }}
+#define PAD_MEMSET {{ sw_increment_counter() }}
+#define PAD_ST_RESET {{ sw_increment_counter() }}
+#define PAD_END {{ sw_increment_counter() }}
+#define MAC_PREPARE {{ sw_increment_counter() }}
+#define MAC_COMPUTE {{ sw_increment_counter() }}
+#define MAC_END {{ sw_increment_counter() }}
+
+{%- set re = namespace(cnt=0) %}
+{%- macro re_increment_counter() -%}
+    {{ re.cnt }}
+    {%- set re.cnt = re.cnt + 1 -%}
+{%- endmacro %}
+
+#define RESHAPE_START {{ re_increment_counter() }}
+#define RESHAPE_PREPARE_ST_RESET {{ re_increment_counter() }}
+#define RESHAPE_MAIN {{ re_increment_counter() }}
+#define RESHAPE_ST_RESET {{ re_increment_counter() }}
+#define RESHAPE_END {{ re_increment_counter() }}
+
+{%- set inter = namespace(cnt=0) %}
+{%- macro increment_counter() -%}
+    {{ inter.cnt }}
+    {%- set inter.cnt = inter.cnt + 1 -%}
+{%- endmacro %}
+
+#define INTERMITTENT_{{ model_name }}_START_TRANSFER {{ increment_counter() }}
+#define INTERMITTENT_{{ model_name }}_START_CLEANUP {{ increment_counter() }}
+{%- for layer in layer_list %}
+#define INTERMITTENT_{{ layer }}_PREPARE {{ increment_counter() }}
+#define INTERMITTENT_{{ layer }}_MAIN {{ increment_counter() }}
+#define INTERMITTENT_{{ layer }}_BIAS {{ increment_counter() }}
+#define INTERMITTENT_{{ layer }}_EXIT {{ increment_counter() }}
+#define INTERMITTENT_{{ layer }}_DMA {{ increment_counter() }}
+{%- endfor %}
+#define INTERMITTENT_{{ model_name }}_END {{ increment_counter() }}
+
+#endif
