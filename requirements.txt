@@ -17,6 +17,7 @@ networkx==3.4.2
 numpy==2.2.4
 onnx==1.17.0
 packaging==24.2
+pandas==2.2.3
 pillow==11.1.0
 portalocker==3.1.1
 protobuf==6.30.1
@@ -24,8 +25,11 @@ pycocotools==2.0.8
 pyparsing==3.2.2
 pyserial==3.5
 python-dateutil==2.9.0.post0
+pytz==2025.2
 pyvww==0.1.1
 PyYAML==6.0.2
+scipy==1.15.2
+seaborn==0.13.2
 setuptools==78.0.1
 six==1.17.0
 sympy==1.13.1
@@ -36,4 +40,5 @@ torchaudio==2.6.0
 torchvision==0.21.0
 tqdm==4.67.1
 typing_extensions==4.12.2
+tzdata==2025.2
 yacs==0.1.8
