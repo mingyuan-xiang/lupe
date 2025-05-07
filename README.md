@@ -1,3 +1,14 @@
+- [Lupe](#lupe)
+  - [Environments Setup](#environments-setup)
+  - [Usage](#usage)
+    - [Generate Efficient MSP430 Code](#generate-efficient-msp430-code)
+      - [Print the Model](#print-the-model)
+      - [Generate DNN Code](#generate-dnn-code)
+    - [Calibrate DNN Instantiations](#calibrate-dnn-instantiations)
+    - [Run Generated code on the Devices](#run-generated-code-on-the-devices)
+  - [Directory Breakdown](#directory-breakdown)
+  - [BibTex](#bibtex)
+
 # Lupe
 
 This is the implementation of our [SenSys' 25 paper](https://dl.acm.org/doi/10.1145/3715014.3722059).

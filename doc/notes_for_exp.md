@@ -1,5 +1,3 @@
-# Notes for Replicating Our Results
-
 - [Notes for Replicating Our Results](#notes-for-replicating-our-results)
   - [Caveat](#caveat)
   - [Converting PyTorch Model to ONNX](#converting-pytorch-model-to-onnx)
@@ -10,6 +8,8 @@
     - [DS-CNN](#ds-cnn)
     - [MLPClassifier](#mlpclassifier)
   - [Intermittent Time](#intermittent-time)
+
+# Notes for Replicating Our Results
 
 ## Caveat
 
