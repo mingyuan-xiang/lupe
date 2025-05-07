@@ -1,5 +1,4 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
+# Byte-compiled / optimized / DLL files __pycache__/
 *.py[cod]
 *$py.class
 
@@ -175,11 +174,6 @@ tmp_downloads
 # application folder
 apps/*
 !apps/blink
-
-# calibration folder
-!calibration/calibration.py
-!calibration/__init__.py
-!calibration/uart_dump.py
 
 # maker outer Makefile
 /Makefile

@@ -13,10 +13,57 @@ an TI MSP430FR5994 is necessary to execute Lupe generated programs. Please refer
 
 ## Usage
 
-### Generated Efficient MSP430 Code
+### Generate Efficient MSP430 Code
 
-You might also want to check this [note](doc/notes_for_exp.md) if you want to
+You might want to check this [note](doc/notes_for_exp.md) if you want to
 replicate the results in our paper.
+
+#### Print the Model
+
+print the model structure with the given name and an ONNX file path.
+
+```
+./lupe.py print --model-name <model name> --model-path models/onnx/<model name>.onnx
+```
+
+#### Generate DNN Code
+
+The following command generates DNN programs with the given name and an ONNX file path.
+
++ `--qf` specifies fixed point format.
++ `--config` indicates the location of the optimization configuration file.
+  See this [note](doc/config.md) for descriptions of the optimization flags.
+
+```
+./lupe.py code-gen --model-name <model name> --model-path models/onnx/<model name>.onnx --qf <qf> --config configs/<config file>
+```
+
+There are also some additional arguments that can be used:
+
++ `--debug-random` will generate a random input for debugging the input shapes
+  is specified as `--debug-dataset`.
++ `--intermittent` will enable our lightweight intermittent-safe support.
++ `--hifram-func` will decide how many functions to be put on HIFRAM.
++ `--max-dma-size` sets the maximum DMA size.
+
+One example of the command would be:
+
+```
+./lupe.py code-gen --model-name ResNet3 --model-path models/onnx/ResNet3.onnx --qf 4 --config configs/no_opt.json --debug-random --debug-dataset CIFAR10 --intermittent --hifram-func 5
+```
+
+### Calibrate DNN Instantiations
+
+As we motivated and explained in Section 2.3 and Section 3.2, we use profiling
+to select the best performing DNN instantiations for all layers. It will record
+the results in `calibration/<model name>.json`. The optimization flag `adaptive_gen_lea`
+needs to be enabled.
+
+The command for calibration is:
+
+```
+./lupe.py calibrate --model-name DS_CNN --model-name <model name> --model-path models/onnx/<model name>.onnx --qf <qf> --config configs/<config file>
+```
 
 ### Run Generated code on the Devices
 
@@ -42,6 +89,45 @@ The commands for using maker is:
 + **Clean app and all dependent libraries**: `make apps/<app name>/bld/gcc/depclean`
 
 ## Directory Breakdown
+
+The directory looks like below:
+
+```
+.
+├── apps
+├── calibration
+├── codegen
+├── configs
+├── debug
+├── doc
+├── ext
+├── graph
+├── lupe.py
+├── Makefile.env
+├── makefile.jinja
+├── models
+├── README.md
+├── requirements.txt
+├── scripts
+└── tools
+```
+
+Here are some explanations of the directory:
+
++ All generated programs are saved in `apps` as it is required by the CMU maker system
++ `calibration` implements most of the logic for calibrating DNN instantiations and
+  stores the calibration json files.
++ `codegen` is of the core implementation of Lupe. We use jinja templates as the
+  backbone of our framework. The `enhanced_fir.jinja` and `enhanced_mac.jinja`
+  implements the batched acceleration idea.
++ `configs` saves the possible optimization flags ([note](doc/config.md)).
++ `debug` provides some helper functions for debugging purposes.
++ `ext` holds C dependencies.
++ `graph` implements the ONNX parsing logic and glue the jinja templates with `lupe.py`
+  script.
++ `lupe.py` is our main interface of the framework.
++ `models` provides some ONNX checkpoints that are also used in the paper.
++ `tools` is for the CMU maker
 
 ## BibTex
 
