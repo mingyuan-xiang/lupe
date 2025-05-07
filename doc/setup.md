@@ -3,6 +3,8 @@
 The dependency setup consists of two parts: 1) Python environments to generate
 MSP430 code; 2) CMU maker to run generated code on an MSP430.
 
+TODO: Package everything into a docker image
+
 ## Python Environments
 
 This part is as simple as create a Python virtual environments and install
