@@ -24,16 +24,15 @@ def _inputgen(
     # force the input size to have dimension 4
     if len(input_data.shape) > 4:
         raise ValueError("Input size is too large")
-    shape = list(input_data.shape)
     while len(input_data.shape) < 4:
-        shape.insert(0, 1)
+        input_data.shape = (1, *input_data.shape)
     if debug_input is None:
         if calibration:
             low = -1.0 / (2**qf)
             high = 1.0 / (2**qf)
-            data = np.random.uniform(low, high, shape)
+            data = np.random.uniform(low, high, input_data.shape)
         else:
-            data = np.zeros(shape)
+            data = np.zeros(input_data.shape)
         input_data = Matrix(input_data.name, data, False, loc=loc)
     else:
         input_data = Matrix(input_data.name, debug_input, False, loc=loc)

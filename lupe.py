@@ -15,6 +15,7 @@ import queue
 
 from jinja2 import Template
 import onnx
+import numpy as np
 from onnx import checker
 
 from graph.graph import LupeGraph
@@ -87,6 +88,10 @@ def lupe_args():
     par.add_argument(
         "--debug-random-seed", type=int, default=0,
         help="Seed for random input"
+    )
+    par.add_argument(
+        "--debug-input-size", nargs=4, type=int, default=None,
+        help="Input size for the random input. It has to have 4 dimensions"
     )
     par.add_argument(
         "--debug-dataset", choices=[
@@ -287,10 +292,15 @@ def _generate(args, mode, graph, config, out_path, dir_name):
     )
 
     if mode == LupeMode.DEBUG or args.debug_random:
-        input_arr, label = get_input(
-            args.debug_dataset, args.debug_idx, args.debug_random,
-            args.debug_random_seed
-        )
+        if args.debug_input_size is None:
+            input_arr, label = get_input(
+                args.debug_dataset, args.debug_idx, args.debug_random,
+                args.debug_random_seed
+            )
+        else:
+            np.random.seed(args.debug_random_seed)
+            input_arr, label = np.random.rand(*args.debug_input_size), 0
+
         generator.setup_debug_info(
             input_arr / (2 ** args.qf), label, args.debug
         )
