@@ -1,6 +1,6 @@
 LIB = libmsptimer
 
-OBJECTS = timekeeper.o
+OBJECTS = timekeeper.o time_clock.o
 
 DEPS += libmsp
 
