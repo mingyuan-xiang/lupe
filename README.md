@@ -6,6 +6,7 @@
       - [Generate DNN Code](#generate-dnn-code)
     - [Calibrate DNN Instantiations](#calibrate-dnn-instantiations)
     - [Run Generated code on the Devices](#run-generated-code-on-the-devices)
+    - [Compiler and Flash the Model with Maker](#compiler-and-flash-the-model-with-maker)
   - [Directory Breakdown](#directory-breakdown)
   - [BibTex](#bibtex)
 
@@ -91,6 +92,8 @@ Because my MSP430 connects to `/dev/cu.usbmodem1201` and `/dev/cu.usbmodem1203`
 on my Mac, where "usbmodem1203" is for the UART. You might also want to change
 the path of `TI_ROOT` if you change the location of TI toolchains that you
 installed from [setup](#environments-setup)
+
+### Compiler and Flash the Model with Maker
 
 The commands for using maker is:
 
