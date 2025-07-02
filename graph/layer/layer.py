@@ -1,7 +1,7 @@
 """The layer node in the graph"""
 
 from abc import ABC, abstractmethod
-from .layer_utils import name_conversion
+from .layer_utils import name_conversion, get_onnx_shape
 
 class LupeLayer(ABC):
     """
@@ -28,13 +28,9 @@ class LupeLayer(ABC):
             self.output_size = self._get_output_size(node, model)
         elif io == "input":
             self.input_size = None
-            self.output_size = [
-                dim.dim_value for dim in node.type.tensor_type.shape.dim
-            ]
+            self.output_size = get_onnx_shape(node)
         elif io == "output":
-            self.input_size = [
-                dim.dim_value for dim in node.type.tensor_type.shape.dim
-            ]
+            self.input_size = get_onnx_shape(node)
             self.output_size = None
         else:
             raise ValueError("Invalid io arguments")
@@ -102,12 +98,11 @@ class LupeLayer(ABC):
         input_name = node.input[0]
         for v in model.graph.value_info:
             if v.name == input_name:
-                tensor_shape = v.type.tensor_type.shape
-                return tuple(dim.dim_value for dim in tensor_shape.dim)
+                return tuple(get_onnx_shape(v))
 
         # This is the first layer, and the model input is technically not a node
         node = model.graph.input[0]
-        return tuple(dim.dim_value for dim in node.type.tensor_type.shape.dim)
+        return tuple(tuple(get_onnx_shape(node)))
 
     def _get_output_size(self, node, model):
         """Set the output size"""
@@ -117,8 +112,7 @@ class LupeLayer(ABC):
         output_name = node.output[0]
         for v in model.graph.value_info:
             if v.name == output_name:
-                tensor_shape = v.type.tensor_type.shape
-                return tuple(dim.dim_value for dim in tensor_shape.dim)
+                return tuple(get_onnx_shape(v))
 
         # This is the last layer, and the model output is technically not a node
         node = model.graph.output[0]
