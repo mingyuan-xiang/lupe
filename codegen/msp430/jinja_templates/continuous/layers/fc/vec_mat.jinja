@@ -235,6 +235,6 @@ void {{ layer_name }}(mat_t* input, mat_t* output, mat_t* weight, mat_t* bias) {
   {%- endif %}
   {% if lea_opt %}
   add_clear();
-  mac_clear();
+  vector_matrix_mpy_clear();
   {%- endif %}
 }
