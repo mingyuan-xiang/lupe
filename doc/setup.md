@@ -41,6 +41,9 @@ start from there if you don't like CMU maker.
 
 ===============================================================================
 
+**Note:** Somehow, I can only make it work with Boost 1.85.0 on Mac.
+Please manually install Boost 1.85.0, and then run the following script.
+
 Assume the python environment is created. Then, simply do the following in the
 root directory of Lupe directory. 
 
