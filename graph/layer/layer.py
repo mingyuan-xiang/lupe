@@ -1,4 +1,5 @@
-"""The layer node in the graph"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 from abc import ABC, abstractmethod
 from .layer_utils import name_conversion, get_onnx_shape

@@ -1,4 +1,5 @@
-"""Helper functions for the MSP430 code generator."""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 import os
 

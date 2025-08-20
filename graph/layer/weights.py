@@ -1,4 +1,5 @@
-"""Weight and bias"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 import onnx.numpy_helper
 

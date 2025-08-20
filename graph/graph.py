@@ -1,8 +1,5 @@
-"""The graph for the DNN model
-
-The plot is kind of broken, but I'll probably fix it in the future.
-
-"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 from collections import OrderedDict
 

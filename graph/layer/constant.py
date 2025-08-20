@@ -1,4 +1,5 @@
-"""Activation layers"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 from .layer import LupeLayer
 from .layer_utils import get_onnx_attr, name_conversion

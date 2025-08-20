@@ -1,4 +1,5 @@
-"""Supported layer types"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 from enum import Enum, auto
 from .convolution import Convolution2D

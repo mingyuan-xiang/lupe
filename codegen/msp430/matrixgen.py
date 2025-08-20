@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
+
 """
 A script to generate header files for matrices.
 Ignore sparse matrices for now.
@@ -112,7 +115,11 @@ def save(code, loc):
 
 def gen_header_includes(name):
     """Generate the header file for the includes."""
-    h_code = ""
+    h_code = """/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */\n
+"""
     h_code += "#ifndef " + name.upper() + "_ARRAY_H\n"
     h_code += "#define " + name.upper() + "_ARRAY_H\n\n"
     # add includes
@@ -133,7 +140,11 @@ def gen_header_data(mat, gen_array=True):
 
 def gen_c(header_prefix, name):
     """Generate the c file."""
-    c_code = ""
+    c_code = """/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */\n
+"""
     c_code += "#include <" + header_prefix + "/include/" + name + ".h>\n\n"
 
     return c_code

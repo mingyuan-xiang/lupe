@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */
+
 #include <msp430.h>
 #include <libmsp/clock.h>
 #include <libmsp/gpio.h>

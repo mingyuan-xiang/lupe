@@ -1,4 +1,5 @@
-"""Helper functions for the layer module"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 def get_onnx_attr(node, s):
     """Get the ONNX attribute

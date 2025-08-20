@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */
+
 #ifndef INCLUDE_POWEROFF_H
 #define INCLUDE_POWEROFF_H
 #include <libmsp/macro_basics.h>

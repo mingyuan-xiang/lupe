@@ -1,4 +1,5 @@
-"""Helper functions"""
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
 
 from math import log2, ceil
 import numpy as np

@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */
+
 #include <libmspsyncioutils/mspsyncioutils.h>
 #include <libmspsyncioutils/uartio_msg.h>
 

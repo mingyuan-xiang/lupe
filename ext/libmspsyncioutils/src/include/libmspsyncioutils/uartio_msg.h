@@ -1,3 +1,8 @@
+/*
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ * Copyright (C) 2025 Mingyuan Xiang
+ */
+
 #ifndef INCLUDE_MSPIO_UARTIO_MSG_H
 #define INCLUDE_MSPIO_UARTIO_MSG_H
 

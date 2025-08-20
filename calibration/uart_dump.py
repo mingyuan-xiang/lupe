@@ -1,5 +1,10 @@
-# Script to dump UART data from the serial port
-# The script will do a synchronize read
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
+
+"""
+Script to dump UART data from the serial port
+The script will do a synchronize read
+"""
 
 import numpy as np
 import argparse

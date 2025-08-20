@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: AGPL-3.0-or-later
+# Copyright (C) 2025 Mingyuan Xiang
+
 """
 A script to generate header files for matrices.
 Ignore sparse matrices for now.

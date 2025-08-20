@@ -1,3 +1,6 @@
+{#- SPDX-License-Identifier: AGPL-3.0-or-later -#}
+{#- Copyright (C) 2025 Mingyuan Xiang -#}
+
 EXEC = {{ model_name }}
 
 OBJECTS = main.o {{model_name}}.o buffer/input.o{%if verify%} buffer/output.o{%endif%} buffer/buffer.o{%if has_extra_buffer%} buffer/lupe_buffer.o{%endif%}{%if has_add_buffer%} buffer/add_buffer.o{%endif%} layers/utils.o{%for l in layer_list%} layers/{{l}}.o{%endfor%}{%for l in layers_with_weights%} params/{{l}}.o{%endfor%}
