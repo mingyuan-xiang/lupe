@@ -7,6 +7,7 @@
     - [Calibrate DNN Instantiations](#calibrate-dnn-instantiations)
     - [Run Generated code on the Devices](#run-generated-code-on-the-devices)
     - [Compiler and Flash the Model with Maker](#compiler-and-flash-the-model-with-maker)
+    - [Useful tools](#useful-tools)
   - [Directory Breakdown](#directory-breakdown)
   - [BibTex](#bibtex)
 
@@ -103,6 +104,16 @@ The commands for using maker is:
 + **Compile and flash**: `make apps/<app name>/bld/gcc/prog`
 + **Clean app**: `make apps/<app name>/bld/gcc/depclean`
 + **Clean app and all dependent libraries**: `make apps/<app name>/bld/gcc/depclean`
+
+### Useful tools
+
+I provided some useful tools (and also some scripts to replicate our results
+in the paper) that work with Lupe. For example, `python scripts/uart_commute/uart_dump.py`
+will start a UART receiver for anything that send from the board. Additionally,
+I implement two functions: 1) `msp_send_printf()` works the same as a C printf().
+It will send a string through UART. 2) `msp_send_mat()` will send an entire
+matrix through UART (for debugging purpose).
+
 
 ## Directory Breakdown
 
