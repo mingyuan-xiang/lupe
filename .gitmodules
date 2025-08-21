@@ -31,3 +31,6 @@
 [submodule "ext/librng"]
 	path = ext/librng
 	url = git@github.com:Mahdigho/librng.git
+[submodule "tools/AbstractMaker"]
+	path = tools/maker
+	url = git@github.com:Mahdigho/AbstractMaker.git
