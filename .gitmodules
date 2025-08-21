@@ -1,0 +1,36 @@
+[submodule "ext/libdsp"]
+	path = ext/libdsp
+	url = git@github.com:Mahdigho/libdsp.git
+[submodule "ext/libfixedAbstract"]
+	path = ext/libfixedAbstract
+	url = git@github.com:Mahdigho/libfixedAbstract.git
+[submodule "ext/libmsp"]
+	path = ext/libmsp
+	url = git@github.com:Mahdigho/libmsp.git
+[submodule "ext/libmspdriver"]
+	path = ext/libmspdriver
+	url = git@github.com:mingyuan-xiang/libmspdriver.git
+[submodule "ext/libmatAbstract"]
+	path = ext/libmatAbstract
+	url = git@github.com:mingyuan-xiang/libmatAbstract.git
+[submodule "ext/libmspio"]
+	path = ext/libmspio
+	url = git@github.com:mingyuan-xiang/libmspio.git
+[submodule "ext/libmspleaops"]
+	path = ext/libmspleaops
+	url = git@github.com:mingyuan-xiang/libmspleaops.git
+[submodule "ext/libmsppoweroff"]
+	path = ext/libmsppoweroff
+	url = git@github.com:mingyuan-xiang/libmsppoweroff.git
+[submodule "ext/libmspprintf"]
+	path = ext/libmspprintf
+	url = git@github.com:Mahdigho/libmspprintf.git
+[submodule "ext/libmspsyncioutils"]
+	path = ext/libmspsyncioutils
+	url = git@github.com:mingyuan-xiang/libmspsyncioutils.git
+[submodule "ext/libmsptimer"]
+	path = ext/libmsptimer
+	url = git@github.com:mingyuan-xiang/libmsptimer.git
+[submodule "ext/librng"]
+	path = ext/librng
+	url = git@github.com:Mahdigho/librng.git

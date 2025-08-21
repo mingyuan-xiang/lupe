@@ -1,8 +1,0 @@
-# This makefile applies the options.
-# For list of options and documentation see Makefile.config
-include $(MAKER_ROOT)/Makefile.pre
-include $(MAKER_ROOT)/Makefile.msp
-
-ifneq ($(LIBMSPPRINTF_PRINT_PORT),)
-override CFLAGS += -DCONFIG_PRINT_PORT=$(LIBMSPPRINTF_PRINT_PORT)
-endif
