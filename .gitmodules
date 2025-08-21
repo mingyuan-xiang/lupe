@@ -16,9 +16,6 @@
 [submodule "ext/libmspio"]
 	path = ext/libmspio
 	url = git@github.com:mingyuan-xiang/libmspio.git
-[submodule "ext/libmspleaops"]
-	path = ext/libmspleaops
-	url = git@github.com:mingyuan-xiang/libmspleaops.git
 [submodule "ext/libmsppoweroff"]
 	path = ext/libmsppoweroff
 	url = git@github.com:mingyuan-xiang/libmsppoweroff.git
