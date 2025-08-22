@@ -63,7 +63,7 @@ There are also some additional arguments that can be used:
 
 Here are two examples of the command:
 
-1. An continuous LeNet with no optimization that receives input from UART
+1. A continuous LeNet with no optimization that receives input from UART
 
 ```
 ./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 5 --config configs/no_opt.json
