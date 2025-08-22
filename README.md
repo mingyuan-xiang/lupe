@@ -61,10 +61,18 @@ There are also some additional arguments that can be used:
 + `--hifram-func` will decide how many functions to be put on HIFRAM.
 + `--max-dma-size` sets the maximum DMA size.
 
-One example of the command would be:
+Here are two examples of the command:
+
+1. An continuous LeNet with no optimization that receives input from UART
 
 ```
-./lupe.py code-gen --model-name ResNet3 --model-path models/onnx/ResNet3.onnx --qf 4 --config configs/no_opt.json --debug-random --debug-dataset CIFAR10 --intermittent --hifram-func 5
+./lupe.py code-gen --model-name LeNet --model-path models/onnx/LeNet.onnx --qf 5 --config configs/no_opt.json
+```
+
+2. An intermittent-safe ResNet3 with full optimization that uses an random input
+
+```
+./lupe.py code-gen --model-name ResNet3 --model-path models/onnx/ResNet3.onnx --qf 4 --config configs/lupe_best.json --debug-random --debug-dataset CIFAR10 --intermittent --hifram-func 5
 ```
 
 ### Calibrate DNN Instantiations

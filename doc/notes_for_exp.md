@@ -54,21 +54,21 @@ each DNN layer during training, though the clipping range varies.
 
 + mnist size: 10000
 + Clip(-32, 32) only in training
-+ q5.10 for activation and bias, `qf_offset=1` for weights
++ q5.10 for activation and bias, `qf=5`, `qf_offset=1` for weights
 + test accuracy in PyTorch (98.49%)
 
 ### ResNet3
 
 + cifar10 size: 10000
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
-+ q4.11 for activation and bias, `qf_offset=1` for weights
++ q4.11 for activation and bias, `qf=4`, `qf_offset=1` for weights
 + test accuracy in PyTorch (80.42%)
 
 ### MobileNetV2
 
 + vww size: 8059
 + Clip(-16, 16) for activation and Clip(-1, 1) for weights (only in training)
-+ q4.11 for activation and bias, `qf_offset=1` for weights
++ q4.11 for activation and bias, `qf=4`, `qf_offset=1` for weights
 + test accuracy in PyTorch (80.69%)
 + (bottom-up implementation) For intermittent-safe support, it cannot fit, so I have to put 10 layer functions on the HIFRAM (`--hifram-func 10`)
 
@@ -76,14 +76,14 @@ each DNN layer during training, though the clipping range varies.
 
 + speech_commands size: 11005
 + Clip(-32, 32) for activation and Clip(-1, 1) for weights (only in training)
-+ q5.10 for activation and bias, `qf_offset=1` for weights
++ q5.10 for activation and bias, `qf=5`, `qf_offset=1` for weights
 + test accuracy in PyTorch (94.39%)
 
 ### MLPClassifier
 
 + fasion_mnist: 10000
 + Clip(-32, 32) only in training
-+ q5.10 for activation and bias, `qf_offset=1` for weights
++ q5.10 for activation and bias, `qf=5`, `qf_offset=1` for weights
 + test accuracy in PyTorch (90.57%)
 
 ## Intermittent Time
