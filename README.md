@@ -1,4 +1,5 @@
 - [Lupe](#lupe)
+  - [Download the repo](#download-the-repo)
   - [Environments Setup](#environments-setup)
   - [Usage](#usage)
     - [Generate Efficient MSP430 Code](#generate-efficient-msp430-code)
@@ -19,6 +20,14 @@ with a few customizations. The entire framework is designed for
 [TI MSP430FR5994](https://www.ti.com/product/MSP430FR5994?utm_source=google&utm_medium=cpc&utm_campaign=epd-msp-null-44700045336317329_prodfolderdynamic-cpc-pf-google-ww_en_int&utm_content=prodfolddynamic&ds_k=DYNAMIC+SEARCH+ADS&DCM=yes&gclsrc=aw.ds&gad_source=1&gad_campaignid=7213436380&gbraid=0AAAAAC068F1zXtw5KpqBzmPtCc1XNTKmd&gclid=Cj0KCQjw5ubABhDIARIsAHMighYdV1m00bnPcnf-G_YDguCZHepmlfUrIGs9HYlGR-1VxJP3FZ2lm34aAvwvEALw_wcB).
 
 TODO: This repo is very cumbersome (and hard to use) because the main design goal is to demonstrate our top-down idea. I'm currently working on rewriting some of the interfaces of Lupe to make it easier to use.
+
+## Download the repo
+
+```
+$ git clone https://github.com/mingyuan-xiang/lupe.git
+$ cd lupe
+$ git submodule update --init --recursive
+```
 
 ## Environments Setup
 
