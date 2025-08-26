@@ -1,6 +1,6 @@
 - [Lupe](#lupe)
   - [Download the repo](#download-the-repo)
-  - [Environments Setup](#environments-setup)
+  - [Environment Setup](#environment-setup)
   - [Usage](#usage)
     - [Generate Efficient MSP430 Code](#generate-efficient-msp430-code)
       - [Print the Model](#print-the-model)
@@ -29,7 +29,7 @@ $ cd lupe
 $ git submodule update --init --recursive
 ```
 
-## Environments Setup
+## Environment Setup
 
 We tested and ran all of our experiments on an MacOS as well as an Arch Linux machine.
 an TI MSP430FR5994 is necessary to execute Lupe generated programs. Please refer to
