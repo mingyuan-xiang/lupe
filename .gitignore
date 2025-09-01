@@ -233,7 +233,7 @@ apps/*
 /Makefile
 
 # gcc folder
-.toolchains/
+.toolchains
 
 # training data
 data/

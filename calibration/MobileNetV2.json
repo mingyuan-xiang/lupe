@@ -1,62 +1,62 @@
 {
     "features_features_0_block_block_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 91454,
+        "cycles": 91210,
         "repeat": 10
     },
     "features_features_1_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 12138,
+        "cycles": 12107,
         "repeat": 10
     },
     "features_features_1_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "1x1_mpy",
-        "cycles": 5877,
+        "cycles": 5861,
         "repeat": 10
     },
     "features_features_2_pw_conv_pw_conv_0_Conv": {
         "acceleration": "1x1_mpy",
-        "cycles": 35182,
+        "cycles": 35095,
         "repeat": 10
     },
     "features_features_2_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 22200,
+        "cycles": 22096,
         "repeat": 10
     },
     "features_features_2_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 9309,
+        "cycles": 9301,
         "repeat": 10
     },
     "features_features_3_pw_conv_pw_conv_0_Conv": {
         "acceleration": "1x1_mpy",
-        "cycles": 13355,
+        "cycles": 13322,
         "repeat": 10
     },
     "features_features_3_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 8375,
+        "cycles": 8339,
         "repeat": 10
     },
     "features_features_3_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 2459,
+        "cycles": 2461,
         "repeat": 10
     },
     "features_features_4_pw_conv_pw_conv_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 7733,
+        "cycles": 7662,
         "repeat": 10
     },
     "features_features_4_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 4830,
+        "cycles": 4819,
         "repeat": 10
     },
     "features_features_4_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 1656,
+        "cycles": 1650,
         "repeat": 10
     },
     "features_features_5_pw_conv_pw_conv_0_Conv": {
@@ -66,38 +66,38 @@
     },
     "features_features_5_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 6339,
+        "cycles": 6316,
         "repeat": 10
     },
     "features_features_5_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 2367,
+        "cycles": 2362,
         "repeat": 10
     },
     "features_features_6_pw_conv_pw_conv_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 6766,
+        "cycles": 6751,
         "repeat": 10
     },
     "features_features_6_dw_conv_dw_conv_0_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 6338,
+        "cycles": 6321,
         "repeat": 10
     },
     "features_features_6_pw_conv_linear_pw_conv_linear_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 3348,
+        "cycles": 3345,
         "repeat": 10
     },
     "conv_block_block_0_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 12071,
+        "cycles": 12009,
         "repeat": 10
     },
     "classifier_Gemm": {
         "acceleration": "vec_mat",
-        "cycles": 52,
+        "cycles": 44,
         "repeat": 10
     },
-    "opt_config": "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"
+    "opt_config": "configs/lupe_best.json"
 }

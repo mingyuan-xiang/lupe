@@ -1,22 +1,22 @@
 {
     "conv1_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 11555,
+        "cycles": 11525,
         "repeat": 10
     },
     "conv2_Conv": {
         "acceleration": "enhanced_fir",
-        "cycles": 28846,
+        "cycles": 28774,
         "repeat": 10
     },
     "conv3_Conv": {
         "acceleration": "enhanced_mac",
-        "cycles": 5724,
+        "cycles": 5709,
         "repeat": 10
     },
     "fc1_Gemm": {
         "acceleration": "vec_mat",
-        "cycles": 991,
+        "cycles": 988,
         "repeat": 10
     },
     "fc2_Gemm": {
@@ -24,5 +24,5 @@
         "cycles": 88,
         "repeat": 10
     },
-    "opt_config": "configs/dma_lea_opt_adaptive_buffer_mem_acc.json"
+    "opt_config": "configs/lupe_best.json"
 }
