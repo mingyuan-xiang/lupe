@@ -55,8 +55,19 @@ $ . ./scripts/setup/setup.sh mac
 
 Arch Linux:
 
+Install boost@1.85 with:
+
 ```
-$ . ./scripts/setup/setup.sh linux
+$ curl -LO https://archives.boost.io/release/1.85.0/source/boost_1_85_0.tar.gz
+$ tar xzf boost_1_85_0.tar.gz
+$ cd boost_1_85_0
+$ ./bootstrap.sh --prefix=$HOME/opt/boost-1.85
+$ ./b2 -j$(nproc) --with-system --with-thread --with-filesystem \
+  --with-date_time --with-chrono --with-atomic install
+```
+Then
+```
+$ BOOST_ROOT=$HOME/opt/boost-1.85 ./setup.sh linux
 ```
 
 Hopefully, it should automatically install everything in the virtual environments
